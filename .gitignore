@@ -1,24 +1,48 @@
-# Dependencies
-node_modules/
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+PIPFILE.lock
+
+# Virtual Environment
 venv/
 env/
-.venv/
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-pip-log.txt
-pip-delete-this-directory.txt
-.eggs/
-*.egg-info/
-dist/
-build/
+ENV/
+.venv
 
-# Environment variables
+# Blockchain & Crypto
+*.key
+*.pem
+keystore/
+wallets/
+.secrets/
+
+# Smart Contracts
+artifacts/
+cache/
+.brownie/
+.hardhat/
+
+# Environment
 .env
 .env.local
-.env.*.local
 *.env
 
 # IDE
@@ -26,36 +50,23 @@ build/
 .idea/
 *.swp
 *.swo
-*~
 .DS_Store
 
 # Logs
-logs/
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+logs/
 
 # Testing
-coverage/
-.nyc_output/
 .pytest_cache/
-*.cover
 .coverage
+htmlcov/
+.tox/
 
-# Build outputs
-dist/
-build/
-*.tar.gz
-*.zip
+# Database
+*.db
+*.sqlite3
 
-# Blockchain
-artifacts/
-cache/
-.openzeppelin/
-*.key
-*.pem
-
-# OS
-.DS_Store
-Thumbs.db
+# Node modules (if using web3.js)
+node_modules/
+package-lock.json
+yarn.lock
