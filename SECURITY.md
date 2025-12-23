@@ -8,7 +8,7 @@
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability, please email: security@garrettcampbell.dev
+If you discover a security vulnerability, please email: security@garrettcarroll.dev
 
 **Please do not open public issues for security vulnerabilities.**
 

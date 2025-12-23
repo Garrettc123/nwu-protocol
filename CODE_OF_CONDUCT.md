@@ -22,7 +22,7 @@ We pledge to make participation in our project a harassment-free experience for 
 
 ## Enforcement
 
-Instances of abusive behavior may be reported to security@garrettcampbell.dev. All complaints will be reviewed and investigated promptly and fairly.
+Instances of abusive behavior may be reported to security@garrettcarroll.dev. All complaints will be reviewed and investigated promptly and fairly.
 
 ## Attribution
 
