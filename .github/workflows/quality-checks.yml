@@ -7,9 +7,28 @@ on:
     branches: [main, develop]
 
 jobs:
+  check-repository:
+    name: Repository Structure Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check repository structure
+        run: |
+          echo "Repository structure:"
+          ls -la
+          echo "Checking for source directories..."
+          for dir in backend frontend contracts agents; do
+            if [ -d "$dir" ]; then
+              echo "✓ Found $dir directory"
+            else
+              echo "ℹ️ No $dir directory"
+            fi
+          done
+
   backend-quality:
     name: Backend Quality Checks
     runs-on: ubuntu-latest
+    needs: [check-repository]
     if: hashFiles('backend/**') != ''
     steps:
       - uses: actions/checkout@v4
@@ -238,7 +257,7 @@ jobs:
 
   report-summary:
     name: Quality Report Summary
-    needs: [backend-quality, frontend-quality, contracts-quality, agents-quality, security-scan]
+    needs: [check-repository, backend-quality, frontend-quality, contracts-quality, agents-quality, security-scan]
     runs-on: ubuntu-latest
     if: always()
     permissions:
