@@ -241,10 +241,12 @@ jobs:
     needs: [backend-quality, frontend-quality, contracts-quality, agents-quality, security-scan]
     runs-on: ubuntu-latest
     if: always()
+    permissions:
+      pull-requests: write
     steps:
       - name: Comment PR with summary
         if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const backend = '${{ needs.backend-quality.result }}';
