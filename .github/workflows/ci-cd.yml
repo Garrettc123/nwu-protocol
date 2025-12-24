@@ -54,7 +54,7 @@ jobs:
         if: steps.check-python.outputs.has_python == 'true'
         id: check-tests
         run: |
-          if find . -name "test_*.py" -o -name "*_test.py" | grep -q .; then
+          if find . \( -name "test_*.py" -o -name "*_test.py" -o -path "*/tests/*.py" -o -path "*/test/*.py" \) -not -path "./venv/*" -not -path "./.venv/*" -not -path "*/site-packages/*" | grep -q .; then
             echo "has_tests=true" >> $GITHUB_OUTPUT
           else
             echo "has_tests=false" >> $GITHUB_OUTPUT
