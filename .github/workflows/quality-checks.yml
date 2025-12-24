@@ -172,12 +172,17 @@ jobs:
       
       - name: Dependency check
         run: |
-          npm install -g npm-audit-resolver
-          npm audit --audit-level=moderate || true
+          if [ -f "package.json" ] || [ -f "backend/package.json" ] || [ -f "frontend/package.json" ] || [ -f "contracts/package.json" ]; then
+            npm install -g npm-audit-resolver
+            npm audit --audit-level=moderate || true
+          else
+            echo "No Node.js projects found, skipping npm audit"
+          fi
 
   complexity-check:
     name: Code Complexity Analysis
     runs-on: ubuntu-latest
+    if: hashFiles('backend/**') != '' || hashFiles('frontend/**') != ''
     steps:
       - uses: actions/checkout@v4
       
@@ -191,15 +196,20 @@ jobs:
       
       - name: Check JavaScript complexity
         run: |
-          echo "Backend Complexity:"
-          complexity-report --log-type simple backend/src/ || true
-          echo "Frontend Complexity:"
-          complexity-report --log-type simple frontend/src/ || true
+          if [ -d "backend/src" ]; then
+            echo "Backend Complexity:"
+            complexity-report --log-type simple backend/src/ || true
+          fi
+          if [ -d "frontend/src" ]; then
+            echo "Frontend Complexity:"
+            complexity-report --log-type simple frontend/src/ || true
+          fi
         continue-on-error: true
 
   dependency-check:
     name: Dependency Health Check
     runs-on: ubuntu-latest
+    if: hashFiles('backend/**') != '' || hashFiles('frontend/**') != '' || hashFiles('contracts/**') != ''
     steps:
       - uses: actions/checkout@v4
       
@@ -210,12 +220,20 @@ jobs:
       
       - name: Check outdated dependencies
         run: |
-          echo "Backend Dependencies:"
-          cd backend && npm outdated || true
-          echo "\nFrontend Dependencies:"
-          cd ../frontend && npm outdated || true
-          echo "\nContracts Dependencies:"
-          cd ../contracts && npm outdated || true
+          if [ -d "backend" ] && [ -f "backend/package.json" ]; then
+            echo "Backend Dependencies:"
+            cd backend && npm outdated || true
+            cd ..
+          fi
+          if [ -d "frontend" ] && [ -f "frontend/package.json" ]; then
+            echo "Frontend Dependencies:"
+            cd frontend && npm outdated || true
+            cd ..
+          fi
+          if [ -d "contracts" ] && [ -f "contracts/package.json" ]; then
+            echo "Contracts Dependencies:"
+            cd contracts && npm outdated || true
+          fi
         continue-on-error: true
 
   report-summary:
@@ -235,15 +253,21 @@ jobs:
             const agents = '${{ needs.agents-quality.result }}';
             const security = '${{ needs.security-scan.result }}';
             
+            const getStatus = (result) => {
+              if (result === 'success') return '✅';
+              if (result === 'skipped') return '⏭️ Skipped';
+              return '⚠️';
+            };
+            
             const comment = `## 👍 Quality Check Summary
             
             | Component | Status |
             |-----------|--------|
-            | Backend | ${backend === 'success' ? '✅' : '⚠️'} |
-            | Frontend | ${frontend === 'success' ? '✅' : '⚠️'} |
-            | Contracts | ${contracts === 'success' ? '✅' : '⚠️'} |
-            | Agents | ${agents === 'success' ? '✅' : '⚠️'} |
-            | Security | ${security === 'success' ? '✅' : '⚠️'} |
+            | Backend | ${getStatus(backend)} |
+            | Frontend | ${getStatus(frontend)} |
+            | Contracts | ${getStatus(contracts)} |
+            | Agents | ${getStatus(agents)} |
+            | Security | ${getStatus(security)} |
             
             View full results in [Actions](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).
             `;
