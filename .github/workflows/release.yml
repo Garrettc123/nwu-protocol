@@ -57,7 +57,7 @@ jobs:
           npm run package -- --platform ${{ matrix.platform }} --arch ${{ matrix.arch }}
       
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: nwu-${{ matrix.platform }}-${{ matrix.arch }}
           path: dist/*
