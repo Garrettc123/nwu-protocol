@@ -1,0 +1,256 @@
+name: 👍 Quality & Security Checks
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+jobs:
+  backend-quality:
+    name: Backend Quality Checks
+    runs-on: ubuntu-latest
+    if: hashFiles('backend/**') != ''
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'backend/package-lock.json'
+      
+      - name: Install dependencies
+        run: cd backend && npm ci
+      
+      - name: Lint code
+        run: cd backend && npm run lint || true
+      
+      - name: Check formatting
+        run: cd backend && npm run format:check || true
+      
+      - name: Run tests
+        run: cd backend && npm test -- --coverage
+      
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./backend/coverage/coverage-final.json
+          flags: backend
+
+  frontend-quality:
+    name: Frontend Quality Checks
+    runs-on: ubuntu-latest
+    if: hashFiles('frontend/**') != ''
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'frontend/package-lock.json'
+      
+      - name: Install dependencies
+        run: cd frontend && npm ci
+      
+      - name: Lint code
+        run: cd frontend && npm run lint || true
+      
+      - name: Type check
+        run: cd frontend && npm run type-check || true
+      
+      - name: Run tests
+        run: cd frontend && npm test -- --coverage
+      
+      - name: Build
+        run: cd frontend && npm run build
+      
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./frontend/coverage/coverage-final.json
+          flags: frontend
+
+  contracts-quality:
+    name: Smart Contracts Quality Checks
+    runs-on: ubuntu-latest
+    if: hashFiles('contracts/**') != ''
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'contracts/package-lock.json'
+      
+      - name: Install dependencies
+        run: cd contracts && npm ci
+      
+      - name: Lint Solidity
+        run: cd contracts && npm run lint || true
+      
+      - name: Compile contracts
+        run: cd contracts && npm run compile
+      
+      - name: Run tests
+        run: cd contracts && npm test
+      
+      - name: Check test coverage
+        run: cd contracts && npm run coverage || true
+      
+      - name: Security scan with Slither
+        uses: crytic/slither-action@v0.3.0
+        with:
+          target: 'contracts/contracts/'
+          sarif: results.sarif
+        continue-on-error: true
+      
+      - name: Upload SARIF
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: results.sarif
+        continue-on-error: true
+
+  agents-quality:
+    name: AI Agents Quality Checks
+    runs-on: ubuntu-latest
+    if: hashFiles('agents/**') != ''
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: cd agents && pip install -r requirements.txt && pip install pytest pytest-cov black flake8 mypy
+      
+      - name: Format check with Black
+        run: cd agents && black --check . || true
+      
+      - name: Lint with Flake8
+        run: cd agents && flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics || true
+      
+      - name: Type check with MyPy
+        run: cd agents && mypy src/ || true
+      
+      - name: Run tests with coverage
+        run: cd agents && pytest --cov=src --cov-report=xml
+      
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./agents/coverage.xml
+          flags: agents
+
+  security-scan:
+    name: Security Vulnerability Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+      
+      - name: Upload Trivy results
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+        continue-on-error: true
+      
+      - name: Dependency check
+        run: |
+          npm install -g npm-audit-resolver
+          npm audit --audit-level=moderate || true
+
+  complexity-check:
+    name: Code Complexity Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      
+      - name: Install complexity analyzer
+        run: npm install -g complexity-report
+      
+      - name: Check JavaScript complexity
+        run: |
+          echo "Backend Complexity:"
+          complexity-report --log-type simple backend/src/ || true
+          echo "Frontend Complexity:"
+          complexity-report --log-type simple frontend/src/ || true
+        continue-on-error: true
+
+  dependency-check:
+    name: Dependency Health Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      
+      - name: Check outdated dependencies
+        run: |
+          echo "Backend Dependencies:"
+          cd backend && npm outdated || true
+          echo "\nFrontend Dependencies:"
+          cd ../frontend && npm outdated || true
+          echo "\nContracts Dependencies:"
+          cd ../contracts && npm outdated || true
+        continue-on-error: true
+
+  report-summary:
+    name: Quality Report Summary
+    needs: [backend-quality, frontend-quality, contracts-quality, agents-quality, security-scan]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Comment PR with summary
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const backend = '${{ needs.backend-quality.result }}';
+            const frontend = '${{ needs.frontend-quality.result }}';
+            const contracts = '${{ needs.contracts-quality.result }}';
+            const agents = '${{ needs.agents-quality.result }}';
+            const security = '${{ needs.security-scan.result }}';
+            
+            const comment = `## 👍 Quality Check Summary
+            
+            | Component | Status |
+            |-----------|--------|
+            | Backend | ${backend === 'success' ? '✅' : '⚠️'} |
+            | Frontend | ${frontend === 'success' ? '✅' : '⚠️'} |
+            | Contracts | ${contracts === 'success' ? '✅' : '⚠️'} |
+            | Agents | ${agents === 'success' ? '✅' : '⚠️'} |
+            | Security | ${security === 'success' ? '✅' : '⚠️'} |
+            
+            View full results in [Actions](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).
+            `;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
