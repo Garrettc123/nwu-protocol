@@ -10,6 +10,7 @@ jobs:
   check-repository:
     name: Repository Structure Check
     runs-on: ubuntu-latest
+    if: always()
     steps:
       - uses: actions/checkout@v4
       - name: Check repository structure
