@@ -24,23 +24,50 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
           pip install pytest pytest-cov black flake8
 
+      - name: Check for Python source files
+        id: check-python
+        run: |
+          if find . -name "*.py" -not -path "./venv/*" -not -path "./.venv/*" -not -path "*/site-packages/*" | grep -q .; then
+            echo "has_python=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_python=false" >> $GITHUB_OUTPUT
+            echo "No Python source files found, skipping Python-specific checks"
+          fi
+
       - name: Lint with flake8
+        if: steps.check-python.outputs.has_python == 'true'
         run: |
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
       - name: Format check with black
+        if: steps.check-python.outputs.has_python == 'true'
         run: |
           black --check . || true
 
+      - name: Check for tests
+        if: steps.check-python.outputs.has_python == 'true'
+        id: check-tests
+        run: |
+          if find . -name "test_*.py" -o -name "*_test.py" | grep -q .; then
+            echo "has_tests=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_tests=false" >> $GITHUB_OUTPUT
+            echo "No test files found, skipping pytest"
+          fi
+
       - name: Run tests with pytest
+        if: steps.check-python.outputs.has_python == 'true' && steps.check-tests.outputs.has_tests == 'true'
         run: |
           pytest --cov=. --cov-report=xml
 
       - name: Upload coverage to Codecov
+        if: steps.check-python.outputs.has_python == 'true' && steps.check-tests.outputs.has_tests == 'true'
         uses: codecov/codecov-action@v3
         with:
           file: ./coverage.xml
@@ -49,6 +76,9 @@ jobs:
 
   security:
     runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
@@ -64,6 +94,7 @@ jobs:
       - name: Upload Trivy results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v2
         if: always()
+        continue-on-error: true
         with:
           sarif_file: 'trivy-results.sarif'
 
