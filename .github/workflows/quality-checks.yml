@@ -259,7 +259,7 @@ jobs:
 
   report-summary:
     name: Quality Report Summary
-    needs: [check-repository, backend-quality, frontend-quality, contracts-quality, agents-quality, security-scan]
+    needs: [check-repository, backend-quality, frontend-quality, contracts-quality, agents-quality, security-scan, complexity-check, dependency-check]
     runs-on: ubuntu-latest
     if: always()
     permissions:
