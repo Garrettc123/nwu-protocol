@@ -1,47 +1,66 @@
-name: Automated Release Management
+name: 📄 Automated Release
 
 on:
   push:
-    tags:
-      - 'v*.*.*'
+    branches: [main]
+    paths:
+      - 'backend/package.json'
+      - 'frontend/package.json'
+      - 'contracts/package.json'
   workflow_dispatch:
     inputs:
       version:
         description: 'Release version (e.g., 1.0.0)'
         required: true
-      prerelease:
-        description: 'Is this a pre-release?'
-        required: false
-        default: 'false'
-        type: boolean
+      component:
+        description: 'Component to release'
+        required: true
+        type: choice
+        options:
+          - all
+          - backend
+          - frontend
+          - contracts
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  # 📝 Generate Changelog
-  generate-changelog:
+  prepare-release:
+    name: Prepare Release
     runs-on: ubuntu-latest
     outputs:
+      version: ${{ steps.version.outputs.version }}
       changelog: ${{ steps.changelog.outputs.changelog }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       
+      - name: Generate version
+        id: version
+        run: |
+          if [ "${{ github.event.inputs.version }}" != "" ]; then
+            VERSION=${{ github.event.inputs.version }}
+          else
+            VERSION=$(date +%Y.%m.%d)
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+      
       - name: Generate changelog
         id: changelog
         run: |
-          echo "## What's Changed" > CHANGELOG.md
-          git log $(git describe --tags --abbrev=0 HEAD^)..HEAD --pretty=format:"- %s (@%an)" >> CHANGELOG.md
-          echo "changelog<<EOF" >> $GITHUB_OUTPUT
-          cat CHANGELOG.md >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          echo "changelog=$(git log $(git describe --tags --abbrev=0)..HEAD --pretty=format:'%h %s' | head -20)" >> $GITHUB_OUTPUT
 
-  # 📦 Build Release Assets
-  build-assets:
+  backend-release:
+    name: Release Backend
+    needs: prepare-release
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        platform: [linux, darwin, windows]
-        arch: [amd64, arm64]
+    if: |
+      github.event.inputs.component == 'all' || 
+      github.event.inputs.component == 'backend' ||
+      hashFiles('backend/**') != ''
     steps:
       - uses: actions/checkout@v4
       
@@ -49,64 +68,47 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
+          registry-url: 'https://registry.npmjs.org'
       
-      - name: Build binaries
+      - name: Install dependencies
+        run: cd backend && npm ci
+      
+      - name: Run tests
+        run: cd backend && npm test
+      
+      - name: Build
+        run: cd backend && npm run build
+      
+      - name: Update version
+        run: cd backend && npm version ${{ needs.prepare-release.outputs.version }} --no-git-tag-version
+      
+      - name: Publish to npm
+        run: cd backend && npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        continue-on-error: true
+      
+      - name: Build Docker image
         run: |
-          npm ci
-          npm run build
-          npm run package -- --platform ${{ matrix.platform }} --arch ${{ matrix.arch }}
+          docker build -t ${{ env.REGISTRY }}/nwu-backend:${{ needs.prepare-release.outputs.version }} \
+                       -t ${{ env.REGISTRY }}/nwu-backend:latest \
+                       ./backend
       
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: nwu-${{ matrix.platform }}-${{ matrix.arch }}
-          path: dist/*
+      - name: Push Docker image
+        run: |
+          echo ${{ secrets.GITHUB_TOKEN }} | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+          docker push ${{ env.REGISTRY }}/nwu-backend:${{ needs.prepare-release.outputs.version }}
+          docker push ${{ env.REGISTRY }}/nwu-backend:latest
+        continue-on-error: true
 
-  # 🐳 Build and Push Docker Images
-  build-docker-release:
+  frontend-release:
+    name: Release Frontend
+    needs: prepare-release
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: |
-            ${{ secrets.DOCKER_USERNAME }}/nwu-protocol
-          tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-            type=raw,value=latest,enable={{is_default_branch}}
-      
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-      
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-      
-      - name: Build and push
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/nwu-protocol:buildcache
-          cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/nwu-protocol:buildcache,mode=max
-
-  # 🔗 Deploy Smart Contracts
-  deploy-contracts:
-    runs-on: ubuntu-latest
-    if: "!contains(github.ref, 'alpha') && !contains(github.ref, 'beta')"
+    if: |
+      github.event.inputs.component == 'all' || 
+      github.event.inputs.component == 'frontend' ||
+      hashFiles('frontend/**') != ''
     steps:
       - uses: actions/checkout@v4
       
@@ -116,72 +118,134 @@ jobs:
           node-version: '18'
       
       - name: Install dependencies
-        run: npm ci
+        run: cd frontend && npm ci
       
-      - name: Deploy to mainnet
-        run: npx hardhat run scripts/deploy.js --network mainnet
+      - name: Run tests
+        run: cd frontend && npm test -- --coverage
+      
+      - name: Build
+        run: cd frontend && npm run build
+      
+      - name: Deploy to Vercel
+        uses: vercel/action@master
+        with:
+          working-directory: frontend
         env:
-          PRIVATE_KEY: ${{ secrets.DEPLOYER_PRIVATE_KEY }}
-          ETHERSCAN_API_KEY: ${{ secrets.ETHERSCAN_API_KEY }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        continue-on-error: true
       
-      - name: Verify contracts
-        run: npx hardhat verify --network mainnet
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ env.REGISTRY }}/nwu-frontend:${{ needs.prepare-release.outputs.version }} \
+                       -t ${{ env.REGISTRY }}/nwu-frontend:latest \
+                       ./frontend
+      
+      - name: Push Docker image
+        run: |
+          echo ${{ secrets.GITHUB_TOKEN }} | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+          docker push ${{ env.REGISTRY }}/nwu-frontend:${{ needs.prepare-release.outputs.version }}
+          docker push ${{ env.REGISTRY }}/nwu-frontend:latest
+        continue-on-error: true
 
-  # 🚀 Create GitHub Release
-  create-release:
+  contracts-release:
+    name: Release Smart Contracts
+    needs: prepare-release
     runs-on: ubuntu-latest
-    needs: [generate-changelog, build-assets, build-docker-release]
-    permissions:
-      contents: write
+    if: |
+      github.event.inputs.component == 'all' || 
+      github.event.inputs.component == 'contracts' ||
+      hashFiles('contracts/**') != ''
     steps:
       - uses: actions/checkout@v4
       
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          path: release-assets
+          node-version: '18'
+          registry-url: 'https://registry.npmjs.org'
       
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
-        with:
-          body: ${{ needs.generate-changelog.outputs.changelog }}
-          files: release-assets/**/*
-          draft: false
-          prerelease: ${{ github.event.inputs.prerelease == 'true' }}
-          generate_release_notes: true
+      - name: Install dependencies
+        run: cd contracts && npm ci
+      
+      - name: Compile contracts
+        run: cd contracts && npm run compile
+      
+      - name: Run tests
+        run: cd contracts && npm test
+      
+      - name: Update version
+        run: cd contracts && npm version ${{ needs.prepare-release.outputs.version }} --no-git-tag-version
+      
+      - name: Publish to npm
+        run: cd contracts && npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        continue-on-error: true
+
+  create-release:
+    name: Create GitHub Release
+    needs: [prepare-release, backend-release, frontend-release, contracts-release]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Create release
+        uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  # 📢 Notify Release
-  notify-release:
-    runs-on: ubuntu-latest
-    needs: create-release
-    steps:
-      - name: Send Discord notification
-        run: |
-          curl -X POST "${{ secrets.DISCORD_WEBHOOK }}" \
-            -H "Content-Type: application/json" \
-            -d '{"content": "🎉 New NWU Protocol release: ${{ github.ref_name }}\n\nView release: ${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ github.ref_name }}"}'
-      
-      - name: Send Twitter announcement
-        run: |
-          echo "🐦 Tweet: NWU Protocol ${{ github.ref_name }} is now live!"
-          # Add Twitter API integration here
-
-  # 📄 Update Documentation
-  update-docs:
-    runs-on: ubuntu-latest
-    needs: create-release
-    steps:
-      - uses: actions/checkout@v4
         with:
-          ref: docs
+          tag_name: v${{ needs.prepare-release.outputs.version }}
+          release_name: Release ${{ needs.prepare-release.outputs.version }}
+          body: |
+            # Release ${{ needs.prepare-release.outputs.version }}
+            
+            ## Changes
+            ${{ needs.prepare-release.outputs.changelog }}
+            
+            ## Components Released
+            - ✅ Backend
+            - ✅ Frontend  
+            - ✅ Smart Contracts
+            
+            ## Docker Images
+            - `ghcr.io/${{ github.repository }}/nwu-backend:${{ needs.prepare-release.outputs.version }}`
+            - `ghcr.io/${{ github.repository }}/nwu-frontend:${{ needs.prepare-release.outputs.version }}`
+          draft: false
+          prerelease: false
+        continue-on-error: true
+
+  notify-release:
+    name: Notify Release
+    needs: [prepare-release, create-release]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Post to Discord
+        uses: sarisia/actions-status-discord@v1
+        if: always()
+        with:
+          webhook_url: ${{ secrets.DISCORD_WEBHOOK }}
+          title: "Release Published"
+          description: "Version ${{ needs.prepare-release.outputs.version }} is now available!"
+          color: 0x28a745
+        continue-on-error: true
       
-      - name: Update version in docs
-        run: |
-          sed -i 's/version: .*/version: ${{ github.ref_name }}/' docs/_config.yml
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-          git add .
-          git commit -m "Update docs to ${{ github.ref_name }}"
-          git push
+      - name: Send Slack notification
+        uses: slackapi/slack-github-action@v1
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK }}
+          payload: |
+            {
+              "text": "NWU Protocol v${{ needs.prepare-release.outputs.version }} released! 📄",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*NWU Protocol Release* \nVersion: `${{ needs.prepare-release.outputs.version }}`\n<${{ github.server_url }}/${{ github.repository }}/releases/tag/v${{ needs.prepare-release.outputs.version }}|View Release>"
+                  }
+                }
+              ]
+            }
+        continue-on-error: true
