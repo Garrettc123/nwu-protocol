@@ -1,0 +1,80 @@
+# Automatically label PRs based on file changes
+
+# Backend
+'area: backend':
+  - backend/**/*
+  - src/api/**/*
+  - src/services/**/*
+
+# Frontend
+'area: frontend':
+  - frontend/**/*
+  - src/components/**/*
+  - src/pages/**/*
+  - '**/*.tsx'
+  - '**/*.jsx'
+
+# Smart Contracts
+'area: contracts':
+  - contracts/**/*
+  - '**/*.sol'
+  - hardhat.config.js
+  - truffle-config.js
+
+# AI Agents
+'area: ai-agents':
+  - agents/**/*
+  - '**/*.py'
+  - requirements.txt
+
+# Infrastructure
+'area: infrastructure':
+  - docker-compose.yml
+  - Dockerfile
+  - '**/*.Dockerfile'
+  - k8s/**/*
+  - terraform/**/*
+  - '.github/workflows/**/*'
+
+# Database
+'area: database':
+  - migrations/**/*
+  - prisma/**/*
+  - '**/*schema*.sql'
+
+# Documentation
+'area: documentation':
+  - docs/**/*
+  - '**/*.md'
+  - README.md
+  - CONTRIBUTING.md
+
+# Tests
+'area: tests':
+  - '**/*.test.js'
+  - '**/*.spec.js'
+  - '**/*.test.ts'
+  - '**/*.spec.ts'
+  - test/**/*
+  - tests/**/*
+
+# Configuration
+'area: configuration':
+  - '**/*.config.js'
+  - '**/*.config.ts'
+  - '.env.example'
+  - package.json
+  - tsconfig.json
+
+# Dependencies
+'dependencies':
+  - package.json
+  - package-lock.json
+  - yarn.lock
+  - Pipfile
+  - requirements.txt
+
+# Security
+'security':
+  - 'SECURITY.md'
+  - '.github/workflows/*security*.yml'
