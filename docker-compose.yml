@@ -1,35 +1,35 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database
-  postgres:
-    image: postgres:15-alpine
-    container_name: nwu-postgres
-    environment:
-      POSTGRES_DB: nwu_protocol
-      POSTGRES_USER: nwu_user
-      POSTGRES_PASSWORD: nwu_password
+  # MongoDB for data persistence
+  mongodb:
+    image: mongo:7-alpine
+    container_name: nwu-mongodb
     ports:
-      - "5432:5432"
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: nwu
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - mongo-data:/data/db
+      - mongo-config:/data/configdb
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U nwu_user"]
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
       - nwu-network
 
-  # Redis Cache
+  # Redis for caching and sessions
   redis:
     image: redis:7-alpine
     container_name: nwu-redis
-    command: redis-server --appendonly yes
     ports:
       - "6379:6379"
     volumes:
-      - redis_data:/data
+      - redis-data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -38,169 +38,129 @@ services:
     networks:
       - nwu-network
 
-  # IPFS Node
-  ipfs:
-    image: ipfs/kubo:latest
-    container_name: nwu-ipfs
-    ports:
-      - "4001:4001"     # P2P
-      - "5001:5001"     # API
-      - "8080:8080"     # Gateway
-    volumes:
-      - ipfs_data:/data/ipfs
-      - ipfs_staging:/export
-    environment:
-      IPFS_PROFILE: server
-    healthcheck:
-      test: ["CMD", "ipfs", "id"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    networks:
-      - nwu-network
-
-  # RabbitMQ Message Queue
+  # RabbitMQ for message queue
   rabbitmq:
-    image: rabbitmq:3-management-alpine
+    image: rabbitmq:3.12-management-alpine
     container_name: nwu-rabbitmq
     ports:
-      - "5672:5672"     # AMQP
-      - "15672:15672"   # Management UI
+      - "5672:5672"
+      - "15672:15672"
     environment:
-      RABBITMQ_DEFAULT_USER: nwu_admin
-      RABBITMQ_DEFAULT_PASS: nwu_rabbitmq_pass
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
     volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
+      - rabbitmq-data:/var/lib/rabbitmq
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - nwu-network
 
-  # Backend API Service
-  backend:
-    build:
-      context: .
-      dockerfile: Dockerfile.backend
-    container_name: nwu-backend
+  # PostgreSQL for relational data (optional)
+  postgres:
+    image: postgres:16-alpine
+    container_name: nwu-postgres
     ports:
-      - "8000:8000"
+      - "5432:5432"
     environment:
-      DATABASE_URL: postgresql://nwu_user:nwu_password@postgres:5432/nwu_protocol
-      REDIS_URL: redis://redis:6379
-      IPFS_HOST: ipfs
-      IPFS_PORT: 5001
-      IPFS_PROTOCOL: http
-      RABBITMQ_HOST: rabbitmq
-      RABBITMQ_PORT: 5672
-      RABBITMQ_USER: nwu_admin
-      RABBITMQ_PASS: nwu_rabbitmq_pass
-      API_HOST: 0.0.0.0
-      API_PORT: 8000
-      DEBUG: "True"
+      POSTGRES_DB: nwu
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
     volumes:
-      - ./backend:/app
-      - backend_logs:/app/logs
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      ipfs:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d nwu"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - nwu-network
-    restart: unless-stopped
+    profiles:
+      - optional
 
-  # AI Agent - Alpha (Quality Verifier)
-  agent-alpha:
-    build:
-      context: .
-      dockerfile: Dockerfile.agent
-    container_name: nwu-agent-alpha
-    environment:
-      AGENT_NAME: agent-alpha
-      AGENT_TYPE: quality-verifier
-      RABBITMQ_HOST: rabbitmq
-      RABBITMQ_PORT: 5672
-      RABBITMQ_USER: nwu_admin
-      RABBITMQ_PASS: nwu_rabbitmq_pass
-      DATABASE_URL: postgresql://nwu_user:nwu_password@postgres:5432/nwu_protocol
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
-      HUGGINGFACE_TOKEN: ${HUGGINGFACE_TOKEN}
-    volumes:
-      - ./agents:/app
-      - agent_logs:/app/logs
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-      postgres:
-        condition: service_healthy
-    networks:
-      - nwu-network
-    restart: unless-stopped
-
-  # Frontend Service (Next.js 14)
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: nwu-frontend
+  # Grafana for monitoring
+  grafana:
+    image: grafana/grafana:latest
+    container_name: nwu-grafana
     ports:
       - "3000:3000"
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:8000
-      NEXT_PUBLIC_IPFS_GATEWAY: http://localhost:8080
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_SECURITY_ADMIN_USER: admin
     volumes:
-      - ./frontend:/app
-      - /app/node_modules
-      - /app/.next
+      - grafana-data:/var/lib/grafana
     depends_on:
-      - backend
+      - prometheus
     networks:
       - nwu-network
-    restart: unless-stopped
+    profiles:
+      - monitoring
 
-  # Nginx Reverse Proxy
-  nginx:
-    image: nginx:alpine
-    container_name: nwu-nginx
+  # Prometheus for metrics
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: nwu-prometheus
     ports:
-      - "80:80"
-      - "443:443"
+      - "9090:9090"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/ssl:/etc/nginx/ssl:ro
-    depends_on:
-      - backend
-      - frontend
+      - prometheus-data:/prometheus
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
     networks:
       - nwu-network
-    restart: unless-stopped
+    profiles:
+      - monitoring
+
+  # Elasticsearch for logging (optional)
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: nwu-elasticsearch
+    ports:
+      - "9200:9200"
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: curl -s http://localhost:9200 >/dev/null || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - nwu-network
+    profiles:
+      - logging
+
+  # Kibana for log visualization (optional)
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: nwu-kibana
+    ports:
+      - "5601:5601"
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+    networks:
+      - nwu-network
+    profiles:
+      - logging
 
 volumes:
-  postgres_data:
-    driver: local
-  redis_data:
-    driver: local
-  ipfs_data:
-    driver: local
-  ipfs_staging:
-    driver: local
-  rabbitmq_data:
-    driver: local
-  backend_logs:
-    driver: local
-  agent_logs:
-    driver: local
+  mongo-data:
+  mongo-config:
+  redis-data:
+  rabbitmq-data:
+  postgres-data:
+  grafana-data:
+  prometheus-data:
+  elasticsearch-data:
 
 networks:
   nwu-network:
     driver: bridge
-    ipam:
-      config:
-        - subnet: 172.20.0.0/16
