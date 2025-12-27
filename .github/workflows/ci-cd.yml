@@ -55,13 +55,7 @@ jobs:
 
       - name: Run Python tests
         if: steps.detect_python.outputs.python_present == 'true' && steps.check-tests.outputs.has_tests == 'true'
-        run: |
-          # Run tests if a tests folder or pytest config exists
-          if [ -d tests ] || [ -f pytest.ini ] || [ -f setup.cfg ]; then
-            pytest -q
-          else
-            echo "No tests detected; skipping pytest"
-          fi
+        run: pytest -q
 
       - name: Upload SARIF results
         if: always()
