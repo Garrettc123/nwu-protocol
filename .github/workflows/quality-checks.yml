@@ -220,21 +220,21 @@ jobs:
         run: |
           echo "Backend Dependencies:"
           if [ -d "backend" ]; then
-            cd backend && npm outdated || true
+            (cd backend && npm outdated) || true
           else
             echo "Backend directory not found, skipping..."
           fi
           echo ""
           echo "Frontend Dependencies:"
           if [ -d "frontend" ]; then
-            cd frontend && npm outdated || true
+            (cd frontend && npm outdated) || true
           else
             echo "Frontend directory not found, skipping..."
           fi
           echo ""
           echo "Contracts Dependencies:"
           if [ -d "contracts" ]; then
-            cd contracts && npm outdated || true
+            (cd contracts && npm outdated) || true
           else
             echo "Contracts directory not found, skipping..."
           fi
