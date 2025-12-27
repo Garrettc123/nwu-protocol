@@ -43,8 +43,18 @@ jobs:
             pip install -r requirements.txt
           fi
 
-      - name: Run Python tests
+      - name: Check for Python tests
         if: steps.detect_python.outputs.python_present == 'true'
+        id: check-tests
+        run: |
+          if find . \( -name "test_*.py" -o -name "*_test.py" -o -path "*/tests/*.py" -o -path "*/test/*.py" \) -not -path "./venv/*" -not -path "./.venv/*" -not -path "*/site-packages/*" | grep -q .; then
+            echo "has_tests=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_tests=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run Python tests
+        if: steps.detect_python.outputs.python_present == 'true' && steps.check-tests.outputs.has_tests == 'true'
         run: |
           # Run tests if a tests folder or pytest config exists
           if [ -d tests ] || [ -f pytest.ini ] || [ -f setup.cfg ]; then
