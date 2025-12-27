@@ -192,9 +192,17 @@ jobs:
       - name: Check JavaScript complexity
         run: |
           echo "Backend Complexity:"
-          complexity-report --log-type simple backend/src/ || true
+          if [ -d "backend/src" ]; then
+            complexity-report --log-type simple backend/src/ || true
+          else
+            echo "Backend source directory not found, skipping..."
+          fi
           echo "Frontend Complexity:"
-          complexity-report --log-type simple frontend/src/ || true
+          if [ -d "frontend/src" ]; then
+            complexity-report --log-type simple frontend/src/ || true
+          else
+            echo "Frontend source directory not found, skipping..."
+          fi
         continue-on-error: true
 
   dependency-check:
@@ -211,11 +219,25 @@ jobs:
       - name: Check outdated dependencies
         run: |
           echo "Backend Dependencies:"
-          cd backend && npm outdated || true
-          echo "\nFrontend Dependencies:"
-          cd ../frontend && npm outdated || true
-          echo "\nContracts Dependencies:"
-          cd ../contracts && npm outdated || true
+          if [ -d "backend" ]; then
+            cd backend && npm outdated || true
+          else
+            echo "Backend directory not found, skipping..."
+          fi
+          echo ""
+          echo "Frontend Dependencies:"
+          if [ -d "frontend" ]; then
+            cd frontend && npm outdated || true
+          else
+            echo "Frontend directory not found, skipping..."
+          fi
+          echo ""
+          echo "Contracts Dependencies:"
+          if [ -d "contracts" ]; then
+            cd contracts && npm outdated || true
+          else
+            echo "Contracts directory not found, skipping..."
+          fi
         continue-on-error: true
 
   report-summary:
@@ -235,15 +257,21 @@ jobs:
             const agents = '${{ needs.agents-quality.result }}';
             const security = '${{ needs.security-scan.result }}';
             
+            const getStatus = (result) => {
+              if (result === 'success') return '✅';
+              if (result === 'skipped') return '⏭️ N/A';
+              return '⚠️';
+            };
+            
             const comment = `## 👍 Quality Check Summary
             
             | Component | Status |
             |-----------|--------|
-            | Backend | ${backend === 'success' ? '✅' : '⚠️'} |
-            | Frontend | ${frontend === 'success' ? '✅' : '⚠️'} |
-            | Contracts | ${contracts === 'success' ? '✅' : '⚠️'} |
-            | Agents | ${agents === 'success' ? '✅' : '⚠️'} |
-            | Security | ${security === 'success' ? '✅' : '⚠️'} |
+            | Backend | ${getStatus(backend)} |
+            | Frontend | ${getStatus(frontend)} |
+            | Contracts | ${getStatus(contracts)} |
+            | Agents | ${getStatus(agents)} |
+            | Security | ${getStatus(security)} |
             
             View full results in [Actions](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).
             `;
