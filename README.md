@@ -14,14 +14,52 @@
 
 ---
 
-## 📖 Table of Contents
+## 🚀 Quick Start (Under 2 Minutes!)
+
+```bash
+# One command to rule them all
+chmod +x setup.sh && ./setup.sh
+```
+
+**That's it!** Your complete AI infrastructure is now running.
+
+### 🎯 What You Just Got
+
+- ✅ **8 Services Running** - Backend API, Agent-Alpha, Frontend, PostgreSQL, Redis, RabbitMQ, IPFS, NGINX
+- ✅ **Health Monitoring** - Auto-checks every 30 seconds
+- ✅ **Auto-Restart** - Services recover automatically
+- ✅ **Production Ready** - Full Docker orchestration
+
+### 🌐 Access Your System
+
+| Service | URL | Purpose |
+|---------|-----|----------|
+| **Frontend** | http://localhost:3000 | User interface |
+| **API Docs** | http://localhost:8000/docs | Interactive API testing |
+| **RabbitMQ** | http://localhost:15672 | Message queue (guest/guest) |
+
+### 🔧 Daily Commands
+
+```bash
+./status.sh     # Check everything is running
+./logs.sh       # See what's happening
+./restart.sh    # Quick restart
+./stop.sh       # Stop (keeps your data)
+./dev.sh        # Interactive menu
+./help.sh       # Full command reference
+```
+
+**Need more help?** Read [EASY_START.md](EASY_START.md) for detailed instructions.
+
+---
+
+## 📚 Table of Contents
 
 - [Vision](#-vision)
 - [The Problem](#-the-problem)
 - [Our Solution](#-our-solution)
 - [Architecture](#-architecture-the-tree)
 - [Key Features](#-key-features)
-- [Quick Start](#-quick-start)
 - [Technology Stack](#-technology-stack)
 - [Contributing](#-contributing)
 - [Roadmap](#-roadmap)
@@ -146,53 +184,6 @@ Submission → AI Analysis (5-15s) → Human Verification (optional)
 ### 📊 Dynamic Reward Algorithm
 ```javascript
 Reward = BaseValue × QualityScore × ComplexityMultiplier × ReputationBonus
-```
-
----
-
-## 🚀 Quick Start
-
-### Prerequisites
-- **Docker** v24+ & Docker Compose
-- **Node.js** v18+
-- **Python** 3.10+
-- **Git**
-
-### Installation
-
-1. **Clone the Repository**
-```bash
-git clone https://github.com/Garrettc123/nwu-protocol.git
-cd nwu-protocol
-```
-
-2. **Configure Environment**
-```bash
-cp .env.example .env
-# Edit .env with your:
-# - IPFS API keys
-# - MongoDB URI
-# - OpenAI API key
-# - Ethereum RPC endpoint
-```
-
-3. **Launch the Network**
-```bash
-docker-compose up --build
-```
-
-4. **Access the Portal**
-- **Frontend**: http://localhost:3000
-- **API Gateway**: http://localhost:8000
-- **RabbitMQ Dashboard**: http://localhost:15672 (guest/guest)
-
-### First Contribution
-
-```bash
-# Connect your Web3 wallet (MetaMask)
-# Upload a file (code, dataset, or document)
-# Watch real-time verification status
-# Receive NWU tokens upon consensus
 ```
 
 ---
