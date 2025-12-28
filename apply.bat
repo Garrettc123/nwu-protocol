@@ -3,8 +3,7 @@ REM NWU Protocol - Apply/Submit Contribution Tool (Windows)
 
 setlocal enabledelayedexpansion
 
-set API_URL=http://localhost:8000
-if defined API_URL set API_URL=%API_URL%
+if not defined API_URL set API_URL=http://localhost:8000
 
 echo ================================================================
 echo          NWU Protocol - Submit Your Contribution
