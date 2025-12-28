@@ -1,166 +1,70 @@
 version: '3.8'
 
 services:
-  # MongoDB for data persistence
   mongodb:
-    image: mongo:7-alpine
+    image: mongo:5.0
     container_name: nwu-mongodb
     ports:
       - "27017:27017"
     environment:
-      MONGO_INITDB_DATABASE: nwu
       MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_ROOT_PASSWORD: rocket69!
+      MONGO_INITDB_DATABASE: nwu_db
     volumes:
-      - mongo-data:/data/db
-      - mongo-config:/data/configdb
+      - mongodb_data:/data/db
     healthcheck:
       test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - nwu-network
 
-  # Redis for caching and sessions
+  postgres:
+    image: postgres:15
+    container_name: nwu-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: nwu_user
+      POSTGRES_PASSWORD: rocket69!
+      POSTGRES_DB: nwu_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nwu_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   redis:
     image: redis:7-alpine
     container_name: nwu-redis
     ports:
       - "6379:6379"
     volumes:
-      - redis-data:/data
+      - redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - nwu-network
 
-  # RabbitMQ for message queue
-  rabbitmq:
-    image: rabbitmq:3.12-management-alpine
-    container_name: nwu-rabbitmq
+  ipfs:
+    image: ipfs/kubo:latest
+    container_name: nwu-ipfs
     ports:
-      - "5672:5672"
-      - "15672:15672"
-    environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
+      - "5001:5001"
+      - "8080:8080"
     volumes:
-      - rabbitmq-data:/var/lib/rabbitmq
-    healthcheck:
-      test: rabbitmq-diagnostics -q ping
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - nwu-network
-
-  # PostgreSQL for relational data (optional)
-  postgres:
-    image: postgres:16-alpine
-    container_name: nwu-postgres
-    ports:
-      - "5432:5432"
+      - ipfs_data:/data/ipfs
     environment:
-      POSTGRES_DB: nwu
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: password
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U admin -d nwu"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - nwu-network
-    profiles:
-      - optional
-
-  # Grafana for monitoring
-  grafana:
-    image: grafana/grafana:latest
-    container_name: nwu-grafana
-    ports:
-      - "3000:3000"
-    environment:
-      GF_SECURITY_ADMIN_PASSWORD: admin
-      GF_SECURITY_ADMIN_USER: admin
-    volumes:
-      - grafana-data:/var/lib/grafana
-    depends_on:
-      - prometheus
-    networks:
-      - nwu-network
-    profiles:
-      - monitoring
-
-  # Prometheus for metrics
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: nwu-prometheus
-    ports:
-      - "9090:9090"
-    volumes:
-      - prometheus-data:/prometheus
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-    networks:
-      - nwu-network
-    profiles:
-      - monitoring
-
-  # Elasticsearch for logging (optional)
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
-    container_name: nwu-elasticsearch
-    ports:
-      - "9200:9200"
-    environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-      - ES_JAVA_OPTS=-Xms512m -Xmx512m
-    volumes:
-      - elasticsearch-data:/usr/share/elasticsearch/data
-    healthcheck:
-      test: curl -s http://localhost:9200 >/dev/null || exit 1
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - nwu-network
-    profiles:
-      - logging
-
-  # Kibana for log visualization (optional)
-  kibana:
-    image: docker.elastic.co/kibana/kibana:8.11.0
-    container_name: nwu-kibana
-    ports:
-      - "5601:5601"
-    environment:
-      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
-    depends_on:
-      - elasticsearch
-    networks:
-      - nwu-network
-    profiles:
-      - logging
+      IPFS_PATH: /data/ipfs
 
 volumes:
-  mongo-data:
-  mongo-config:
-  redis-data:
-  rabbitmq-data:
-  postgres-data:
-  grafana-data:
-  prometheus-data:
-  elasticsearch-data:
+  mongodb_data:
+  postgres_data:
+  redis_data:
+  ipfs_data:
 
 networks:
-  nwu-network:
-    driver: bridge
+  default:
+    name: nwu-network

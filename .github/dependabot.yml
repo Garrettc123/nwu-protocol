@@ -1,94 +1,26 @@
 version: 2
 updates:
-  # NPM dependencies for backend
-  - package-ecosystem: "npm"
-    directory: "/backend"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "09:00"
-    open-pull-requests-limit: 10
-    reviewers:
-      - "Garrettc123"
-    labels:
-      - "dependencies"
-      - "area: backend"
-    commit-message:
-      prefix: "chore(backend)"
-      include: "scope"
-    ignore:
-      # Ignore major version updates for now
-      - dependency-name: "*"
-        update-types: ["version-update:semver-major"]
-
-  # NPM dependencies for frontend
-  - package-ecosystem: "npm"
-    directory: "/frontend"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "09:00"
-    open-pull-requests-limit: 10
-    reviewers:
-      - "Garrettc123"
-    labels:
-      - "dependencies"
-      - "area: frontend"
-    commit-message:
-      prefix: "chore(frontend)"
-      include: "scope"
-
-  # Python dependencies for AI agents
-  - package-ecosystem: "pip"
-    directory: "/agents"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "10:00"
-    open-pull-requests-limit: 5
-    reviewers:
-      - "Garrettc123"
-    labels:
-      - "dependencies"
-      - "area: ai-agents"
-    commit-message:
-      prefix: "chore(agents)"
-
-  # Docker images
-  - package-ecosystem: "docker"
+  - package-ecosystem: npm
     directory: "/"
     schedule:
-      interval: "weekly"
-      day: "tuesday"
-    open-pull-requests-limit: 5
-    labels:
-      - "dependencies"
-      - "area: infrastructure"
-    commit-message:
-      prefix: "chore(docker)"
+      interval: daily
+    open-pull-requests-limit: 10
+    reviewers:
+      - Garrettc123
+    auto-merge: true
 
-  # GitHub Actions
-  - package-ecosystem: "github-actions"
+  - package-ecosystem: pip
     directory: "/"
     schedule:
-      interval: "weekly"
-      day: "wednesday"
-    open-pull-requests-limit: 5
-    labels:
-      - "dependencies"
-      - "area: infrastructure"
-    commit-message:
-      prefix: "chore(ci)"
+      interval: daily
+    open-pull-requests-limit: 10
+    reviewers:
+      - Garrettc123
+    auto-merge: true
 
-  # Terraform (if used)
-  - package-ecosystem: "terraform"
-    directory: "/terraform"
+  - package-ecosystem: docker
+    directory: "/"
     schedule:
-      interval: "weekly"
-      day: "thursday"
-    open-pull-requests-limit: 3
-    labels:
-      - "dependencies"
-      - "area: infrastructure"
-    commit-message:
-      prefix: "chore(terraform)"
+      interval: weekly
+    reviewers:
+      - Garrettc123
