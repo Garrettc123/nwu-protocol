@@ -43,6 +43,7 @@ chmod +x setup.sh && ./setup.sh
 ```bash
 ./status.sh     # Check everything is running
 ./logs.sh       # See what's happening
+./apply.sh      # Submit a contribution
 ./restart.sh    # Quick restart
 ./stop.sh       # Stop (keeps your data)
 ./dev.sh        # Interactive menu
@@ -50,6 +51,30 @@ chmod +x setup.sh && ./setup.sh
 ```
 
 **Need more help?** Read [EASY_START.md](EASY_START.md) for detailed instructions.
+
+---
+
+## 🎯 Submit Your Contribution
+
+Ready to contribute and earn NWU tokens? Use our apply tool:
+
+```bash
+# Interactive mode (easiest)
+./apply.sh
+
+# Or specify directly
+./apply.sh code ./my-code.py "My Algorithm" "Description"
+./apply.sh dataset ./data.csv "Training Data"
+./apply.sh document ./paper.pdf "Research Paper"
+```
+
+**What happens next?**
+1. Your contribution is uploaded to IPFS (decentralized storage)
+2. AI agents verify quality, originality, and security (2-5 minutes)
+3. You receive NWU tokens based on quality score
+4. Track status at http://localhost:3000/dashboard
+
+**Supported Types:** Code, Datasets, Documents, AI Models
 
 ---
 

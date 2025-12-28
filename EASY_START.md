@@ -28,6 +28,7 @@ That's it! This single command will:
 ```bash
 ./status.sh     # Check if everything is running
 ./logs.sh       # See what's happening
+./apply.sh      # Submit a contribution
 ./restart.sh    # Restart if needed
 ./stop.sh       # Stop when done (keeps your data)
 ./help.sh       # Show all commands
@@ -103,21 +104,27 @@ kill -9 <PID>
 
 ## Next Steps
 
-### 1. Test the API
+### 1. Submit Your First Contribution
+```bash
+./apply.sh    # Interactive mode
+# Or: ./apply.sh code myfile.py "My Contribution"
+```
+
+### 2. Test the API
 ```bash
 curl http://localhost:8000/health
 ```
 
-### 2. Explore the Docs
+### 3. Explore the Docs
 Visit http://localhost:8000/docs to see all API endpoints
 
-### 3. Check Logs
+### 4. Check Logs
 ```bash
 ./logs.sh backend    # See backend activity
 ./logs.sh agent-alpha    # See agent activity
 ```
 
-### 4. Monitor Health
+### 5. Monitor Health
 ```bash
 watch -n 5 ./status.sh    # Auto-refresh every 5 seconds
 ```

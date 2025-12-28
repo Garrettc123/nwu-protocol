@@ -157,6 +157,27 @@ docker-compose up -d --build
 
 ## 🧪 Testing
 
+### Test Apply Tool (Submit Contributions)
+
+```bash
+# Interactive mode - easiest way
+./apply.sh
+
+# Or use command-line mode
+./apply.sh code ./my-code.py "My Algorithm" "Optional description"
+./apply.sh dataset ./data.csv "Training Data"
+./apply.sh document ./paper.pdf "Research Paper"
+
+# Windows users
+apply.bat
+```
+
+**What it does:**
+- Validates the API is running
+- Uploads your file to IPFS
+- Submits contribution metadata
+- Returns submission ID for tracking
+
 ### Test API Endpoints
 
 ```bash
