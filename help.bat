@@ -13,6 +13,7 @@ echo --------------------------------------------------------
 echo   setup.bat              One-command setup (first time)
 echo   status.bat             Check all services
 echo   logs.bat [service]     View logs (all or specific)
+echo   apply.bat              Submit a contribution (interactive)
 echo.
 echo MANAGEMENT
 echo --------------------------------------------------------

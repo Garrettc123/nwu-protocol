@@ -17,6 +17,7 @@ ${YELLOW}───────────────────────�
   ./setup.sh              One-command setup (first time)
   ./status.sh             Check all services
   ./logs.sh [service]     View logs (all or specific service)
+  ./apply.sh              Submit a contribution (interactive)
 
 ${GREEN}🔧 MANAGEMENT${NC}
 ${YELLOW}──────────────────────────────────────────────────────────────${NC}
