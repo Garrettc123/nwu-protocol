@@ -1,0 +1,240 @@
+name: Codex Auto-Fix CI/CD
+
+on:
+  workflow_run:
+    workflows: ["*"]
+    types: [completed]
+  push:
+    branches: [main, master, develop]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  autofix:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'failure' || github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
+    
+    permissions:
+      contents: write
+      pull-requests: write
+      checks: read
+      actions: read
+      issues: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Analyze failure and generate fix
+        id: codex_fix
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO_NAME: ${{ github.repository }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
+        run: |
+          pip install openai requests PyYAML
+          
+          cat > autofix.py << 'EOFPYTHON'
+          import os, json, sys, subprocess
+          from openai import OpenAI
+          from datetime import datetime
+          
+          client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
+          
+          def get_failure_logs():
+              run_id = os.environ.get('RUN_ID', '')
+              if not run_id:
+                  print("ℹ️ No workflow failure detected - running health check")
+                  return None
+              
+              try:
+                  result = subprocess.run(
+                      ['gh', 'run', 'view', run_id, '--log-failed', '--repo', os.environ['REPO_NAME']],
+                      capture_output=True, text=True, timeout=30
+                  )
+                  return result.stdout if result.returncode == 0 else None
+              except Exception as e:
+                  print(f"⚠️ Could not fetch logs: {e}")
+                  return None
+          
+          def get_repo_context():
+              try:
+                  files = subprocess.run(['git', 'ls-files'], capture_output=True, text=True, timeout=10)
+                  recent_commits = subprocess.run(
+                      ['git', 'log', '--oneline', '-5'],
+                      capture_output=True, text=True, timeout=10
+                  )
+                  return {
+                      'files': files.stdout[:2000],
+                      'recent_commits': recent_commits.stdout
+                  }
+              except Exception as e:
+                  print(f"⚠️ Could not fetch context: {e}")
+                  return {'files': '', 'recent_commits': ''}
+          
+          def generate_fix(logs, context):
+              try:
+                  response = client.chat.completions.create(
+                      model="gpt-4o",
+                      messages=[{
+                          "role": "system",
+                          "content": "You are an expert CI/CD debugger and code fixer. Analyze failures and provide precise, working solutions. Always return valid JSON."
+                      }, {
+                          "role": "user",
+                          "content": f"""Repository: {os.environ.get('REPO_NAME', 'Unknown')}
+Workflow: {os.environ.get('WORKFLOW_NAME', 'Unknown')}
+
+FAILURE LOGS:
+{logs[:4000] if logs else 'No logs available'}
+
+REPOSITORY CONTEXT:
+Files: {context['files']}
+Recent Commits: {context['recent_commits']}
+
+Provide:
+1. Root cause analysis (be specific)
+2. Exact file changes needed with full paths
+3. Complete fixed file contents
+4. Testing strategy
+
+Return JSON: {{"analysis": "detailed analysis", "fixes": [{{"file": "path/to/file", "content": "complete file content", "reason": "why this fixes it"}}], "test_command": "command to verify fix"}}"""
+                      }],
+                      temperature=0.2,
+                      response_format={"type": "json_object"}
+                  )
+                  
+                  return json.loads(response.choices[0].message.content)
+              except Exception as e:
+                  print(f"❌ Error generating fix: {e}")
+                  return None
+          
+          def apply_fixes(result):
+              if not result or 'fixes' not in result:
+                  print("⚠️ No fixes to apply")
+                  return False
+              
+              applied = []
+              for fix in result['fixes']:
+                  try:
+                      file_path = fix['file']
+                      os.makedirs(os.path.dirname(file_path) or '.', exist_ok=True)
+                      with open(file_path, 'w', encoding='utf-8') as f:
+                          f.write(fix['content'])
+                      applied.append(file_path)
+                      print(f"✅ Fixed: {file_path} - {fix.get('reason', 'Applied fix')}")
+                  except Exception as e:
+                      print(f"❌ Failed to apply fix to {fix.get('file', 'unknown')}: {e}")
+              
+              return len(applied) > 0
+          
+          def main():
+              print("🤖 Codex Auto-Fix System Starting...")
+              
+              logs = get_failure_logs()
+              context = get_repo_context()
+              
+              if not logs:
+                  print("ℹ️ No failures to fix - system is operational")
+                  with open(os.environ.get('GITHUB_OUTPUT', '/dev/null'), 'a') as f:
+                      f.write("has_fixes=false\n")
+                      f.write("analysis=No failures detected - system healthy\n")
+                  return
+              
+              print("🔍 Analyzing failure...")
+              result = generate_fix(logs, context)
+              
+              if not result:
+                  print("❌ Could not generate fix")
+                  sys.exit(1)
+              
+              print(f"\n📊 Analysis:\n{result.get('analysis', 'No analysis')}\n")
+              
+              if apply_fixes(result):
+                  print("\n✅ Fixes applied successfully!")
+                  with open(os.environ.get('GITHUB_OUTPUT', '/dev/null'), 'a') as f:
+                      f.write("has_fixes=true\n")
+                      analysis = result.get('analysis', '').replace('\n', '\\n')
+                      f.write(f"analysis={analysis}\n")
+                      test_cmd = result.get('test_command', 'No test specified')
+                      f.write(f"test_command={test_cmd}\n")
+              else:
+                  print("⚠️ No fixes were applied")
+                  with open(os.environ.get('GITHUB_OUTPUT', '/dev/null'), 'a') as f:
+                      f.write("has_fixes=false\n")
+          
+          if __name__ == '__main__':
+              main()
+          EOFPYTHON
+          
+          python autofix.py
+      
+      - name: Create Pull Request
+        if: steps.codex_fix.outputs.has_fixes == 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "🤖 Auto-fix: Resolved CI failure"
+          title: "🤖 Automated Fix: ${{ github.event.workflow_run.name || 'CI/CD Issue' }}"
+          body: |
+            ## 🔧 Automated Fix Applied by Codex
+            
+            **Repository:** `${{ github.repository }}`
+            **Triggered by:** Failed workflow run #${{ github.event.workflow_run.run_number || 'Manual' }}
+            **Date:** ${{ github.event.workflow_run.created_at || github.event.head_commit.timestamp }}
+            
+            ### 📊 Root Cause Analysis
+            ${{ steps.codex_fix.outputs.analysis }}
+            
+            ### 🧪 Testing
+            ```bash
+            ${{ steps.codex_fix.outputs.test_command }}
+            ```
+            
+            ---
+            ⚠️ **Action Required:** Please review and test this automated fix before merging.
+            
+            <details>
+            <summary>About Codex Auto-Fix</summary>
+            
+            This fix was automatically generated using GPT-4 analysis of your CI/CD logs.
+            - Analyzes failure patterns
+            - Suggests precise corrections
+            - Creates ready-to-review PRs
+            
+            Always verify automated fixes in a test environment first.
+            </details>
+          branch: autofix/${{ github.run_id }}
+          delete-branch: true
+          labels: automated-fix, codex
+      
+      - name: Comment on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '❌ Codex Auto-Fix Failed',
+              body: `The Codex auto-fix system encountered an error.\n\n**Workflow:** ${context.workflow}\n**Run:** ${context.runId}\n\nPlease check the logs and ensure OPENAI_API_KEY secret is configured.`,
+              labels: ['bug', 'autofix-error']
+            })
+      
+      - name: Summary
+        if: always()
+        run: |
+          echo "## 🤖 Codex Auto-Fix Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Repository:** ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Fixes Applied:** ${{ steps.codex_fix.outputs.has_fixes || 'false' }}" >> $GITHUB_STEP_SUMMARY

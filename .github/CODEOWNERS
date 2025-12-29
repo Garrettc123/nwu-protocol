@@ -1,0 +1,5 @@
+# Codex Auto-Fix System
+# All automated PRs require review
+
+.github/workflows/codex-autofix.yml @Garrettc123
+autofix/* @Garrettc123
