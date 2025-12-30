@@ -182,7 +182,7 @@ export default function UploadPage() {
             <label className="block text-sm font-medium mb-2">File Type *</label>
             <select
               value={fileType}
-              onChange={(e) => setFileType(e.target.value as any)}
+              onChange={(e) => setFileType(e.target.value as 'code' | 'dataset' | 'document')}
               className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-primary-500"
               required
             >

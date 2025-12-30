@@ -131,7 +131,8 @@ class Verifier:
     
     def _parse_response(self, response: str, file_type: str) -> Dict[str, Any]:
         """Parse LLM response into structured scores."""
-        # This is a simplified parser. In production, use structured output
+        import re
+        
         lines = response.split('\n')
         
         scores = {
@@ -141,18 +142,25 @@ class Verifier:
             'documentation_score': 60.0
         }
         
-        # Try to extract scores from response
+        # Try to extract scores from response using regex
         for line in lines:
-            if 'quality' in line.lower() and any(c.isdigit() for c in line):
-                try:
-                    scores['quality_score'] = float(''.join(filter(str.isdigit, line.split(':')[-1])))
-                except:
-                    pass
-            elif 'originality' in line.lower() and any(c.isdigit() for c in line):
-                try:
-                    scores['originality_score'] = float(''.join(filter(str.isdigit, line.split(':')[-1])))
-                except:
-                    pass
+            # Match patterns like "Quality: 85" or "Quality Score: 85.5"
+            if 'quality' in line.lower():
+                match = re.search(r'(\d+(?:\.\d+)?)', line)
+                if match:
+                    scores['quality_score'] = float(match.group(1))
+            elif 'originality' in line.lower():
+                match = re.search(r'(\d+(?:\.\d+)?)', line)
+                if match:
+                    scores['originality_score'] = float(match.group(1))
+            elif 'security' in line.lower() and file_type == "code":
+                match = re.search(r'(\d+(?:\.\d+)?)', line)
+                if match:
+                    scores['security_score'] = float(match.group(1))
+            elif 'documentation' in line.lower():
+                match = re.search(r'(\d+(?:\.\d+)?)', line)
+                if match:
+                    scores['documentation_score'] = float(match.group(1))
         
         # Calculate overall vote score
         vote_score = sum(s for s in scores.values() if s is not None) / len([s for s in scores.values() if s is not None])
