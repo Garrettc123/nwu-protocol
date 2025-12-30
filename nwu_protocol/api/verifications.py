@@ -6,28 +6,16 @@ from typing import List
 from nwu_protocol.models.verification import Verification, VerificationCreate
 from nwu_protocol.services.verification_engine import VerificationEngine
 from nwu_protocol.services.contribution_manager import ContributionManager
-from nwu_protocol.api.contributions import get_contribution_manager
+from nwu_protocol.core.dependencies import get_verification_engine, get_contribution_manager
 
 router = APIRouter(prefix="/api/v1/verifications", tags=["verifications"])
-
-# Dependency to get verification engine
-_verification_engine = None
-
-
-def get_verification_engine() -> VerificationEngine:
-    """Get the verification engine instance."""
-    global _verification_engine
-    if _verification_engine is None:
-        _verification_engine = VerificationEngine(
-            contribution_manager=get_contribution_manager()
-        )
-    return _verification_engine
 
 
 @router.post("", response_model=Verification, status_code=201)
 async def submit_verification(
     verification_data: VerificationCreate,
-    engine: VerificationEngine = Depends(get_verification_engine)
+    engine: VerificationEngine = Depends(get_verification_engine),
+    manager: ContributionManager = Depends(get_contribution_manager)
 ) -> Verification:
     """
     Submit a new verification for a contribution.
@@ -35,13 +23,13 @@ async def submit_verification(
     Args:
         verification_data: Verification data
         engine: Verification engine instance
+        manager: Contribution manager instance
 
     Returns:
         Created verification
     """
     try:
         # Check if contribution exists
-        manager = get_contribution_manager()
         contribution = manager.get_contribution(verification_data.contribution_id)
         if not contribution:
             raise HTTPException(status_code=404, detail="Contribution not found")
@@ -78,7 +66,8 @@ async def get_verification(
 @router.get("/contribution/{contribution_id}", response_model=List[Verification])
 async def get_contribution_verifications(
     contribution_id: str,
-    engine: VerificationEngine = Depends(get_verification_engine)
+    engine: VerificationEngine = Depends(get_verification_engine),
+    manager: ContributionManager = Depends(get_contribution_manager)
 ) -> List[Verification]:
     """
     Get all verifications for a contribution.
@@ -86,12 +75,12 @@ async def get_contribution_verifications(
     Args:
         contribution_id: ID of the contribution
         engine: Verification engine instance
+        manager: Contribution manager instance
 
     Returns:
         List of verifications
     """
     # Check if contribution exists
-    manager = get_contribution_manager()
     contribution = manager.get_contribution(contribution_id)
     if not contribution:
         raise HTTPException(status_code=404, detail="Contribution not found")
@@ -102,7 +91,8 @@ async def get_contribution_verifications(
 @router.get("/contribution/{contribution_id}/consensus")
 async def get_contribution_consensus(
     contribution_id: str,
-    engine: VerificationEngine = Depends(get_verification_engine)
+    engine: VerificationEngine = Depends(get_verification_engine),
+    manager: ContributionManager = Depends(get_contribution_manager)
 ):
     """
     Get the consensus status for a contribution.
@@ -110,12 +100,12 @@ async def get_contribution_consensus(
     Args:
         contribution_id: ID of the contribution
         engine: Verification engine instance
+        manager: Contribution manager instance
 
     Returns:
         Consensus information
     """
     # Check if contribution exists
-    manager = get_contribution_manager()
     contribution = manager.get_contribution(contribution_id)
     if not contribution:
         raise HTTPException(status_code=404, detail="Contribution not found")

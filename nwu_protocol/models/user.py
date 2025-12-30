@@ -1,8 +1,8 @@
 """User data models."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class UserCreate(BaseModel):
@@ -12,16 +12,8 @@ class UserCreate(BaseModel):
 
 class User(BaseModel):
     """Complete user model."""
-    id: str = Field(..., description="Unique user ID")
-    address: str = Field(..., description="Ethereum wallet address")
-    reputation_score: float = Field(0.0, ge=0, description="User reputation score")
-    total_contributions: int = Field(0, ge=0, description="Total number of contributions")
-    total_rewards: float = Field(0.0, ge=0, description="Total NWU tokens earned")
-    joined_at: datetime = Field(default_factory=datetime.utcnow)
-    last_active: datetime = Field(default_factory=datetime.utcnow)
-
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "id": "user_789ghi",
                 "address": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb",
@@ -32,6 +24,15 @@ class User(BaseModel):
                 "last_active": "2025-12-30T00:00:00Z"
             }
         }
+    )
+
+    id: str = Field(..., description="Unique user ID")
+    address: str = Field(..., description="Ethereum wallet address")
+    reputation_score: float = Field(0.0, ge=0, description="User reputation score")
+    total_contributions: int = Field(0, ge=0, description="Total number of contributions")
+    total_rewards: float = Field(0.0, ge=0, description="Total NWU tokens earned")
+    joined_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    last_active: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class UserStats(BaseModel):

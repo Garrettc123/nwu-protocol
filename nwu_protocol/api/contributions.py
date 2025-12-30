@@ -9,16 +9,9 @@ from nwu_protocol.models.contribution import (
     ContributionStatus,
 )
 from nwu_protocol.services.contribution_manager import ContributionManager
+from nwu_protocol.core.dependencies import get_contribution_manager
 
 router = APIRouter(prefix="/api/v1/contributions", tags=["contributions"])
-
-# Dependency to get contribution manager
-_contribution_manager = ContributionManager()
-
-
-def get_contribution_manager() -> ContributionManager:
-    """Get the contribution manager instance."""
-    return _contribution_manager
 
 
 @router.post("", response_model=Contribution, status_code=201)
