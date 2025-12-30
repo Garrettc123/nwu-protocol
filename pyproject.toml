@@ -56,7 +56,7 @@ data = [
 app = "app:app"
 
 [tool.setuptools]
-package-dir = {"": "."}
+packages = ["nwu_protocol", "nwu_protocol.api", "nwu_protocol.core", "nwu_protocol.models", "nwu_protocol.services"]
 
 [tool.black]
 line-length = 100
