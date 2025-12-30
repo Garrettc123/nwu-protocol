@@ -148,6 +148,29 @@ class ContributionManager:
 
         return contribution
 
+    def increment_verification_count(
+        self,
+        contribution_id: str
+    ) -> Optional[Contribution]:
+        """
+        Increment the verification count for a contribution.
+
+        Args:
+            contribution_id: ID of the contribution
+
+        Returns:
+            Updated contribution or None if not found
+        """
+        contribution = self._contributions.get(contribution_id)
+        if not contribution:
+            return None
+
+        contribution.verification_count += 1
+        contribution.updated_at = datetime.now(timezone.utc)
+        logger.info(f"Incremented verification count for contribution {contribution_id} to {contribution.verification_count}")
+
+        return contribution
+
     @staticmethod
     def compute_content_hash(content: bytes) -> str:
         """

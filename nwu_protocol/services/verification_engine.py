@@ -51,6 +51,13 @@ class VerificationEngine:
         )
 
         self._verifications[verification_id] = verification
+        
+        # Increment verification count
+        if self._contribution_manager:
+            self._contribution_manager.increment_verification_count(
+                verification_data.contribution_id
+            )
+        
         logger.info(
             f"Verification {verification_id} submitted for "
             f"contribution {verification_data.contribution_id}"
