@@ -39,10 +39,13 @@ artifacts/
 cache/
 .brownie/
 .hardhat/
+typechain/
+typechain-types/
 
 # Environment
 .env
 .env.local
+.env.production
 *.env
 
 # IDE
@@ -65,8 +68,21 @@ htmlcov/
 # Database
 *.db
 *.sqlite3
+test.db
 
-# Node modules (if using web3.js)
+# Node modules
 node_modules/
 package-lock.json
 yarn.lock
+pnpm-lock.yaml
+
+# Next.js
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# Frontend build
+frontend/dist/
+frontend/.next/
+frontend/out/
