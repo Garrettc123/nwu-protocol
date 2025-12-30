@@ -1,9 +1,9 @@
 """Verification data models."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class VerificationVote(str, Enum):
@@ -32,17 +32,8 @@ class VerificationCreate(BaseModel):
 
 class Verification(BaseModel):
     """Complete verification model."""
-    id: str = Field(..., description="Unique verification ID")
-    contribution_id: str
-    agent_id: AgentType
-    vote: VerificationVote
-    score: float = Field(..., ge=0, le=100)
-    reasoning: str
-    details: dict = Field(default_factory=dict)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "id": "verif_456def",
                 "contribution_id": "contrib_123abc",
@@ -59,3 +50,13 @@ class Verification(BaseModel):
                 "created_at": "2025-12-30T00:02:00Z"
             }
         }
+    )
+
+    id: str = Field(..., description="Unique verification ID")
+    contribution_id: str
+    agent_id: AgentType
+    vote: VerificationVote
+    score: float = Field(..., ge=0, le=100)
+    reasoning: str
+    details: dict = Field(default_factory=dict)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

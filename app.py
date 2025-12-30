@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import logging
 from typing import Dict, Any
-from datetime import datetime
+from datetime import datetime, timezone
 
 # Import API routers
 from nwu_protocol.api import contributions, verifications
@@ -80,7 +80,7 @@ async def api_status() -> Dict[str, Any]:
     return {
         "status": "operational",
         "api_version": "1.0.0",
-        "timestamp": datetime.utcnow().isoformat() + "Z"
+        "timestamp": datetime.now(timezone.utc).isoformat() + "Z"
     }
 
 

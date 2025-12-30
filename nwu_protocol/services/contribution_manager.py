@@ -2,7 +2,7 @@
 
 import hashlib
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, List
 from uuid import uuid4
 
@@ -118,7 +118,7 @@ class ContributionManager:
             return None
 
         contribution.status = status
-        contribution.updated_at = datetime.utcnow()
+        contribution.updated_at = datetime.now(timezone.utc)
         logger.info(f"Updated contribution {contribution_id} status to {status}")
 
         return contribution
@@ -143,7 +143,7 @@ class ContributionManager:
             return None
 
         contribution.quality_score = quality_score
-        contribution.updated_at = datetime.utcnow()
+        contribution.updated_at = datetime.now(timezone.utc)
         logger.info(f"Updated contribution {contribution_id} quality score to {quality_score}")
 
         return contribution

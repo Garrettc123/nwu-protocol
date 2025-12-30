@@ -1,9 +1,9 @@
 """Contribution data models."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class ContributionStatus(str, Enum):
@@ -41,21 +41,8 @@ class ContributionCreate(BaseModel):
 
 class Contribution(BaseModel):
     """Complete contribution model."""
-    id: str = Field(..., description="Unique contribution ID")
-    submitter: str = Field(..., description="Ethereum address of submitter")
-    file_type: ContributionType
-    metadata: ContributionMetadata
-    content_hash: str
-    ipfs_hash: Optional[str] = None
-    status: ContributionStatus = ContributionStatus.PENDING
-    quality_score: Optional[float] = Field(None, ge=0, le=100, description="Quality score 0-100")
-    verification_count: int = Field(0, description="Number of verifications received")
-    reward_amount: Optional[float] = Field(None, description="Calculated reward in NWU tokens")
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
-
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "id": "contrib_123abc",
                 "submitter": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb",
@@ -76,3 +63,17 @@ class Contribution(BaseModel):
                 "updated_at": "2025-12-30T00:05:00Z"
             }
         }
+    )
+
+    id: str = Field(..., description="Unique contribution ID")
+    submitter: str = Field(..., description="Ethereum address of submitter")
+    file_type: ContributionType
+    metadata: ContributionMetadata
+    content_hash: str
+    ipfs_hash: Optional[str] = None
+    status: ContributionStatus = ContributionStatus.PENDING
+    quality_score: Optional[float] = Field(None, ge=0, le=100, description="Quality score 0-100")
+    verification_count: int = Field(0, description="Number of verifications received")
+    reward_amount: Optional[float] = Field(None, description="Calculated reward in NWU tokens")
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
