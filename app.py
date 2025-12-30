@@ -1,10 +1,15 @@
 """Main FastAPI application entrypoint for nwu-protocol."""
 
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import logging
 from typing import Dict, Any
+from datetime import datetime
+
+# Import API routers
+from nwu_protocol.api import contributions, verifications
 
 # Configure logging
 logging.basicConfig(
@@ -13,14 +18,28 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Handle application lifespan events."""
+    # Startup
+    logger.info("NWU Protocol API starting up...")
+    logger.info("API available at http://0.0.0.0:8000")
+    logger.info("Documentation at http://0.0.0.0:8000/docs")
+    yield
+    # Shutdown
+    logger.info("NWU Protocol API shutting down...")
+
+
 # Create FastAPI application
 app = FastAPI(
     title="NWU Protocol API",
-    description="Enterprise-grade API for NWU Protocol system",
+    description="Decentralized Intelligence & Verified Truth Protocol - Enterprise-grade API",
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
-    openapi_url="/openapi.json"
+    openapi_url="/openapi.json",
+    lifespan=lifespan
 )
 
 # Add CORS middleware
@@ -31,6 +50,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include routers
+app.include_router(contributions.router)
+app.include_router(verifications.router)
 
 
 @app.get("/")
@@ -57,7 +80,7 @@ async def api_status() -> Dict[str, Any]:
     return {
         "status": "operational",
         "api_version": "1.0.0",
-        "timestamp": "2025-12-28T11:56:00Z"
+        "timestamp": datetime.utcnow().isoformat() + "Z"
     }
 
 
@@ -89,20 +112,6 @@ async def http_exception_handler(request, exc):
             "status_code": exc.status_code
         }
     )
-
-
-@app.on_event("startup")
-async def startup_event():
-    """Handle startup events."""
-    logger.info("NWU Protocol API starting up...")
-    logger.info("API available at http://0.0.0.0:8000")
-    logger.info("Documentation at http://0.0.0.0:8000/docs")
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Handle shutdown events."""
-    logger.info("NWU Protocol API shutting down...")
 
 
 if __name__ == "__main__":
