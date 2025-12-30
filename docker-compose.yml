@@ -48,6 +48,23 @@ services:
       timeout: 5s
       retries: 5
 
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: nwu-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   ipfs:
     image: ipfs/kubo:latest
     container_name: nwu-ipfs
@@ -59,10 +76,51 @@ services:
     environment:
       IPFS_PATH: /data/ipfs
 
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: nwu-backend
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://nwu_user:rocket69!@postgres:5432/nwu_db
+      MONGO_URL: mongodb://admin:rocket69!@mongodb:27017/nwu_db?authSource=admin
+      REDIS_URL: redis://redis:6379
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      IPFS_HOST: ipfs
+      IPFS_PORT: 5001
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    depends_on:
+      - postgres
+      - mongodb
+      - redis
+      - rabbitmq
+      - ipfs
+    restart: unless-stopped
+
+  agent-alpha:
+    build:
+      context: .
+      dockerfile: Dockerfile.agent
+    container_name: nwu-agent-alpha
+    environment:
+      BACKEND_URL: http://backend:8000
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      IPFS_HOST: ipfs
+      IPFS_PORT: 5001
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    depends_on:
+      - backend
+      - rabbitmq
+      - ipfs
+    restart: unless-stopped
+
 volumes:
   mongodb_data:
   postgres_data:
   redis_data:
+  rabbitmq_data:
   ipfs_data:
 
 networks:
