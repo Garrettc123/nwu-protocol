@@ -7,42 +7,247 @@
 
 Decentralized Intelligence & Verified Truth Protocol - Safeguarding humanity through AI-powered verification and blockchain immutability.
 
+A complete platform for submitting code, datasets, and documents that are verified by AI agents and rewarded with blockchain tokens.
+
+## ✨ Features
+
+### 🚀 Backend API (FastAPI)
+- ✅ Contribution submission and management
+- ✅ User registration and stats tracking
+- ✅ IPFS integration for decentralized file storage
+- ✅ RabbitMQ message queue for async processing
+- ✅ PostgreSQL database with SQLAlchemy ORM
+- ✅ RESTful API with automatic OpenAPI documentation
+
+### 🤖 Agent-Alpha (AI Verification)
+- ✅ Automated quality verification using OpenAI GPT-4
+- ✅ Code quality, originality, and security analysis
+- ✅ Dataset and document verification
+- ✅ Consensus-based scoring system
+- ✅ RabbitMQ consumer for async task processing
+
+### 🎨 Frontend (Next.js 14)
+- ✅ Modern, responsive UI with Tailwind CSS
+- ✅ File upload with drag-and-drop support
+- ✅ Real-time contribution status tracking
+- ✅ Browse all contributions
+- ✅ Integration with backend API
+
+### 🔗 Smart Contracts (Solidity)
+- ✅ ERC-20 NWU Token with minting and burning
+- ✅ Verification Registry for on-chain results
+- ✅ Reward Distribution with quality-based calculations
+- ✅ OpenZeppelin security standards
+
 ## Quick Start
+
+### Prerequisites
+- Docker & Docker Compose
+- OpenAI API key (optional for AI verification)
+
+### 1. Clone and Setup
 
 ```bash
 git clone https://github.com/Garrettc123/nwu-protocol.git
 cd nwu-protocol
-docker-compose up
+cp .env.example .env
+# Edit .env and add your OPENAI_API_KEY
 ```
+
+### 2. Start All Services
+
+```bash
+docker-compose up -d
+```
+
+This starts:
+- **Backend API** - http://localhost:8000
+- **Agent-Alpha** - Background AI verification service
+- **PostgreSQL** - Database on port 5432
+- **MongoDB** - NoSQL database on port 27017
+- **Redis** - Cache on port 6379
+- **RabbitMQ** - Message queue on port 5672 (Management UI: http://localhost:15672)
+- **IPFS** - Decentralized storage on port 8080
+
+### 3. Access Services
+
+- **API Documentation**: http://localhost:8000/docs
+- **Health Check**: http://localhost:8000/health
+- **RabbitMQ Management**: http://localhost:15672 (guest/guest)
+- **IPFS Gateway**: http://localhost:8080
+
+### 4. Run Frontend (Optional)
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Visit http://localhost:3000
 
 ## Architecture
 
-### Components
+### System Components
 
-- **Contribution Manager**: File ingestion with IPFS pinning
-- **Verification Engine**: AI-powered verification with consensus
-- **Reward Calculator**: Dynamic token reward distribution
-- **Blockchain Layer**: Smart contracts for tokenomics
-- **API Gateway**: REST + GraphQL endpoints
-- **Dashboard**: Real-time monitoring and management
+```
+┌─────────────────────────────────────────────┐
+│              Frontend (Next.js)             │
+│     File Upload, Dashboard, Contributions   │
+└─────────────────┬───────────────────────────┘
+                  │
+                  ▼
+┌─────────────────────────────────────────────┐
+│           Backend API (FastAPI)             │
+│  Contributions, Users, Verifications        │
+└─────┬─────────────────────┬─────────────────┘
+      │                     │
+      ▼                     ▼
+┌──────────┐        ┌──────────────┐
+│   IPFS   │        │   RabbitMQ   │
+│ Storage  │        │ Message Queue│
+└──────────┘        └──────┬───────┘
+                           │
+                           ▼
+                  ┌────────────────┐
+                  │  Agent-Alpha   │
+                  │ AI Verification│
+                  └────────────────┘
+                           │
+                           ▼
+                  ┌────────────────┐
+                  │  PostgreSQL    │
+                  │   Database     │
+                  └────────────────┘
+                           │
+                           ▼
+                  ┌────────────────┐
+                  │Smart Contracts │
+                  │   (Ethereum)   │
+                  └────────────────┘
+```
+
+## API Endpoints
+
+### Contributions
+- `POST /api/v1/contributions/` - Upload a new contribution
+- `GET /api/v1/contributions/` - List all contributions
+- `GET /api/v1/contributions/{id}` - Get contribution details
+- `GET /api/v1/contributions/{id}/status` - Get verification status
+- `GET /api/v1/contributions/{id}/file` - Download file
+
+### Users
+- `POST /api/v1/users/` - Create user
+- `GET /api/v1/users/{address}` - Get user by address
+- `GET /api/v1/users/{address}/contributions` - Get user contributions
+- `GET /api/v1/users/{address}/rewards` - Get user rewards
+- `GET /api/v1/users/{address}/stats` - Get user statistics
+
+### Verifications
+- `POST /api/v1/verifications/` - Submit verification (agents only)
+- `GET /api/v1/verifications/contribution/{id}` - Get contribution verifications
 
 ## Technology Stack
 
-- **Backend**: Node.js, Python (FastAPI)
-- **Database**: MongoDB, PostgreSQL, Redis
+- **Backend**: Python, FastAPI, SQLAlchemy, Pydantic
+- **Database**: PostgreSQL, MongoDB, Redis
 - **Storage**: IPFS
-- **Blockchain**: Solidity smart contracts
-- **Frontend**: Next.js 14, React 18
-- **Orchestration**: Docker, Kubernetes
+- **Message Queue**: RabbitMQ
+- **AI/ML**: OpenAI GPT-4, LangChain
+- **Blockchain**: Solidity, Hardhat, OpenZeppelin
+- **Frontend**: Next.js 14, React 18, TypeScript, Tailwind CSS
+- **DevOps**: Docker, Docker Compose
+
+## Project Structure
+
+```
+nwu-protocol/
+├── backend/              # FastAPI backend
+│   ├── app/
+│   │   ├── api/         # API routes
+│   │   ├── models.py    # Database models
+│   │   ├── schemas.py   # Pydantic schemas
+│   │   ├── services/    # IPFS, RabbitMQ services
+│   │   └── main.py      # FastAPI app
+│   └── requirements.txt
+├── agent-alpha/          # AI verification agent
+│   ├── app/
+│   │   ├── verifier.py  # AI verification logic
+│   │   └── main.py      # RabbitMQ consumer
+│   └── requirements.txt
+├── frontend/            # Next.js frontend
+│   ├── app/            # App router pages
+│   └── package.json
+├── contracts/          # Smart contracts
+│   ├── contracts/     # Solidity files
+│   ├── scripts/       # Deployment scripts
+│   └── hardhat.config.js
+└── docker-compose.yml  # Docker orchestration
+```
 
 ## Development
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions.
+### Backend Development
+
+```bash
+cd backend
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+```
+
+### Agent Development
+
+```bash
+cd agent-alpha
+pip install -r requirements.txt
+python -m app.main
+```
+
+### Smart Contracts
+
+```bash
+cd contracts
+npm install
+npx hardhat compile
+npx hardhat test
+npx hardhat node  # Start local blockchain
+npx hardhat run scripts/deploy.js --network localhost
+```
+
+## Testing
+
+```bash
+# Backend tests
+cd backend
+pytest
+
+# Smart contract tests
+cd contracts
+npx hardhat test
+```
+
+## Deployment
+
+See [DEPLOYMENT_STATUS.md](DEPLOYMENT_STATUS.md) for detailed deployment instructions.
+
+## Documentation
+
+- [Architecture](ARCHITECTURE.md) - System architecture and design
+- [Master Control](MASTER_CONTROL.md) - Complete system status and commands
+- [Quickstart](QUICKSTART.md) - Quick setup guide
+- [Contributing](CONTRIBUTING.md) - How to contribute
 
 ## Project Status
 
-- ✅ CI/CD Pipeline
-- 🔄 Foundation Layer (30% complete)
+- ✅ Backend API (Complete)
+- ✅ Agent-Alpha AI Verification (Complete)
+- ✅ Frontend UI (Complete)
+- ✅ Smart Contracts (Complete)
+- ✅ Docker Infrastructure (Complete)
+- ✅ Database Models (Complete)
+- ✅ IPFS Integration (Complete)
+- ✅ RabbitMQ Messaging (Complete)
+- 🔄 Additional testing and documentation
 - 📋 [Project Roadmap](https://github.com/Garrettc123/nwu-protocol/issues/1)
 
 ## License

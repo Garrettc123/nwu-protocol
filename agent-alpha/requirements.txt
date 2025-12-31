@@ -1,0 +1,9 @@
+openai==1.7.2
+langchain==0.1.0
+langchain-openai==0.0.2
+aio-pika==9.3.1
+python-dotenv==1.0.0
+httpx==0.26.0
+ipfshttpclient==0.8.0a2
+pytest==7.4.4
+pytest-asyncio==0.23.3
