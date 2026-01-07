@@ -73,7 +73,7 @@ jobs:
           cache-dependency-path: backend/package-lock.json
       
       - name: Install dependencies
-        run: cd backend && npm ci
+        run: cd backend && npm install
       
       - name: Run tests
         run: cd backend && npm test
@@ -122,7 +122,7 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       
       - name: Install dependencies
-        run: cd frontend && npm ci
+        run: cd frontend && npm install
       
       - name: Run tests
         run: cd frontend && npm test -- --coverage
@@ -171,7 +171,7 @@ jobs:
           cache-dependency-path: contracts/package-lock.json
       
       - name: Install dependencies
-        run: cd contracts && npm ci
+        run: cd contracts && npm install
       
       - name: Compile contracts
         run: cd contracts && npm run compile

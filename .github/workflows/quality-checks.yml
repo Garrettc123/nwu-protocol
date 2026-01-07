@@ -43,7 +43,7 @@ jobs:
           cache-dependency-path: 'backend/package-lock.json'
       
       - name: Install dependencies
-        run: cd backend && npm ci
+        run: cd backend && npm install
       
       - name: Lint code
         run: cd backend && npm run lint || true
@@ -75,7 +75,7 @@ jobs:
           cache-dependency-path: 'frontend/package-lock.json'
       
       - name: Install dependencies
-        run: cd frontend && npm ci
+        run: cd frontend && npm install
       
       - name: Lint code
         run: cd frontend && npm run lint || true
@@ -110,7 +110,7 @@ jobs:
           cache-dependency-path: 'contracts/package-lock.json'
       
       - name: Install dependencies
-        run: cd contracts && npm ci
+        run: cd contracts && npm install
       
       - name: Lint Solidity
         run: cd contracts && npm run lint || true
