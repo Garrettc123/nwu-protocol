@@ -40,7 +40,6 @@ jobs:
         with:
           node-version: '18'
           cache: ${{ hashFiles('backend/package-lock.json') != '' && 'npm' || '' }}
-          cache-dependency-path: 'backend/package-lock.json'
       
       - name: Install dependencies
         run: cd backend && npm install
@@ -72,7 +71,6 @@ jobs:
         with:
           node-version: '18'
           cache: ${{ hashFiles('frontend/package-lock.json') != '' && 'npm' || '' }}
-          cache-dependency-path: 'frontend/package-lock.json'
       
       - name: Install dependencies
         run: cd frontend && npm install
@@ -107,7 +105,6 @@ jobs:
         with:
           node-version: '18'
           cache: ${{ hashFiles('contracts/package-lock.json') != '' && 'npm' || '' }}
-          cache-dependency-path: 'contracts/package-lock.json'
       
       - name: Install dependencies
         run: cd contracts && npm install
