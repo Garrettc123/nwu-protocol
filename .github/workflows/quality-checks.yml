@@ -211,6 +211,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
+          cache: ${{ hashFiles('package-lock.json') != '' && 'npm' || '' }}
       
       - name: Install complexity analyzer
         run: npm install -g complexity-report
@@ -238,6 +239,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
+          cache: ${{ hashFiles('package-lock.json') != '' && 'npm' || '' }}
       
       - name: Check outdated dependencies
         run: |
