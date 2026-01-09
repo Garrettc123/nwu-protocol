@@ -1,6 +1,8 @@
 # NWU Protocol
 
 [![CI/CD Pipeline](https://github.com/Garrettc123/nwu-protocol/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/Garrettc123/nwu-protocol/actions)
+[![Quality & Security Checks](https://github.com/Garrettc123/nwu-protocol/actions/workflows/quality-checks.yml/badge.svg)](https://github.com/Garrettc123/nwu-protocol/actions)
+[![Microsoft Defender for DevOps](https://github.com/Garrettc123/nwu-protocol/actions/workflows/defender-for-devops.yml/badge.svg)](https://github.com/Garrettc123/nwu-protocol/actions)
 [![codecov](https://codecov.io/gh/Garrettc123/nwu-protocol/branch/main/graph/badge.svg)](https://codecov.io/gh/Garrettc123/nwu-protocol)
 
 ## Overview
@@ -38,6 +40,34 @@ A complete platform for submitting code, datasets, and documents that are verifi
 - ✅ Verification Registry for on-chain results
 - ✅ Reward Distribution with quality-based calculations
 - ✅ OpenZeppelin security standards
+
+## 🔧 CI/CD & Automation
+
+The project includes comprehensive GitHub Actions workflows for continuous integration, security scanning, and automated maintenance:
+
+### Security & Quality
+- **Microsoft Defender for DevOps** (`defender-for-devops.yml`) - Advanced security scanning with SARIF reporting
+- **Quality & Security Checks** (`quality-checks.yml`) - Code quality, linting, and security audits across all components
+- **CI/CD Pipeline** (`ci.yml`) - Main continuous integration pipeline with testing and validation
+
+### Automated Maintenance
+- **Codex Auto-Fix** (`codex-autofix.yml`) - Automatically fixes CI failures using AI-powered analysis
+- **Continuous Code Healing** (`continuous-healing.yml`) - Proactive code health monitoring and auto-repair
+- **Auto-Complete Code Pipeline** (`auto-complete-repair.yml`) - AI-assisted code completion and repair
+- **Auto PR Workflow** (`auto-pr.yml`) - Automated pull request creation and management
+
+### Deployment & Release
+- **Deploy to Production** (`deploy.yml`) - Production deployment pipeline
+- **Failover Deployment System** (`failover-deployment.yml`) - Multi-region failover and disaster recovery
+- **Self-Healing Deployment** (`autofix-deploy.yml`) - Node.js-focused deployment with auto-recovery
+- **Automated Release** (`release.yml`) - Automated version management and release notes generation
+
+### Project Management
+- **Universal CI/CD** (`ci-cd.yml`) - Universal build and test pipeline
+- **FastAPI Entrypoint Verification** (`fastapi-check.yml`) - Validates FastAPI backend configuration
+- **Project Initialization Helper** (`project-init.yml`) - Automated project setup and configuration
+
+All workflows are configured with appropriate permissions and security best practices.
 
 ## Quick Start
 
