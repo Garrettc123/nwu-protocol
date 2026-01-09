@@ -48,7 +48,7 @@ The project includes comprehensive GitHub Actions workflows for continuous integ
 ### Security & Quality
 - **Microsoft Defender for DevOps** (`defender-for-devops.yml`) - Advanced security scanning with SARIF reporting
 - **Quality & Security Checks** (`quality-checks.yml`) - Code quality, linting, and security audits across all components
-- **CI/CD Pipeline** (`ci.yml`) - Main continuous integration pipeline with testing and validation
+- **CI/CD Pipeline** (`ci.yml`) - Comprehensive CI pipeline for Node.js, backend tests, and smart contract validation
 
 ### Automated Maintenance
 - **Codex Auto-Fix** (`codex-autofix.yml`) - Automatically fixes CI failures using AI-powered analysis
@@ -63,7 +63,7 @@ The project includes comprehensive GitHub Actions workflows for continuous integ
 - **Automated Release** (`release.yml`) - Automated version management and release notes generation
 
 ### Project Management
-- **Universal CI/CD** (`ci-cd.yml`) - Universal build and test pipeline
+- **Universal CI/CD** (`ci-cd.yml`) - Auto-detecting pipeline for Python, Node.js, and Docker environments
 - **FastAPI Entrypoint Verification** (`fastapi-check.yml`) - Validates FastAPI backend configuration
 - **Project Initialization Helper** (`project-init.yml`) - Automated project setup and configuration
 
