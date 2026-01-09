@@ -9,6 +9,7 @@ chmod +x setup.sh && ./setup.sh
 ```
 
 That's it! This single command will:
+
 - ✅ Check your system has Docker installed
 - ✅ Create your configuration file
 - ✅ Ask for your OpenAI API key (optional)
@@ -19,6 +20,7 @@ That's it! This single command will:
 ### After Setup
 
 **Visit these URLs:**
+
 - 🌐 Frontend: http://localhost:3000
 - 🔧 API Docs: http://localhost:8000/docs
 - 📊 RabbitMQ: http://localhost:15672 (guest/guest)
@@ -49,6 +51,7 @@ Opens a user-friendly menu with all common tasks.
 ### Don't have Docker?
 
 **macOS:**
+
 ```bash
 brew install --cask docker
 ```
@@ -57,6 +60,7 @@ brew install --cask docker
 Download from: https://docs.docker.com/desktop/install/windows-install/
 
 **Linux:**
+
 ```bash
 curl -fsSL https://get.docker.com -o get-docker.sh
 sudo sh get-docker.sh
@@ -84,6 +88,7 @@ kill -9 <PID>
 ## What You Get
 
 ### Services Running
+
 - **Backend API** - FastAPI with auto-docs
 - **Agent-Alpha** - AI agent system
 - **Frontend** - React interface
@@ -94,6 +99,7 @@ kill -9 <PID>
 - **NGINX** - Web server
 
 ### Everything Automated
+
 - Health checks every 30 seconds
 - Auto-restart if services crash
 - Data persistence across restarts
@@ -105,26 +111,31 @@ kill -9 <PID>
 ## Next Steps
 
 ### 1. Submit Your First Contribution
+
 ```bash
 ./apply.sh    # Interactive mode
 # Or: ./apply.sh code myfile.py "My Contribution"
 ```
 
 ### 2. Test the API
+
 ```bash
 curl http://localhost:8000/health
 ```
 
 ### 3. Explore the Docs
+
 Visit http://localhost:8000/docs to see all API endpoints
 
 ### 4. Check Logs
+
 ```bash
 ./logs.sh backend    # See backend activity
 ./logs.sh agent-alpha    # See agent activity
 ```
 
 ### 5. Monitor Health
+
 ```bash
 watch -n 5 ./status.sh    # Auto-refresh every 5 seconds
 ```

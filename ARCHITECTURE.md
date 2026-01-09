@@ -15,7 +15,7 @@ The NWU Protocol follows a hierarchical tree structure where each component repr
       ______|______      _____|_____      ____|____
      |      |      |    |     |     |    |    |    |
    Contrib Verif Reward Agent Agent  Msg K8s Docker RMQ
-   Manager Engine  Calc Alpha Beta  Bus             
+   Manager Engine  Calc Alpha Beta  Bus
                               |
                          🌿 BRANCHES
                          (API Layer)
@@ -56,6 +56,7 @@ The NWU Protocol follows a hierarchical tree structure where each component repr
 ### 1. Core Backend (The Trunk) 🪵
 
 #### Contribution Manager
+
 - **Purpose**: Handles all contribution ingestion and processing
 - **Technology**: Node.js + Express + TypeScript
 - **Key Features**:
@@ -66,6 +67,7 @@ The NWU Protocol follows a hierarchical tree structure where each component repr
   - File validation (size, type, malware scanning)
 
 #### Verification Engine
+
 - **Purpose**: Orchestrates the AI verification workflow
 - **Technology**: Node.js + State Machine pattern
 - **Key Features**:
@@ -76,6 +78,7 @@ The NWU Protocol follows a hierarchical tree structure where each component repr
   - Retry logic for failed verifications
 
 #### Reward Calculator
+
 - **Purpose**: Computes contributor rewards based on quality
 - **Technology**: Node.js + Mathematical algorithms
 - **Key Features**:
@@ -88,6 +91,7 @@ The NWU Protocol follows a hierarchical tree structure where each component repr
 ### 2. AI Intelligence (The Nervous System) 🧠
 
 #### Agent-Alpha: Quality Verifier
+
 - **Purpose**: Primary code quality and originality verification
 - **Technology**: Python + LangChain + GPT-4
 - **Verification Criteria**:
@@ -106,6 +110,7 @@ The NWU Protocol follows a hierarchical tree structure where each component repr
      - README completeness
 
 #### Agent-Beta: Domain Expert (Future)
+
 - **Purpose**: Domain-specific verification
 - **Specializations**:
   - Machine Learning models
@@ -113,6 +118,7 @@ The NWU Protocol follows a hierarchical tree structure where each component repr
   - Scientific datasets
 
 #### Agent Infrastructure
+
 - RabbitMQ consumer pattern
 - OpenAI API integration
 - Error handling and logging
@@ -122,6 +128,7 @@ The NWU Protocol follows a hierarchical tree structure where each component repr
 ### 3. API Layer (The Branches) 🌿
 
 #### REST API
+
 ```
 POST   /api/v1/contributions          # Upload new contribution
 GET    /api/v1/contributions/:id      # Get contribution details
@@ -133,11 +140,13 @@ GET    /api/v1/health                 # System health
 ```
 
 #### GraphQL API (Future)
+
 - Flexible data querying
 - Reduced over-fetching
 - Real-time subscriptions
 
 #### WebSocket Events
+
 - Real-time verification updates
 - Reward notifications
 - System announcements
@@ -145,12 +154,14 @@ GET    /api/v1/health                 # System health
 ### 4. User Interface (The Leaves) 🍃
 
 #### Contributor Portal
+
 - **Framework**: Next.js 14 + App Router
 - **Styling**: TailwindCSS + shadcn/ui
 - **State Management**: Zustand + React Query
 - **Web3**: Ethers.js v6 + WalletConnect
 
 **Key Pages**:
+
 1. Landing Page
    - Protocol overview
    - How it works
@@ -177,29 +188,33 @@ GET    /api/v1/health                 # System health
 ### 5. Infrastructure (The Atmosphere) ☁️
 
 #### Docker Containerization
+
 ```yaml
 Services:
-  - backend-api       # Core API server
-  - agent-alpha       # AI verification agent
-  - mongodb           # Database
-  - redis             # Cache
-  - rabbitmq          # Message bus
-  - nginx             # Reverse proxy
+  - backend-api # Core API server
+  - agent-alpha # AI verification agent
+  - mongodb # Database
+  - redis # Cache
+  - rabbitmq # Message bus
+  - nginx # Reverse proxy
 ```
 
 #### Kubernetes Production Setup
+
 ```yaml
 Components:
-  - Deployments       # Service replicas
-  - Services          # Internal networking
-  - Ingress           # External access
-  - ConfigMaps        # Configuration
-  - Secrets           # Sensitive data
-  - HPA               # Auto-scaling
+  - Deployments # Service replicas
+  - Services # Internal networking
+  - Ingress # External access
+  - ConfigMaps # Configuration
+  - Secrets # Sensitive data
+  - HPA # Auto-scaling
 ```
 
 #### RabbitMQ Message Bus
+
 **Queues**:
+
 - `contributions.new` - New contribution submissions
 - `verifications.pending` - Verification tasks
 - `verifications.complete` - Completed verifications
@@ -212,6 +227,7 @@ Components:
 #### MongoDB Collections
 
 **contributions**
+
 ```javascript
 {
   _id: ObjectId,
@@ -227,6 +243,7 @@ Components:
 ```
 
 **verifications**
+
 ```javascript
 {
   _id: ObjectId,
@@ -239,6 +256,7 @@ Components:
 ```
 
 **users**
+
 ```javascript
 {
   _id: ObjectId,
@@ -251,6 +269,7 @@ Components:
 ```
 
 **rewards**
+
 ```javascript
 {
   _id: ObjectId,
@@ -264,12 +283,14 @@ Components:
 ```
 
 #### IPFS Integration
+
 - **Node**: Self-hosted or Infura
 - **Pinning**: Persistent storage
 - **Gateway**: Public access via IPFS gateway
 - **Content Addressing**: CIDv1 format
 
 #### Redis Cache
+
 - Session storage (30 min TTL)
 - API response caching
 - Rate limiting counters
@@ -280,16 +301,18 @@ Components:
 #### Smart Contracts (Ethereum)
 
 **NWUToken.sol** (ERC-20)
+
 ```solidity
 contract NWUToken is ERC20, Ownable {
   uint256 public constant INITIAL_SUPPLY = 1_000_000_000 * 10**18;
-  
+
   function mint(address to, uint256 amount) external onlyOwner;
   function burn(uint256 amount) external;
 }
 ```
 
 **VerificationRegistry.sol**
+
 ```solidity
 contract VerificationRegistry {
   struct Verification {
@@ -298,9 +321,9 @@ contract VerificationRegistry {
     uint256 timestamp;
     bool verified;
   }
-  
+
   mapping(bytes32 => Verification) public verifications;
-  
+
   function recordVerification(
     bytes32 contributionHash,
     uint8 qualityScore
@@ -309,15 +332,16 @@ contract VerificationRegistry {
 ```
 
 **RewardDistribution.sol**
+
 ```solidity
 contract RewardDistribution {
   NWUToken public token;
-  
+
   function distributeReward(
     address contributor,
     uint256 amount
   ) external onlyBackend;
-  
+
   function claimReward() external;
 }
 ```
@@ -355,11 +379,13 @@ contract RewardDistribution {
 ## 🔒 Security Architecture
 
 ### Authentication
+
 - Web3 wallet signature verification
 - JWT tokens for session management
 - Role-based access control (RBAC)
 
 ### API Security
+
 - Rate limiting (100 req/min per IP)
 - CORS policies
 - Input validation and sanitization
@@ -367,6 +393,7 @@ contract RewardDistribution {
 - XSS protection
 
 ### Infrastructure Security
+
 - SSL/TLS encryption (Let's Encrypt)
 - Kubernetes network policies
 - Secret management (Kubernetes Secrets)
@@ -374,6 +401,7 @@ contract RewardDistribution {
 - Automated security scanning
 
 ### Smart Contract Security
+
 - OpenZeppelin contracts
 - Access control modifiers
 - Reentrancy guards
@@ -382,6 +410,7 @@ contract RewardDistribution {
 ## 📊 Monitoring & Observability
 
 ### Metrics (Prometheus)
+
 - API latency (p50, p95, p99)
 - Verification throughput
 - Agent processing time
@@ -389,18 +418,21 @@ contract RewardDistribution {
 - Database performance
 
 ### Logging (ELK Stack)
+
 - Application logs
 - Access logs
 - Error logs
 - Audit logs
 
 ### Alerting
+
 - Service downtime
 - High error rates
 - Performance degradation
 - Security incidents
 
 ### Dashboards (Grafana)
+
 - System health overview
 - Real-time metrics
 - Historical trends
@@ -409,18 +441,21 @@ contract RewardDistribution {
 ## 🚀 Deployment Strategy
 
 ### Development
+
 - Local Docker Compose
 - Hot reload enabled
 - Mock blockchain (Hardhat)
 - Test data seeding
 
 ### Staging
+
 - Kubernetes cluster (2 replicas)
 - Sepolia testnet
 - Full CI/CD pipeline
 - Load testing
 
 ### Production
+
 - Kubernetes cluster (5+ replicas)
 - Ethereum mainnet
 - Blue-green deployment

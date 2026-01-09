@@ -19,7 +19,9 @@ Currently, authentication is via wallet address parameter. Full Web3 authenticat
 ### Health & Status
 
 #### GET /
+
 Root endpoint with API information
+
 ```json
 {
   "status": "healthy",
@@ -31,7 +33,9 @@ Root endpoint with API information
 ```
 
 #### GET /health
+
 Simple health check
+
 ```json
 {
   "status": "healthy",
@@ -40,7 +44,9 @@ Simple health check
 ```
 
 #### GET /api/v1/status
+
 Detailed API status with timestamp
+
 ```json
 {
   "status": "operational",
@@ -52,12 +58,15 @@ Detailed API status with timestamp
 ### Contributions
 
 #### POST /api/v1/contributions
+
 Create a new contribution
 
 **Query Parameters:**
+
 - `submitter` (required): Ethereum address of the submitter
 
 **Request Body:**
+
 ```json
 {
   "file_type": "code",
@@ -73,6 +82,7 @@ Create a new contribution
 ```
 
 **Response (201):**
+
 ```json
 {
   "id": "contrib_123abc",
@@ -91,9 +101,11 @@ Create a new contribution
 ```
 
 #### GET /api/v1/contributions/{contribution_id}
+
 Get contribution details
 
 **Response (200):**
+
 ```json
 {
   "id": "contrib_123abc",
@@ -105,9 +117,11 @@ Get contribution details
 ```
 
 #### GET /api/v1/contributions/{contribution_id}/status
+
 Get contribution verification status
 
 **Response (200):**
+
 ```json
 {
   "contribution_id": "contrib_123abc",
@@ -120,14 +134,17 @@ Get contribution verification status
 ```
 
 #### GET /api/v1/contributions
+
 List contributions with optional filters
 
 **Query Parameters:**
+
 - `submitter` (optional): Filter by submitter address
 - `status` (optional): Filter by status (pending, verified, rejected)
 - `limit` (optional): Maximum results (default: 100)
 
 **Response (200):**
+
 ```json
 [
   { "id": "contrib_123abc", ... },
@@ -138,9 +155,11 @@ List contributions with optional filters
 ### Verifications
 
 #### POST /api/v1/verifications
+
 Submit a verification for a contribution (typically called by AI agents)
 
 **Request Body:**
+
 ```json
 {
   "contribution_id": "contrib_123abc",
@@ -158,6 +177,7 @@ Submit a verification for a contribution (typically called by AI agents)
 ```
 
 **Response (201):**
+
 ```json
 {
   "id": "verif_456def",
@@ -172,12 +192,15 @@ Submit a verification for a contribution (typically called by AI agents)
 ```
 
 #### GET /api/v1/verifications/{verification_id}
+
 Get verification details
 
 #### GET /api/v1/verifications/contribution/{contribution_id}
+
 Get all verifications for a contribution
 
 **Response (200):**
+
 ```json
 [
   {
@@ -192,9 +215,11 @@ Get all verifications for a contribution
 ```
 
 #### GET /api/v1/verifications/contribution/{contribution_id}/consensus
+
 Get consensus status for a contribution
 
 **Response (200):**
+
 ```json
 {
   "contribution_id": "contrib_123abc",
@@ -209,6 +234,7 @@ Get consensus status for a contribution
 ## Data Models
 
 ### Contribution Status
+
 - `pending`: Waiting for verification
 - `verifying`: Being verified by agents
 - `verified`: Passed verification
@@ -216,17 +242,20 @@ Get consensus status for a contribution
 - `failed`: System error during verification
 
 ### Contribution Types
+
 - `code`: Source code
 - `dataset`: Data files
 - `document`: Documentation/papers
 - `other`: Other content types
 
 ### Verification Votes
+
 - `approve`: Contribution is valid and high quality
 - `reject`: Contribution does not meet standards
 - `abstain`: Cannot determine (rare)
 
 ### Agent Types
+
 - `agent-alpha`: Quality verification agent
 - `agent-beta`: Domain expert (future)
 - `agent-gamma`: Security specialist (future)
@@ -243,6 +272,7 @@ FastAPI provides interactive API documentation:
 All endpoints may return these error responses:
 
 **404 Not Found:**
+
 ```json
 {
   "error": "Contribution not found",
@@ -251,6 +281,7 @@ All endpoints may return these error responses:
 ```
 
 **500 Internal Server Error:**
+
 ```json
 {
   "error": "Failed to create contribution: ...",
@@ -263,6 +294,7 @@ All endpoints may return these error responses:
 ### Complete Workflow
 
 1. **Create a contribution:**
+
 ```bash
 curl -X POST "http://localhost:8000/api/v1/contributions?submitter=0x123..." \
   -H "Content-Type: application/json" \
@@ -278,6 +310,7 @@ curl -X POST "http://localhost:8000/api/v1/contributions?submitter=0x123..." \
 ```
 
 2. **Submit verification (as agent):**
+
 ```bash
 curl -X POST "http://localhost:8000/api/v1/verifications" \
   -H "Content-Type: application/json" \
@@ -291,6 +324,7 @@ curl -X POST "http://localhost:8000/api/v1/verifications" \
 ```
 
 3. **Check consensus:**
+
 ```bash
 curl "http://localhost:8000/api/v1/verifications/contribution/contrib_123abc/consensus"
 ```
@@ -298,11 +332,13 @@ curl "http://localhost:8000/api/v1/verifications/contribution/contrib_123abc/con
 ## Testing
 
 Run the test suite:
+
 ```bash
 pytest tests/ -v
 ```
 
 Run API tests only:
+
 ```bash
 pytest tests/test_api.py -v
 ```

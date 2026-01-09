@@ -1,24 +1,24 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
 
 export default function Home() {
-  const [apiStatus, setApiStatus] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
+  const [apiStatus, setApiStatus] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/health`)
       .then(res => res.json())
       .then(data => {
-        setApiStatus(data)
-        setLoading(false)
+        setApiStatus(data);
+        setLoading(false);
       })
       .catch(err => {
-        console.error('Failed to fetch API status:', err)
-        setLoading(false)
-      })
-  }, [])
+        console.error('Failed to fetch API status:', err);
+        setLoading(false);
+      });
+  }, []);
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white">
@@ -80,7 +80,7 @@ export default function Home() {
               Advanced AI agents verify quality, originality, and security of all contributions.
             </p>
           </div>
-          
+
           <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
             <div className="text-4xl mb-4">🔗</div>
             <h3 className="text-xl font-bold mb-2">Blockchain Storage</h3>
@@ -88,7 +88,7 @@ export default function Home() {
               Immutable verification results stored on-chain with IPFS file storage.
             </p>
           </div>
-          
+
           <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
             <div className="text-4xl mb-4">💰</div>
             <h3 className="text-xl font-bold mb-2">Token Rewards</h3>
@@ -108,11 +108,11 @@ export default function Home() {
               <div>
                 <div className="flex justify-between items-center mb-4">
                   <span className="text-gray-300">Overall Status</span>
-                  <span className={`px-3 py-1 rounded ${
-                    apiStatus.status === 'healthy' 
-                      ? 'bg-green-600' 
-                      : 'bg-yellow-600'
-                  }`}>
+                  <span
+                    className={`px-3 py-1 rounded ${
+                      apiStatus.status === 'healthy' ? 'bg-green-600' : 'bg-yellow-600'
+                    }`}
+                  >
                     {apiStatus.status}
                   </span>
                 </div>
@@ -121,18 +121,18 @@ export default function Home() {
                     {Object.entries(apiStatus.checks).map(([key, value]) => (
                       <div key={key} className="flex justify-between items-center">
                         <span className="text-gray-400 capitalize">{key}</span>
-                        <span className={`w-3 h-3 rounded-full ${
-                          value ? 'bg-green-500' : 'bg-red-500'
-                        }`}></span>
+                        <span
+                          className={`w-3 h-3 rounded-full ${
+                            value ? 'bg-green-500' : 'bg-red-500'
+                          }`}
+                        ></span>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
             ) : (
-              <div className="text-center text-red-400">
-                Failed to connect to API
-              </div>
+              <div className="text-center text-red-400">Failed to connect to API</div>
             )}
           </div>
         </div>
@@ -148,7 +148,7 @@ export default function Home() {
               <h4 className="font-semibold mb-2">Upload</h4>
               <p className="text-sm text-gray-400">Submit your code, dataset, or document</p>
             </div>
-            
+
             <div className="text-center">
               <div className="w-16 h-16 bg-primary-600 rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
                 2
@@ -156,7 +156,7 @@ export default function Home() {
               <h4 className="font-semibold mb-2">Verify</h4>
               <p className="text-sm text-gray-400">AI agents analyze and score your contribution</p>
             </div>
-            
+
             <div className="text-center">
               <div className="w-16 h-16 bg-primary-600 rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
                 3
@@ -164,7 +164,7 @@ export default function Home() {
               <h4 className="font-semibold mb-2">Store</h4>
               <p className="text-sm text-gray-400">Results recorded on blockchain via IPFS</p>
             </div>
-            
+
             <div className="text-center">
               <div className="w-16 h-16 bg-primary-600 rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
                 4
@@ -182,7 +182,11 @@ export default function Home() {
           <div className="text-center text-gray-400">
             <p>&copy; 2025 NWU Protocol. Safeguarding humanity through verified truth.</p>
             <div className="mt-4 flex justify-center gap-6">
-              <a href="https://github.com/Garrettc123/nwu-protocol" target="_blank" className="hover:text-white transition">
+              <a
+                href="https://github.com/Garrettc123/nwu-protocol"
+                target="_blank"
+                className="hover:text-white transition"
+              >
                 GitHub
               </a>
               <Link href="/docs" className="hover:text-white transition">
@@ -196,5 +200,5 @@ export default function Home() {
         </div>
       </footer>
     </main>
-  )
+  );
 }

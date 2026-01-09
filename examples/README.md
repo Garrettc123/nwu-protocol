@@ -5,11 +5,13 @@ This directory contains example scripts demonstrating how to use the NWU Protoco
 ## Prerequisites
 
 1. Start the API server:
+
 ```bash
 python3 -m uvicorn app:app --host 0.0.0.0 --port 8000
 ```
 
 2. Install dependencies:
+
 ```bash
 pip install requests
 ```
@@ -25,6 +27,7 @@ python3 examples/api_usage.py
 ```
 
 This example shows:
+
 1. Checking API health
 2. Creating a contribution
 3. Submitting an AI agent verification
@@ -35,6 +38,7 @@ This example shows:
 ## Interactive API Documentation
 
 The API provides interactive documentation at:
+
 - **Swagger UI**: http://localhost:8000/docs
 - **ReDoc**: http://localhost:8000/redoc
 

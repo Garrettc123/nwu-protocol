@@ -1,42 +1,50 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
-import axios from 'axios'
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import axios from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 export default function ContributionsPage() {
-  const [contributions, setContributions] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  const [contributions, setContributions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get(`${API_URL}/api/v1/contributions/`)
+    axios
+      .get(`${API_URL}/api/v1/contributions/`)
       .then(res => {
-        setContributions(res.data)
-        setLoading(false)
+        setContributions(res.data);
+        setLoading(false);
       })
       .catch(err => {
-        console.error('Failed to fetch contributions:', err)
-        setLoading(false)
-      })
-  }, [])
+        console.error('Failed to fetch contributions:', err);
+        setLoading(false);
+      });
+  }, []);
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'verified': return 'bg-green-600'
-      case 'verifying': return 'bg-yellow-600'
-      case 'rejected': return 'bg-red-600'
-      default: return 'bg-gray-600'
+      case 'verified':
+        return 'bg-green-600';
+      case 'verifying':
+        return 'bg-yellow-600';
+      case 'rejected':
+        return 'bg-red-600';
+      default:
+        return 'bg-gray-600';
     }
-  }
+  };
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white">
       <header className="border-b border-gray-700">
         <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center">
-            <Link href="/" className="text-3xl font-bold bg-gradient-to-r from-primary-400 to-green-600 text-transparent bg-clip-text">
+            <Link
+              href="/"
+              className="text-3xl font-bold bg-gradient-to-r from-primary-400 to-green-600 text-transparent bg-clip-text"
+            >
               NWU Protocol
             </Link>
             <nav className="flex gap-6">
@@ -68,7 +76,7 @@ export default function ContributionsPage() {
           </div>
         ) : (
           <div className="grid gap-6">
-            {contributions.map((contrib) => (
+            {contributions.map(contrib => (
               <div key={contrib.id} className="bg-gray-800 border border-gray-700 rounded-lg p-6">
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex-1">
@@ -117,5 +125,5 @@ export default function ContributionsPage() {
         )}
       </div>
     </main>
-  )
+  );
 }

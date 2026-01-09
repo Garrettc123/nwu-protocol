@@ -14,6 +14,7 @@ A complete platform for submitting code, datasets, and documents that are verifi
 ## ✨ Features
 
 ### 🚀 Backend API (FastAPI)
+
 - ✅ Contribution submission and management
 - ✅ User registration and stats tracking
 - ✅ IPFS integration for decentralized file storage
@@ -22,6 +23,7 @@ A complete platform for submitting code, datasets, and documents that are verifi
 - ✅ RESTful API with automatic OpenAPI documentation
 
 ### 🤖 Agent-Alpha (AI Verification)
+
 - ✅ Automated quality verification using OpenAI GPT-4
 - ✅ Code quality, originality, and security analysis
 - ✅ Dataset and document verification
@@ -29,6 +31,7 @@ A complete platform for submitting code, datasets, and documents that are verifi
 - ✅ RabbitMQ consumer for async task processing
 
 ### 🎨 Frontend (Next.js 14)
+
 - ✅ Modern, responsive UI with Tailwind CSS
 - ✅ File upload with drag-and-drop support
 - ✅ Real-time contribution status tracking
@@ -36,6 +39,7 @@ A complete platform for submitting code, datasets, and documents that are verifi
 - ✅ Integration with backend API
 
 ### 🔗 Smart Contracts (Solidity)
+
 - ✅ ERC-20 NWU Token with minting and burning
 - ✅ Verification Registry for on-chain results
 - ✅ Reward Distribution with quality-based calculations
@@ -46,23 +50,27 @@ A complete platform for submitting code, datasets, and documents that are verifi
 The project includes comprehensive GitHub Actions workflows for continuous integration, security scanning, and automated maintenance:
 
 ### Security & Quality
+
 - **Microsoft Defender for DevOps** (`defender-for-devops.yml`) - Advanced security scanning with SARIF reporting
 - **Quality & Security Checks** (`quality-checks.yml`) - Code quality, linting, and security audits across all components
 - **CI/CD Pipeline** (`ci.yml`) - Comprehensive CI pipeline for Node.js, backend tests, and smart contract validation
 
 ### Automated Maintenance
+
 - **Codex Auto-Fix** (`codex-autofix.yml`) - Automatically fixes CI failures using AI-powered analysis
 - **Continuous Code Healing** (`continuous-healing.yml`) - Proactive code health monitoring and auto-repair
 - **Auto-Complete Code Pipeline** (`auto-complete-repair.yml`) - AI-assisted code completion and repair
 - **Auto PR Workflow** (`auto-pr.yml`) - Automated pull request creation and management
 
 ### Deployment & Release
+
 - **Deploy to Production** (`deploy.yml`) - Production deployment pipeline
 - **Failover Deployment System** (`failover-deployment.yml`) - Multi-region failover and disaster recovery
 - **Self-Healing Deployment** (`autofix-deploy.yml`) - Node.js-focused deployment with auto-recovery
 - **Automated Release** (`release.yml`) - Automated version management and release notes generation
 
 ### Project Management
+
 - **Universal CI/CD** (`ci-cd.yml`) - Auto-detecting pipeline for Python, Node.js, and Docker environments
 - **FastAPI Entrypoint Verification** (`fastapi-check.yml`) - Validates FastAPI backend configuration
 - **Project Initialization Helper** (`project-init.yml`) - Automated project setup and configuration
@@ -72,6 +80,7 @@ All workflows are configured with appropriate permissions and security best prac
 ## Quick Start
 
 ### Prerequisites
+
 - Docker & Docker Compose
 - OpenAI API key (optional for AI verification)
 
@@ -91,6 +100,7 @@ docker-compose up -d
 ```
 
 This starts:
+
 - **Backend API** - http://localhost:8000
 - **Agent-Alpha** - Background AI verification service
 - **PostgreSQL** - Database on port 5432
@@ -160,6 +170,7 @@ Visit http://localhost:3000
 ## API Endpoints
 
 ### Contributions
+
 - `POST /api/v1/contributions/` - Upload a new contribution
 - `GET /api/v1/contributions/` - List all contributions
 - `GET /api/v1/contributions/{id}` - Get contribution details
@@ -167,6 +178,7 @@ Visit http://localhost:3000
 - `GET /api/v1/contributions/{id}/file` - Download file
 
 ### Users
+
 - `POST /api/v1/users/` - Create user
 - `GET /api/v1/users/{address}` - Get user by address
 - `GET /api/v1/users/{address}/contributions` - Get user contributions
@@ -174,6 +186,7 @@ Visit http://localhost:3000
 - `GET /api/v1/users/{address}/stats` - Get user statistics
 
 ### Verifications
+
 - `POST /api/v1/verifications/` - Submit verification (agents only)
 - `GET /api/v1/verifications/contribution/{id}` - Get contribution verifications
 

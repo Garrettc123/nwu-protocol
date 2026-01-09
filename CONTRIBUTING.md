@@ -3,6 +3,7 @@
 ## Development Setup
 
 ### Prerequisites
+
 - Docker & Docker Compose
 - Node.js 20+
 - Python 3.11+
@@ -51,6 +52,7 @@ OPENAI_API_KEY=sk-...
 ## Testing Requirements
 
 All PRs must include:
+
 - Unit tests with 80%+ coverage
 - Integration tests for API endpoints
 - Security scanning passes

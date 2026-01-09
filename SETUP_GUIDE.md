@@ -15,6 +15,7 @@ This guide will walk you through setting up the NWU Protocol for local developme
 ## Prerequisites
 
 ### System Requirements
+
 - **OS**: macOS, Linux, or Windows (WSL2)
 - **RAM**: 8GB minimum (16GB recommended)
 - **Disk**: 20GB free space
@@ -40,12 +41,14 @@ python3 --version
 ### Installation
 
 **macOS:**
+
 ```bash
 # Using Homebrew
 brew install node@18 git docker python@3.9
 ```
 
 **Ubuntu/Debian:**
+
 ```bash
 sudo apt update
 sudo apt install nodejs npm git python3 python3-pip
@@ -54,6 +57,7 @@ sudo usermod -aG docker $USER
 ```
 
 **Windows (WSL2):**
+
 ```bash
 # In WSL2 terminal
 sudo apt update
@@ -145,6 +149,7 @@ npm run dev
 ```
 
 **Available Scripts:**
+
 ```bash
 npm run dev          # Start with hot reload
 npm start            # Start production server
@@ -172,6 +177,7 @@ npm run dev
 ```
 
 **Available Scripts:**
+
 ```bash
 npm run dev          # Start dev server with hot reload
 npm run build        # Build for production
@@ -203,6 +209,7 @@ npm run deploy:local
 ```
 
 **Available Scripts:**
+
 ```bash
 npm run compile      # Compile Solidity contracts
 npm test             # Run Hardhat tests
@@ -232,6 +239,7 @@ python src/agent_alpha.py
 ```
 
 **Available Commands:**
+
 ```bash
 pytest                        # Run tests
 pytest --cov=src            # Run with coverage

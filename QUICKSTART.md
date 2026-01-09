@@ -44,6 +44,7 @@ docker-compose up -d
 ```
 
 This starts:
+
 - 📦 **PostgreSQL** (port 5432) - Database
 - 🔴 **Redis** (port 6379) - Cache
 - 🌐 **IPFS** (ports 4001, 5001, 8080) - Decentralized storage
@@ -68,15 +69,16 @@ docker-compose logs backend
 
 ### 5. Access Applications
 
-| Service | URL | Description |
-|---------|-----|-------------|
-| **Frontend** | http://localhost:3000 | Main UI |
-| **API Docs** | http://localhost:8000/docs | Swagger UI |
-| **RabbitMQ UI** | http://localhost:15672 | Queue management |
-| **IPFS Gateway** | http://localhost:8080 | IPFS access |
-| **IPFS API** | http://localhost:5001 | IPFS API |
+| Service          | URL                        | Description      |
+| ---------------- | -------------------------- | ---------------- |
+| **Frontend**     | http://localhost:3000      | Main UI          |
+| **API Docs**     | http://localhost:8000/docs | Swagger UI       |
+| **RabbitMQ UI**  | http://localhost:15672     | Queue management |
+| **IPFS Gateway** | http://localhost:8080      | IPFS access      |
+| **IPFS API**     | http://localhost:5001      | IPFS API         |
 
 **Default Credentials:**
+
 - RabbitMQ: `nwu_admin` / `nwu_rabbitmq_pass`
 - PostgreSQL: `nwu_user` / `nwu_password`
 
@@ -173,6 +175,7 @@ apply.bat
 ```
 
 **What it does:**
+
 - Validates the API is running
 - Uploads your file to IPFS
 - Submits contribution metadata
@@ -204,6 +207,7 @@ curl "http://localhost:8080/ipfs/YOUR_HASH_HERE"
 ### Test RabbitMQ
 
 Visit http://localhost:15672 and login with:
+
 - Username: `nwu_admin`
 - Password: `nwu_rabbitmq_pass`
 

@@ -3,6 +3,7 @@
 ## Quick Start
 
 ### Prerequisites
+
 - Python 3.10+
 - Node.js 18+ (for smart contract compilation)
 - IPFS daemon
