@@ -69,9 +69,10 @@ jobs:
         with:
           node-version: '18'
           registry-url: 'https://registry.npmjs.org'
+          cache: ${{ hashFiles('backend/package-lock.json') != '' && 'npm' || '' }}
       
       - name: Install dependencies
-        run: cd backend && npm ci
+        run: cd backend && npm install
       
       - name: Run tests
         run: cd backend && npm test
@@ -116,9 +117,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
+          cache: ${{ hashFiles('frontend/package-lock.json') != '' && 'npm' || '' }}
       
       - name: Install dependencies
-        run: cd frontend && npm ci
+        run: cd frontend && npm install
       
       - name: Run tests
         run: cd frontend && npm test -- --coverage
@@ -163,9 +165,10 @@ jobs:
         with:
           node-version: '18'
           registry-url: 'https://registry.npmjs.org'
+          cache: ${{ hashFiles('contracts/package-lock.json') != '' && 'npm' || '' }}
       
       - name: Install dependencies
-        run: cd contracts && npm ci
+        run: cd contracts && npm install
       
       - name: Compile contracts
         run: cd contracts && npm run compile

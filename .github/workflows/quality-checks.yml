@@ -39,11 +39,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: 'backend/package-lock.json'
+          cache: ${{ hashFiles('backend/package-lock.json') != '' && 'npm' || '' }}
       
       - name: Install dependencies
-        run: cd backend && npm ci
+        run: cd backend && npm install
       
       - name: Lint code
         run: cd backend && npm run lint || true
@@ -71,11 +70,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: 'frontend/package-lock.json'
+          cache: ${{ hashFiles('frontend/package-lock.json') != '' && 'npm' || '' }}
       
       - name: Install dependencies
-        run: cd frontend && npm ci
+        run: cd frontend && npm install
       
       - name: Lint code
         run: cd frontend && npm run lint || true
@@ -106,11 +104,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: 'contracts/package-lock.json'
+          cache: ${{ hashFiles('contracts/package-lock.json') != '' && 'npm' || '' }}
       
       - name: Install dependencies
-        run: cd contracts && npm ci
+        run: cd contracts && npm install
       
       - name: Lint Solidity
         run: cd contracts && npm run lint || true
@@ -211,6 +208,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
+          cache: ${{ hashFiles('package-lock.json') != '' && 'npm' || '' }}
       
       - name: Install complexity analyzer
         run: npm install -g complexity-report
@@ -238,6 +236,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
+          cache: ${{ hashFiles('package-lock.json') != '' && 'npm' || '' }}
       
       - name: Check outdated dependencies
         run: |
