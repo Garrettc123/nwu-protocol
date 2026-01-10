@@ -4,16 +4,19 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
 import json
+import logging
 
 from ..database import get_db
 from ..models import Verification, Contribution
 from ..schemas import VerificationCreate, VerificationResponse
+from .websocket import notify_contribution_update
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/verifications", tags=["verifications"])
 
 
 @router.post("/", response_model=VerificationResponse, status_code=status.HTTP_201_CREATED)
-def submit_verification(verification_data: VerificationCreate, db: Session = Depends(get_db)):
+async def submit_verification(verification_data: VerificationCreate, db: Session = Depends(get_db)):
     """
     Submit a verification result from an AI agent.
     
@@ -62,6 +65,19 @@ def submit_verification(verification_data: VerificationCreate, db: Session = Dep
             contribution.status = "rejected"
     
     db.commit()
+    
+    # Send WebSocket notification
+    try:
+        await notify_contribution_update(
+            contribution.id,
+            contribution.status,
+            contribution.quality_score
+        )
+    except Exception as e:
+        # Log error but don't fail the request
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Failed to send WebSocket notification: {e}")
     
     return verification
 
