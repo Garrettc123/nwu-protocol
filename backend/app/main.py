@@ -9,8 +9,8 @@ from datetime import datetime
 
 from .config import settings
 from .database import init_db, engine
-from .api import contributions_router, users_router, verifications_router
-from .services import rabbitmq_service
+from .api import contributions_router, users_router, verifications_router, auth_router, websocket_router
+from .services import rabbitmq_service, redis_service
 
 # Configure logging
 logging.basicConfig(
@@ -34,6 +34,12 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"Failed to connect to RabbitMQ: {e}")
     
+    try:
+        await redis_service.connect()
+        logger.info("Redis connected")
+    except Exception as e:
+        logger.error(f"Failed to connect to Redis: {e}")
+    
     yield
     
     # Shutdown
@@ -43,6 +49,12 @@ async def lifespan(app: FastAPI):
         logger.info("RabbitMQ disconnected")
     except Exception as e:
         logger.error(f"Error disconnecting RabbitMQ: {e}")
+    
+    try:
+        await redis_service.disconnect()
+        logger.info("Redis disconnected")
+    except Exception as e:
+        logger.error(f"Error disconnecting Redis: {e}")
 
 
 # Create FastAPI application
@@ -69,6 +81,8 @@ app.add_middleware(
 app.include_router(contributions_router)
 app.include_router(users_router)
 app.include_router(verifications_router)
+app.include_router(auth_router)
+app.include_router(websocket_router)
 
 
 @app.get("/")
@@ -104,15 +118,19 @@ async def health_check():
     # Check RabbitMQ
     rabbitmq_healthy = await rabbitmq_service.is_connected()
     
+    # Check Redis
+    redis_healthy = await redis_service.is_connected()
+    
     return {
-        "status": "healthy" if all([db_healthy, ipfs_healthy, rabbitmq_healthy]) else "degraded",
+        "status": "healthy" if all([db_healthy, ipfs_healthy, rabbitmq_healthy, redis_healthy]) else "degraded",
         "service": "nwu-protocol-backend",
         "version": "1.0.0",
         "timestamp": datetime.utcnow().isoformat(),
         "checks": {
             "database": db_healthy,
             "ipfs": ipfs_healthy,
-            "rabbitmq": rabbitmq_healthy
+            "rabbitmq": rabbitmq_healthy,
+            "redis": redis_healthy
         }
     }
 

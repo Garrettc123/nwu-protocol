@@ -26,7 +26,12 @@ class Settings(BaseSettings):
     ipfs_host: str = "ipfs"
     ipfs_port: int = 5001
     
-    # Authentication
+    # JWT Authentication
+    jwt_secret_key: str = "CHANGE-ME-IN-PRODUCTION-USE-ENV-VARIABLE"
+    jwt_algorithm: str = "HS256"
+    jwt_access_token_expire_minutes: int = 1440  # 24 hours
+    
+    # Legacy auth settings (for backward compatibility)
     secret_key: str = "CHANGE-ME-IN-PRODUCTION-USE-ENV-VARIABLE"
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
