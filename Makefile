@@ -12,6 +12,9 @@ help:
 	@echo "  make logs       - View all logs"
 	@echo "  make status     - Show service status"
 	@echo "  make health     - Check system health"
+	@echo "  make validate   - Run comprehensive backend validation"
+	@echo "  make test-api   - Test all API endpoints"
+	@echo "  make test-all   - Run full system validation"
 	@echo "  make clean      - Clean up containers and volumes"
 	@echo "  make test       - Run all tests"
 	@echo "  make build      - Build Docker images"
@@ -67,6 +70,21 @@ status:
 health:
 	@echo "Checking system health..."
 	@curl -s http://localhost:8000/health | jq . || echo "Backend not responding"
+
+# Validate all backend services
+validate:
+	@echo "Running comprehensive backend validation..."
+	@./validate-backend.sh
+
+# Test API endpoints
+test-api:
+	@echo "Testing all API endpoints..."
+	@./test-api-endpoints.sh
+
+# Full validation (backend + API)
+test-all:
+	@echo "Running full system validation..."
+	@./validate-backend.sh && ./test-api-endpoints.sh
 
 # Clean up
 clean:

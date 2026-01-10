@@ -153,9 +153,29 @@ make help          # Show all available commands
 make status        # Check service status
 make logs          # View all logs
 make health        # Check system health
+make validate      # Run comprehensive backend validation
+make test-api      # Test all API endpoints
+make test-all      # Full system validation
 make frontend      # Start frontend dev server
 make clean         # Clean up everything
 ```
+
+## 🔍 Backend Verification
+
+All backend services (invisible components) are automatically validated:
+
+```bash
+# Run comprehensive backend validation
+make validate
+
+# Test all API endpoints
+make test-api
+
+# Full validation (infrastructure + API)
+make test-all
+```
+
+See [BACKEND_VERIFICATION.md](BACKEND_VERIFICATION.md) for complete details on what gets tested.
 
 ## 📚 Documentation
 

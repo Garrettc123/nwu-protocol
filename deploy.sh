@@ -360,6 +360,16 @@ main() {
     display_urls
     
     log_success "Deployment completed successfully! 🎉"
+    echo ""
+    
+    # Run comprehensive backend validation
+    log_info "Running comprehensive backend validation..."
+    echo ""
+    if [ -f ./validate-backend.sh ]; then
+        ./validate-backend.sh
+    else
+        log_warning "Backend validation script not found, skipping validation"
+    fi
 }
 
 # Run main function
