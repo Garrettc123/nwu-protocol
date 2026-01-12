@@ -7,6 +7,9 @@
     "test": "hardhat test",
     "deploy:local": "hardhat run scripts/deploy.js --network localhost",
     "deploy:sepolia": "hardhat run scripts/deploy.js --network sepolia",
+    "deploy:mainnet": "hardhat run scripts/deploy.js --network mainnet",
+    "verify:sepolia": "hardhat verify --network sepolia",
+    "verify:mainnet": "hardhat verify --network mainnet",
     "node": "hardhat node"
   },
   "devDependencies": {
@@ -14,6 +17,7 @@
     "hardhat": "^2.19.4"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^5.0.1"
+    "@openzeppelin/contracts": "^5.0.1",
+    "dotenv": "^16.3.1"
   }
 }
