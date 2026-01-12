@@ -32,9 +32,7 @@ describe('VerificationRegistry', function () {
     });
 
     it('Should not allow non-owner to add verifiers', async function () {
-      await expect(
-        registry.connect(verifier).addVerifier(contributor.address)
-      ).to.be.reverted;
+      await expect(registry.connect(verifier).addVerifier(contributor.address)).to.be.reverted;
     });
   });
 
@@ -48,12 +46,9 @@ describe('VerificationRegistry', function () {
     });
 
     it('Should allow verifier to record verification', async function () {
-      await registry.connect(verifier).recordVerification(
-        contributionId,
-        ipfsHash,
-        qualityScore,
-        contributor.address
-      );
+      await registry
+        .connect(verifier)
+        .recordVerification(contributionId, ipfsHash, qualityScore, contributor.address);
 
       const verification = await registry.verifications(contributionId);
       expect(verification.exists).to.be.true;
@@ -64,43 +59,31 @@ describe('VerificationRegistry', function () {
 
     it('Should not allow non-verifier to record', async function () {
       await expect(
-        registry.connect(contributor).recordVerification(
-          contributionId,
-          ipfsHash,
-          qualityScore,
-          contributor.address
-        )
+        registry
+          .connect(contributor)
+          .recordVerification(contributionId, ipfsHash, qualityScore, contributor.address)
       ).to.be.revertedWith('Not authorized verifier');
     });
 
     it('Should mark as not verified if score is low', async function () {
       const lowScore = 60;
-      await registry.connect(verifier).recordVerification(
-        contributionId,
-        ipfsHash,
-        lowScore,
-        contributor.address
-      );
+      await registry
+        .connect(verifier)
+        .recordVerification(contributionId, ipfsHash, lowScore, contributor.address);
 
       const verification = await registry.verifications(contributionId);
       expect(verification.verified).to.be.false;
     });
 
     it('Should not allow duplicate verifications', async function () {
-      await registry.connect(verifier).recordVerification(
-        contributionId,
-        ipfsHash,
-        qualityScore,
-        contributor.address
-      );
+      await registry
+        .connect(verifier)
+        .recordVerification(contributionId, ipfsHash, qualityScore, contributor.address);
 
       await expect(
-        registry.connect(verifier).recordVerification(
-          contributionId,
-          ipfsHash,
-          qualityScore,
-          contributor.address
-        )
+        registry
+          .connect(verifier)
+          .recordVerification(contributionId, ipfsHash, qualityScore, contributor.address)
       ).to.be.revertedWith('Verification already exists');
     });
   });
@@ -112,12 +95,9 @@ describe('VerificationRegistry', function () {
 
     beforeEach(async function () {
       await registry.addVerifier(verifier.address);
-      await registry.connect(verifier).recordVerification(
-        contributionId,
-        ipfsHash,
-        qualityScore,
-        contributor.address
-      );
+      await registry
+        .connect(verifier)
+        .recordVerification(contributionId, ipfsHash, qualityScore, contributor.address);
     });
 
     it('Should return verification details', async function () {

@@ -12,6 +12,7 @@
 ```
 
 **That's it!** The deployment script automatically handles everything:
+
 - ✅ Builds all Docker images
 - ✅ Starts 7 infrastructure services
 - ✅ Runs database migrations
@@ -19,6 +20,7 @@
 - ✅ Displays all service URLs
 
 **Alternative with Make:**
+
 ```bash
 make deploy
 ```
@@ -121,6 +123,7 @@ cp .env.example .env
 ```
 
 Or use Make:
+
 ```bash
 make deploy
 ```

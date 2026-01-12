@@ -73,6 +73,7 @@ docker-compose up -d
 ```
 
 This will start:
+
 - PostgreSQL (port 5432)
 - MongoDB (port 27017)
 - Redis (port 6379)
@@ -198,6 +199,7 @@ vercel --prod
 ```
 
 Or use the Vercel dashboard:
+
 1. Connect your GitHub repository
 2. Configure environment variables
 3. Deploy
@@ -233,6 +235,7 @@ curl http://localhost:8000/health
 ```
 
 Expected response:
+
 ```json
 {
   "status": "healthy",
@@ -250,6 +253,7 @@ Expected response:
 ### RabbitMQ Management UI
 
 Visit: http://localhost:15672
+
 - Username: guest
 - Password: guest
 
@@ -284,11 +288,13 @@ docker-compose ps
 ### Backend Won't Start
 
 1. Check database connection:
+
    ```bash
    docker-compose logs postgres
    ```
 
 2. Check if port 8000 is available:
+
    ```bash
    lsof -i :8000
    ```
@@ -301,6 +307,7 @@ docker-compose ps
 ### Agent Not Processing Tasks
 
 1. Check RabbitMQ:
+
    ```bash
    docker-compose logs rabbitmq
    ```
@@ -349,6 +356,7 @@ docker-compose ps
 ### Secrets Management
 
 Never commit secrets to git. Use:
+
 - Environment variables
 - Docker secrets
 - AWS Secrets Manager / Azure Key Vault
@@ -395,7 +403,7 @@ Add load balancer (nginx):
 nginx:
   image: nginx:alpine
   ports:
-    - "80:80"
+    - '80:80'
   volumes:
     - ./nginx.conf:/etc/nginx/nginx.conf
   depends_on:
@@ -405,6 +413,7 @@ nginx:
 ### Database Scaling
 
 Consider:
+
 - Read replicas for PostgreSQL
 - MongoDB sharding
 - Redis cluster
@@ -413,6 +422,7 @@ Consider:
 ## Support
 
 For issues and questions:
+
 - GitHub Issues: https://github.com/Garrettc123/nwu-protocol/issues
 - Documentation: See README.md
 - API Docs: http://localhost:8000/docs

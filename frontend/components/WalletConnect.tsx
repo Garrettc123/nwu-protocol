@@ -12,10 +12,10 @@ export default function WalletConnect() {
   const handleConnect = async () => {
     try {
       setError(null);
-      
+
       // Connect wallet
       await connect();
-      
+
       // Get the connected address
       const walletAddress = useWallet.getState().address;
       if (!walletAddress) {
@@ -79,9 +79,7 @@ export default function WalletConnect() {
       >
         {connecting ? 'Connecting...' : authenticating ? 'Authenticating...' : 'Connect Wallet'}
       </button>
-      {error && (
-        <p className="mt-2 text-sm text-red-400">{error}</p>
-      )}
+      {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
     </div>
   );
 }

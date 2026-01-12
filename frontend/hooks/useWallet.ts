@@ -8,7 +8,7 @@ interface WalletState {
   connected: boolean;
   connecting: boolean;
   error: string | null;
-  
+
   connect: () => Promise<void>;
   disconnect: () => void;
   signMessage: (message: string) => Promise<string>;
@@ -31,11 +31,11 @@ export const useWallet = create<WalletState>((set, get) => ({
       }
 
       const provider = new ethers.BrowserProvider(window.ethereum);
-      
+
       // Request account access
       const accounts = await provider.send('eth_requestAccounts', []);
       const address = accounts[0];
-      
+
       // Get signer
       const signer = await provider.getSigner();
 
@@ -45,7 +45,7 @@ export const useWallet = create<WalletState>((set, get) => ({
         signer,
         connected: true,
         connecting: false,
-        error: null
+        error: null,
       });
 
       // Listen for account changes
@@ -61,11 +61,10 @@ export const useWallet = create<WalletState>((set, get) => ({
       window.ethereum.on('chainChanged', () => {
         window.location.reload();
       });
-
     } catch (error: any) {
       set({
         connecting: false,
-        error: error.message || 'Failed to connect wallet'
+        error: error.message || 'Failed to connect wallet',
       });
       throw error;
     }
@@ -78,7 +77,7 @@ export const useWallet = create<WalletState>((set, get) => ({
       signer: null,
       connected: false,
       connecting: false,
-      error: null
+      error: null,
     });
   },
 
@@ -88,7 +87,7 @@ export const useWallet = create<WalletState>((set, get) => ({
       throw new Error('Wallet not connected');
     }
     return await signer.signMessage(message);
-  }
+  },
 }));
 
 // Type declaration for window.ethereum

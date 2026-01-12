@@ -7,18 +7,22 @@ This document describes all the "invisible" backend components and how to verify
 The NWU Protocol includes extensive backend validation to ensure ALL invisible components are working:
 
 ### 1. Infrastructure Services
+
 - **PostgreSQL Database** - Relational data storage
-- **MongoDB** - NoSQL document storage  
+- **MongoDB** - NoSQL document storage
 - **Redis** - Caching and session management
 - **RabbitMQ** - Message queue for async processing
 - **IPFS** - Decentralized file storage
 
 ### 2. Application Services
+
 - **Backend API** - FastAPI application
 - **Agent-Alpha** - AI verification service
 
 ### 3. API Endpoints
+
 All REST API endpoints are tested:
+
 - Authentication endpoints
 - Contribution management
 - User management
@@ -26,6 +30,7 @@ All REST API endpoints are tested:
 - Health checks
 
 ### 4. Service Connectivity
+
 - Container-to-container networking
 - Database connections
 - Queue connections
@@ -65,11 +70,13 @@ Or run scripts directly:
 ## ✅ What Gets Tested
 
 ### Container Health
+
 - All 7 containers running
 - Container health status
 - Restart policies working
 
 ### PostgreSQL Database
+
 - Database server accepting connections
 - Database 'nwu_db' exists
 - Tables created (via migrations)
@@ -77,12 +84,14 @@ Or run scripts directly:
 - Connection from backend
 
 ### MongoDB
+
 - MongoDB server running
 - Authentication working
 - Database operations
 - Connection pooling
 
 ### Redis
+
 - Redis server responding
 - Write operations (SET)
 - Read operations (GET)
@@ -90,6 +99,7 @@ Or run scripts directly:
 - Session storage
 
 ### RabbitMQ
+
 - RabbitMQ service running
 - Management API accessible
 - Queues created
@@ -97,6 +107,7 @@ Or run scripts directly:
 - Message consumption
 
 ### IPFS
+
 - IPFS daemon running
 - API accessible (port 5001)
 - Gateway accessible (port 8080)
@@ -105,6 +116,7 @@ Or run scripts directly:
 - Content addressing
 
 ### Backend API
+
 - Health endpoint responding
 - All service connections healthy
 - Database connection OK
@@ -116,6 +128,7 @@ Or run scripts directly:
 - All API routes registered
 
 ### Agent-Alpha
+
 - Container running
 - Startup successful
 - RabbitMQ connection established
@@ -124,18 +137,21 @@ Or run scripts directly:
 - OpenAI integration (if API key provided)
 
 ### Database Migrations
+
 - Alembic migrations applied
 - Schema at correct version
 - All tables created
 - Indexes in place
 
 ### Environment Configuration
+
 - .env file exists
 - Required variables set
 - API keys configured
 - Secrets properly set
 
 ### Network Connectivity
+
 - Backend → PostgreSQL
 - Backend → MongoDB
 - Backend → Redis
@@ -162,6 +178,7 @@ After validation, you'll see a detailed report:
 ```
 
 ### Success Indicators
+
 - ✓ Green checkmarks = Test passed
 - ⚠ Yellow warnings = Non-critical issues (like missing OpenAI key)
 - ✗ Red X marks = Test failed
@@ -171,11 +188,13 @@ After validation, you'll see a detailed report:
 ### If Validation Fails
 
 1. **Check container status:**
+
    ```bash
    docker-compose ps
    ```
 
 2. **View logs:**
+
    ```bash
    docker-compose logs [service-name]
    # Examples:
@@ -185,11 +204,13 @@ After validation, you'll see a detailed report:
    ```
 
 3. **Restart specific service:**
+
    ```bash
    docker-compose restart [service-name]
    ```
 
 4. **Full restart:**
+
    ```bash
    docker-compose restart
    ```
@@ -203,6 +224,7 @@ After validation, you'll see a detailed report:
 ### Common Issues
 
 #### PostgreSQL Connection Failed
+
 ```bash
 # Check if PostgreSQL is ready
 docker exec nwu-postgres pg_isready -U nwu_user
@@ -215,6 +237,7 @@ docker-compose restart postgres
 ```
 
 #### Redis Connection Failed
+
 ```bash
 # Test Redis directly
 docker exec nwu-redis redis-cli ping
@@ -223,6 +246,7 @@ docker exec nwu-redis redis-cli ping
 ```
 
 #### RabbitMQ Not Accessible
+
 ```bash
 # Check RabbitMQ status
 docker exec nwu-rabbitmq rabbitmq-diagnostics ping
@@ -233,6 +257,7 @@ open http://localhost:15672
 ```
 
 #### IPFS Not Responding
+
 ```bash
 # Check IPFS daemon
 docker exec nwu-ipfs ipfs id
@@ -242,6 +267,7 @@ curl http://localhost:5001/api/v0/id
 ```
 
 #### Backend API Not Responding
+
 ```bash
 # Check if backend is running
 docker-compose ps backend
@@ -254,6 +280,7 @@ curl http://localhost:8000/health | jq
 ```
 
 #### Agent Not Processing Tasks
+
 ```bash
 # Check agent logs
 docker-compose logs agent-alpha --tail=50
@@ -268,6 +295,7 @@ docker exec nwu-agent-alpha env | grep OPENAI
 ## 🎯 Validation Coverage
 
 ### What's Tested
+
 - ✅ All 7 Docker containers
 - ✅ 5 infrastructure services
 - ✅ 2 application services
@@ -280,6 +308,7 @@ docker exec nwu-agent-alpha env | grep OPENAI
 - ✅ Network routing
 
 ### What's NOT Tested (Yet)
+
 - Smart contract deployment
 - Frontend functionality
 - End-to-end workflows
@@ -304,6 +333,7 @@ done
 ## 🔐 Security Checks
 
 Validation includes security checks:
+
 - ✅ Database authentication working
 - ✅ Redis password (if set)
 - ✅ RabbitMQ credentials
@@ -321,6 +351,7 @@ Validation includes security checks:
 ## 🎉 Success Criteria
 
 Your backend is fully operational when:
+
 - ✅ All validation tests pass
 - ✅ No containers in restart loop
 - ✅ Health endpoint returns "healthy"

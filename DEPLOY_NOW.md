@@ -31,6 +31,7 @@ That's it! The deployment script will handle everything automatically.
 ### Install Prerequisites
 
 **Ubuntu/Debian:**
+
 ```bash
 # Docker
 curl -fsSL https://get.docker.com -o get-docker.sh
@@ -42,6 +43,7 @@ sudo apt-get install -y nodejs
 ```
 
 **macOS:**
+
 ```bash
 # Install Docker Desktop from https://www.docker.com/products/docker-desktop
 
@@ -126,20 +128,21 @@ docker-compose -f docker-compose.prod.yml up -d
 
 After deployment, access these URLs:
 
-| Service | URL | Credentials |
-|---------|-----|-------------|
-| Backend API | http://localhost:8000 | - |
-| API Docs | http://localhost:8000/docs | - |
-| Frontend | http://localhost:3000 | - |
-| RabbitMQ Management | http://localhost:15672 | guest/guest |
-| IPFS Gateway | http://localhost:8080 | - |
-| PostgreSQL | localhost:5432 | nwu_user/rocket69! |
-| MongoDB | localhost:27017 | admin/rocket69! |
-| Redis | localhost:6379 | - |
+| Service             | URL                        | Credentials        |
+| ------------------- | -------------------------- | ------------------ |
+| Backend API         | http://localhost:8000      | -                  |
+| API Docs            | http://localhost:8000/docs | -                  |
+| Frontend            | http://localhost:3000      | -                  |
+| RabbitMQ Management | http://localhost:15672     | guest/guest        |
+| IPFS Gateway        | http://localhost:8080      | -                  |
+| PostgreSQL          | localhost:5432             | nwu_user/rocket69! |
+| MongoDB             | localhost:27017            | admin/rocket69!    |
+| Redis               | localhost:6379             | -                  |
 
 ## Useful Commands
 
 ### View Logs
+
 ```bash
 # All services
 docker-compose logs -f
@@ -153,6 +156,7 @@ docker-compose logs --tail=100 backend
 ```
 
 ### Restart Services
+
 ```bash
 # Restart all
 docker-compose restart
@@ -162,6 +166,7 @@ docker-compose restart backend
 ```
 
 ### Stop Services
+
 ```bash
 # Stop all services
 docker-compose down
@@ -171,6 +176,7 @@ docker-compose down -v
 ```
 
 ### Database Operations
+
 ```bash
 # Access PostgreSQL
 docker exec -it nwu-postgres psql -U nwu_user -d nwu_db
@@ -186,6 +192,7 @@ docker exec -i nwu-postgres psql -U nwu_user nwu_db < backup.sql
 ```
 
 ### Run Migrations
+
 ```bash
 # Apply migrations
 docker exec nwu-backend alembic upgrade head

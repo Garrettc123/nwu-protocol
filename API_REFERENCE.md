@@ -37,6 +37,7 @@ Content-Type: application/json
 Initiate wallet connection and get a nonce to sign.
 
 **Request:**
+
 ```json
 {
   "address": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
@@ -44,6 +45,7 @@ Initiate wallet connection and get a nonce to sign.
 ```
 
 **Response:**
+
 ```json
 {
   "nonce": "random_nonce_string",
@@ -57,6 +59,7 @@ Initiate wallet connection and get a nonce to sign.
 Verify wallet signature and receive JWT token.
 
 **Request:**
+
 ```json
 {
   "address": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb",
@@ -66,6 +69,7 @@ Verify wallet signature and receive JWT token.
 ```
 
 **Response:**
+
 ```json
 {
   "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
@@ -80,9 +84,11 @@ Verify wallet signature and receive JWT token.
 Logout and invalidate session.
 
 **Query Parameters:**
+
 - `address` (required): Ethereum address
 
 **Response:**
+
 ```json
 {
   "message": "Logged out successfully"
@@ -94,9 +100,11 @@ Logout and invalidate session.
 Check authentication status.
 
 **Query Parameters:**
+
 - `address` (required): Ethereum address
 
 **Response:**
+
 ```json
 {
   "authenticated": true,
@@ -113,6 +121,7 @@ Check authentication status.
 Upload a new contribution.
 
 **Form Data:**
+
 - `file` (required): File to upload
 - `title` (required): Title of the contribution
 - `description` (optional): Description
@@ -121,6 +130,7 @@ Upload a new contribution.
 - `metadata` (optional): JSON string with additional metadata
 
 **Response:**
+
 ```json
 {
   "id": 1,
@@ -144,6 +154,7 @@ Upload a new contribution.
 Get contribution details by ID.
 
 **Response:**
+
 ```json
 {
   "id": 1,
@@ -167,6 +178,7 @@ Get contribution details by ID.
 Get real-time verification status.
 
 **Response:**
+
 ```json
 {
   "contribution_id": 1,
@@ -182,12 +194,14 @@ Get real-time verification status.
 List all contributions with optional filters.
 
 **Query Parameters:**
+
 - `skip` (optional): Number of records to skip (default: 0)
 - `limit` (optional): Maximum number of records (default: 50, max: 100)
 - `status` (optional): Filter by status (pending, verifying, verified, rejected)
 - `user_address` (optional): Filter by user address
 
 **Response:**
+
 ```json
 [
   {
@@ -216,6 +230,7 @@ Download the original file from IPFS.
 Create a new user.
 
 **Request:**
+
 ```json
 {
   "address": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb",
@@ -225,6 +240,7 @@ Create a new user.
 ```
 
 **Response:**
+
 ```json
 {
   "id": 1,
@@ -244,6 +260,7 @@ Create a new user.
 Get user by Ethereum address.
 
 **Response:**
+
 ```json
 {
   "id": 1,
@@ -251,7 +268,7 @@ Get user by Ethereum address.
   "username": "alice",
   "reputation_score": 75.5,
   "total_contributions": 10,
-  "total_rewards": 1250.50,
+  "total_rewards": 1250.5,
   "created_at": "2024-01-10T10:00:00"
 }
 ```
@@ -261,10 +278,12 @@ Get user by Ethereum address.
 Get all contributions by a user.
 
 **Query Parameters:**
+
 - `skip` (optional): Number of records to skip (default: 0)
 - `limit` (optional): Maximum number of records (default: 50)
 
 **Response:**
+
 ```json
 {
   "user_address": "0x742d35cc6634c0532925a3b844bc9e7595f0beb",
@@ -284,16 +303,18 @@ Get all contributions by a user.
 Get reward history for a user.
 
 **Query Parameters:**
+
 - `skip` (optional): Number of records to skip (default: 0)
 - `limit` (optional): Maximum number of records (default: 50)
 
 **Response:**
+
 ```json
 {
   "user_address": "0x742d35cc6634c0532925a3b844bc9e7595f0beb",
-  "total_rewards": 1250.50,
+  "total_rewards": 1250.5,
   "pending_amount": 200.0,
-  "distributed_amount": 1050.50,
+  "distributed_amount": 1050.5,
   "rewards": [
     {
       "id": 1,
@@ -313,6 +334,7 @@ Get reward history for a user.
 Get user statistics.
 
 **Response:**
+
 ```json
 {
   "user_address": "0x742d35cc6634c0532925a3b844bc9e7595f0beb",
@@ -320,7 +342,7 @@ Get user statistics.
   "total_contributions": 10,
   "verified_contributions": 8,
   "average_quality_score": 82.3,
-  "total_rewards": 1250.50,
+  "total_rewards": 1250.5,
   "joined_at": "2024-01-10T10:00:00"
 }
 ```
@@ -334,6 +356,7 @@ Get user statistics.
 Submit a verification result (agents only).
 
 **Request:**
+
 ```json
 {
   "contribution_id": 1,
@@ -354,6 +377,7 @@ Submit a verification result (agents only).
 ```
 
 **Response:**
+
 ```json
 {
   "id": 1,
@@ -371,6 +395,7 @@ Submit a verification result (agents only).
 Get all verifications for a contribution.
 
 **Response:**
+
 ```json
 [
   {
@@ -394,6 +419,7 @@ Get all verifications for a contribution.
 System health check.
 
 **Response:**
+
 ```json
 {
   "status": "healthy",
@@ -414,6 +440,7 @@ System health check.
 API information.
 
 **Response:**
+
 ```json
 {
   "name": "NWU Protocol API",
@@ -430,6 +457,7 @@ API information.
 Detailed API information.
 
 **Response:**
+
 ```json
 {
   "name": "NWU Protocol API",
@@ -454,10 +482,11 @@ Detailed API information.
 Real-time updates for contribution verification status.
 
 **Connection:**
+
 ```javascript
 const ws = new WebSocket('ws://localhost:8000/ws/contributions/1');
 
-ws.onmessage = (event) => {
+ws.onmessage = event => {
   const data = JSON.parse(event.data);
   console.log('Update:', data);
 };
@@ -469,6 +498,7 @@ setInterval(() => ws.send('ping'), 30000);
 **Message Types:**
 
 Initial status:
+
 ```json
 {
   "type": "status",
@@ -481,6 +511,7 @@ Initial status:
 ```
 
 Update notification:
+
 ```json
 {
   "type": "update",
@@ -498,6 +529,7 @@ Update notification:
 All endpoints may return the following error responses:
 
 ### 400 Bad Request
+
 ```json
 {
   "error": "Invalid request parameters",
@@ -506,6 +538,7 @@ All endpoints may return the following error responses:
 ```
 
 ### 401 Unauthorized
+
 ```json
 {
   "error": "Authentication required",
@@ -514,6 +547,7 @@ All endpoints may return the following error responses:
 ```
 
 ### 404 Not Found
+
 ```json
 {
   "error": "Resource not found",
@@ -522,6 +556,7 @@ All endpoints may return the following error responses:
 ```
 
 ### 500 Internal Server Error
+
 ```json
 {
   "error": "Internal server error",
@@ -587,9 +622,9 @@ async function authenticate(address, signature, nonce) {
   const response = await axios.post('http://localhost:8000/api/v1/auth/verify', {
     address,
     signature,
-    nonce
+    nonce,
   });
-  
+
   return response.data.access_token;
 }
 
@@ -599,18 +634,14 @@ async function uploadContribution(token, file, metadata) {
   formData.append('title', metadata.title);
   formData.append('file_type', metadata.file_type);
   formData.append('user_address', metadata.user_address);
-  
-  const response = await axios.post(
-    'http://localhost:8000/api/v1/contributions/',
-    formData,
-    {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'multipart/form-data'
-      }
-    }
-  );
-  
+
+  const response = await axios.post('http://localhost:8000/api/v1/contributions/', formData, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+
   return response.data;
 }
 ```
@@ -620,5 +651,6 @@ async function uploadContribution(token, file, metadata) {
 ## Support
 
 For API issues:
+
 - GitHub Issues: https://github.com/Garrettc123/nwu-protocol/issues
 - Email: support@nwu-protocol.com

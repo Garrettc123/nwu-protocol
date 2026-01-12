@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 export default function Dashboard() {
   const { address, connected } = useWallet();
   const router = useRouter();
-  
+
   const [user, setUser] = useState<User | null>(null);
   const [contributions, setContributions] = useState<Contribution[]>([]);
   const [stats, setStats] = useState<any>(null);
@@ -31,14 +31,13 @@ export default function Dashboard() {
           api.getUser(address).catch(() => null),
           api.getUserContributions(address),
           api.getUserStats(address),
-          api.getUserRewards(address)
+          api.getUserRewards(address),
         ]);
 
         setUser(userData);
         setContributions(userContributions.contributions || []);
         setStats(userStats);
         setRewards(userRewards);
-        
       } catch (error) {
         console.error('Failed to load dashboard data:', error);
       } finally {
@@ -80,7 +79,9 @@ export default function Dashboard() {
 
           <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
             <div className="text-gray-400 text-sm mb-2">Verified</div>
-            <div className="text-3xl font-bold text-green-500">{stats?.verified_contributions || 0}</div>
+            <div className="text-3xl font-bold text-green-500">
+              {stats?.verified_contributions || 0}
+            </div>
           </div>
 
           <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
@@ -90,7 +91,9 @@ export default function Dashboard() {
 
           <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
             <div className="text-gray-400 text-sm mb-2">Total Rewards</div>
-            <div className="text-3xl font-bold text-yellow-500">{user?.total_rewards.toFixed(2) || '0.00'} NWU</div>
+            <div className="text-3xl font-bold text-yellow-500">
+              {user?.total_rewards.toFixed(2) || '0.00'} NWU
+            </div>
           </div>
         </div>
 
@@ -121,7 +124,7 @@ export default function Dashboard() {
         <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold">Recent Contributions</h2>
-            <Link 
+            <Link
               href="/upload"
               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition"
             >
@@ -138,7 +141,7 @@ export default function Dashboard() {
             </div>
           ) : (
             <div className="space-y-4">
-              {contributions.map((contribution) => (
+              {contributions.map(contribution => (
                 <div
                   key={contribution.id}
                   className="bg-gray-900 p-4 rounded-lg border border-gray-700 hover:border-gray-600 transition"
@@ -150,16 +153,25 @@ export default function Dashboard() {
                       <div className="flex gap-4 mt-2 text-sm">
                         <span className="text-gray-500">Type: {contribution.file_type}</span>
                         <span className="text-gray-500">
-                          Status: <span className={
-                            contribution.status === 'verified' ? 'text-green-400' :
-                            contribution.status === 'verifying' ? 'text-yellow-400' :
-                            contribution.status === 'rejected' ? 'text-red-400' :
-                            'text-gray-400'
-                          }>{contribution.status}</span>
+                          Status:{' '}
+                          <span
+                            className={
+                              contribution.status === 'verified'
+                                ? 'text-green-400'
+                                : contribution.status === 'verifying'
+                                  ? 'text-yellow-400'
+                                  : contribution.status === 'rejected'
+                                    ? 'text-red-400'
+                                    : 'text-gray-400'
+                            }
+                          >
+                            {contribution.status}
+                          </span>
                         </span>
                         {contribution.quality_score && (
                           <span className="text-gray-500">
-                            Score: <span className="text-blue-400">{contribution.quality_score}</span>
+                            Score:{' '}
+                            <span className="text-blue-400">{contribution.quality_score}</span>
                           </span>
                         )}
                       </div>

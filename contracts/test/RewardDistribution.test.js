@@ -94,10 +94,10 @@ describe('RewardDistribution', function () {
     it('Should accumulate multiple rewards', async function () {
       await rewards.connect(distributor).allocateReward(contributor.address, 80);
       const firstReward = await rewards.pendingRewards(contributor.address);
-      
+
       await rewards.connect(distributor).allocateReward(contributor.address, 90);
       const totalReward = await rewards.pendingRewards(contributor.address);
-      
+
       expect(totalReward).to.be.gt(firstReward);
     });
   });
@@ -122,9 +122,7 @@ describe('RewardDistribution', function () {
     });
 
     it('Should not allow claiming with no rewards', async function () {
-      await expect(
-        rewards.connect(owner).claimRewards()
-      ).to.be.revertedWith('No rewards to claim');
+      await expect(rewards.connect(owner).claimRewards()).to.be.revertedWith('No rewards to claim');
     });
 
     it('Should track claimed rewards', async function () {
@@ -138,9 +136,9 @@ describe('RewardDistribution', function () {
     it('Should update total distributed', async function () {
       const totalBefore = await rewards.totalDistributed();
       const pending = await rewards.pendingRewards(contributor.address);
-      
+
       await rewards.connect(contributor).claimRewards();
-      
+
       const totalAfter = await rewards.totalDistributed();
       expect(totalAfter).to.equal(totalBefore + pending);
     });
@@ -158,18 +156,15 @@ describe('RewardDistribution', function () {
 
     it('Should not allow allocation when paused', async function () {
       await rewards.pause();
-      await expect(
-        rewards.connect(distributor).allocateReward(contributor.address, 85)
-      ).to.be.reverted;
+      await expect(rewards.connect(distributor).allocateReward(contributor.address, 85)).to.be
+        .reverted;
     });
 
     it('Should not allow claiming when paused', async function () {
       await rewards.connect(distributor).allocateReward(contributor.address, 85);
       await rewards.pause();
-      
-      await expect(
-        rewards.connect(contributor).claimRewards()
-      ).to.be.reverted;
+
+      await expect(rewards.connect(contributor).claimRewards()).to.be.reverted;
     });
   });
 });
