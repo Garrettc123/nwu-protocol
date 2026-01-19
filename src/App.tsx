@@ -23,11 +23,8 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route 
-          path="/login" 
-          element={!isAuthenticated ? <LoginPage /> : <Navigate to="/" />} 
-        />
-        
+        <Route path="/login" element={!isAuthenticated ? <LoginPage /> : <Navigate to="/" />} />
+
         <Route element={isAuthenticated ? <DashboardLayout /> : <Navigate to="/login" />}>
           <Route index element={<Dashboard />} />
           <Route path="upload" element={<UploadPage />} />
