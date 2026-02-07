@@ -9,19 +9,26 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@vercel/analytics": "^1.6.1",
+    "axios": "^1.6.5",
+    "ethers": "^6.10.0",
     "next": "14.0.4",
     "react": "18.2.0",
     "react-dom": "18.2.0",
-    "axios": "^1.6.5",
+    "react-dropzone": "^14.2.3"
+    "next": "16.1.6",
+    "react": "19.2.4",
+    "react-dom": "18.2.0",
+    "axios": "^1.13.4",
     "ethers": "^6.10.0",
-    "react-dropzone": "^14.2.3",
-    "@vercel/analytics": "^1.4.0"
+    "react-dropzone": "^14.4.0",
+    "zustand": "^5.0.11"
   },
   "devDependencies": {
-    "@types/node": "^20",
-    "@types/react": "^18",
+    "@types/node": "^25",
+    "@types/react": "^19",
     "@types/react-dom": "^18",
-    "autoprefixer": "^10.0.1",
+    "autoprefixer": "^10.4.24",
     "postcss": "^8",
     "tailwindcss": "^4.1.18",
     "typescript": "^5"

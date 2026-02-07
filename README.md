@@ -5,11 +5,33 @@
 [![Microsoft Defender for DevOps](https://github.com/Garrettc123/nwu-protocol/actions/workflows/defender-for-devops.yml/badge.svg)](https://github.com/Garrettc123/nwu-protocol/actions)
 [![codecov](https://codecov.io/gh/Garrettc123/nwu-protocol/branch/main/graph/badge.svg)](https://codecov.io/gh/Garrettc123/nwu-protocol)
 
+## 🚀 Perfect One-Command Deployment
+
+```bash
+./deploy.sh
+```
+
+**That's it!** The deployment script automatically handles everything:
+
+- ✅ Builds all Docker images
+- ✅ Starts 7 infrastructure services
+- ✅ Runs database migrations
+- ✅ Performs health checks
+- ✅ Displays all service URLs
+
+**Alternative with Make:**
+
+```bash
+make deploy
+```
+
+See [DEPLOY_NOW.md](DEPLOY_NOW.md) for the complete quick-start guide.
+
 ## Overview
 
 Decentralized Intelligence & Verified Truth Protocol - Safeguarding humanity through AI-powered verification and blockchain immutability.
 
-A complete platform for submitting code, datasets, and documents that are verified by AI agents and rewarded with blockchain tokens.
+A complete, production-ready platform for submitting code, datasets, and documents that are verified by AI agents and rewarded with blockchain tokens.
 
 ## ✨ Features
 
@@ -77,14 +99,15 @@ The project includes comprehensive GitHub Actions workflows for continuous integ
 
 All workflows are configured with appropriate permissions and security best practices.
 
-## Quick Start
+## 🎯 Quick Start (3 Simple Steps)
 
 ### Prerequisites
 
 - Docker & Docker Compose
-- OpenAI API key (optional for AI verification)
+- Node.js 18+ (for frontend)
+- OpenAI API key (optional, for AI verification)
 
-### 1. Clone and Setup
+### Step 1: Clone and Configure
 
 ```bash
 git clone https://github.com/Garrettc123/nwu-protocol.git
@@ -93,13 +116,30 @@ cp .env.example .env
 # Edit .env and add your OPENAI_API_KEY
 ```
 
-### 2. Start All Services
+### Step 2: Perfect Deployment
 
 ```bash
-docker-compose up -d
+./deploy.sh
 ```
 
-This starts:
+Or use Make:
+
+```bash
+make deploy
+```
+
+### Step 3: Access Your System
+
+The deployment script will display all URLs automatically:
+
+- **Backend API** - http://localhost:8000
+- **API Documentation** - http://localhost:8000/docs
+- **Frontend** - http://localhost:3000 (run `make frontend` in another terminal)
+- **RabbitMQ Management** - http://localhost:15672 (guest/guest)
+
+## 📦 What's Included
+
+This deployment automatically starts:
 
 - **Backend API** - http://localhost:8000
 - **Agent-Alpha** - Background AI verification service
@@ -109,7 +149,47 @@ This starts:
 - **RabbitMQ** - Message queue on port 5672 (Management UI: http://localhost:15672)
 - **IPFS** - Decentralized storage on port 8080
 
-### 3. Access Services
+## 💡 Useful Commands
+
+```bash
+make help          # Show all available commands
+make status        # Check service status
+make logs          # View all logs
+make health        # Check system health
+make validate      # Run comprehensive backend validation
+make test-api      # Test all API endpoints
+make test-all      # Full system validation
+make frontend      # Start frontend dev server
+make clean         # Clean up everything
+```
+
+## 🔍 Backend Verification
+
+All backend services (invisible components) are automatically validated:
+
+```bash
+# Run comprehensive backend validation
+make validate
+
+# Test all API endpoints
+make test-api
+
+# Full validation (infrastructure + API)
+make test-all
+```
+
+See [BACKEND_VERIFICATION.md](BACKEND_VERIFICATION.md) for complete details on what gets tested.
+
+## 📚 Documentation
+
+- **[DEPLOY_NOW.md](DEPLOY_NOW.md)** - Quick deployment guide with troubleshooting
+- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Comprehensive deployment documentation
+- **[API_REFERENCE.md](API_REFERENCE.md)** - Complete API documentation
+- **[IMPLEMENTATION_COMPLETE.md](IMPLEMENTATION_COMPLETE.md)** - Implementation checklist
+
+## 🔍 Service Details
+
+### Access Points
 
 - **API Documentation**: http://localhost:8000/docs
 - **Health Check**: http://localhost:8000/health
