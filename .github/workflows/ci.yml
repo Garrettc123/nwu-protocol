@@ -58,8 +58,8 @@ jobs:
         image: mongo:latest
         ports:
           - 27017:27017
-        options: >
-          --health-cmd "mongosh --eval 'db.runCommand(\"ping\")'"
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.adminCommand({ping: 1})'"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -228,6 +228,7 @@ jobs:
   # ✅ Summary
   ci-complete:
     runs-on: ubuntu-latest
+    needs: [lint-and-security, test-backend, test-frontend, test-contracts, test-ai-agents]
     if: always()
     steps:
       - name: All checks complete
