@@ -4,6 +4,7 @@ pydantic==2.5.3
 pydantic-settings==2.1.0
 python-dotenv==1.0.0
 sqlalchemy==2.0.25
+alembic==1.13.1
 psycopg2-binary==2.9.9
 pymongo==4.6.1
 redis==5.0.1
@@ -14,6 +15,7 @@ passlib[bcrypt]==1.7.4
 python-multipart==0.0.6
 ipfshttpclient==0.8.0a2
 web3==6.14.0
+eth-account==0.10.0
 
 # Development and Testing
 pytest==7.4.4
