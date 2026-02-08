@@ -9,6 +9,9 @@ on:
       - develop
       - 'copilot/**'  # Include Copilot PR branches
 
+permissions:
+  contents: read
+
 jobs:
   check-repository:
     name: Repository Structure Check
