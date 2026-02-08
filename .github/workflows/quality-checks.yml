@@ -229,6 +229,8 @@ jobs:
     name: Dependency Health Check
     runs-on: ubuntu-latest
     if: hashFiles('backend/**') != '' || hashFiles('frontend/**') != '' || hashFiles('contracts/**') != ''
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       
