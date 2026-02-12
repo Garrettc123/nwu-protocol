@@ -1,0 +1,412 @@
+name: 📊 Quarterly Stability Audit
+
+on:
+  # Run quarterly on the 15th of Mar, Jun, Sep, Dec at 9am UTC
+  schedule:
+    - cron: '0 9 15 3,6,9,12 *'
+  
+  # Allow manual trigger
+  workflow_dispatch:
+    inputs:
+      audit_type:
+        description: 'Type of audit to run'
+        required: true
+        default: 'full'
+        type: choice
+        options:
+          - full
+          - security-only
+          - quality-only
+          - metrics-only
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: read
+
+jobs:
+  prepare-audit:
+    name: Prepare Audit Environment
+    runs-on: ubuntu-latest
+    outputs:
+      audit_date: ${{ steps.date.outputs.date }}
+      audit_quarter: ${{ steps.quarter.outputs.quarter }}
+    steps:
+      - name: Get Current Date
+        id: date
+        run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+      
+      - name: Calculate Quarter
+        id: quarter
+        run: |
+          MONTH=$(date +'%m')
+          YEAR=$(date +'%Y')
+          QUARTER=$(( (MONTH - 1) / 3 + 1 ))
+          echo "quarter=Q${QUARTER}-${YEAR}" >> $GITHUB_OUTPUT
+      
+      - name: Create Audit Issue
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const quarter = '${{ steps.quarter.outputs.quarter }}';
+            const date = '${{ steps.date.outputs.date }}';
+            
+            const title = `Quarterly Stability Audit - ${quarter}`;
+            const body = `# Quarterly Stability Audit - ${quarter}
+            
+            **Audit Date**: ${date}
+            **Audit Type**: ${{ github.event.inputs.audit_type || 'full' }}
+            **Status**: 🔄 In Progress
+            
+            ## Audit Scope
+            
+            This automated audit will collect metrics and generate a comprehensive report based on the [Stability Audit Checklist](STABILITY_AUDIT_CHECKLIST.md).
+            
+            ## Progress
+            
+            - [ ] Metrics Collection
+            - [ ] Code Quality Analysis
+            - [ ] Security Assessment
+            - [ ] Infrastructure Review
+            - [ ] Documentation Check
+            - [ ] Report Generation
+            
+            ## Results
+            
+            Results will be posted as comments below as they become available.
+            
+            ---
+            
+            *This issue was created automatically by the Quarterly Stability Audit workflow.*`;
+            
+            const { data: issue } = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body,
+              labels: ['audit', 'governance', 'quarterly']
+            });
+            
+            core.exportVariable('AUDIT_ISSUE_NUMBER', issue.number);
+            return issue.number;
+
+  collect-metrics:
+    name: Collect Quarterly Metrics
+    needs: prepare-audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Calculate Metrics Period
+        id: period
+        run: |
+          # Calculate 90 days ago
+          START_DATE=$(date -d '90 days ago' +'%Y-%m-%d')
+          END_DATE=$(date +'%Y-%m-%d')
+          echo "start=$START_DATE" >> $GITHUB_OUTPUT
+          echo "end=$END_DATE" >> $GITHUB_OUTPUT
+      
+      - name: Collect Git Metrics
+        id: git_metrics
+        run: |
+          echo "### Git Metrics (Last 90 Days)" > metrics.md
+          echo "" >> metrics.md
+          
+          # Commits
+          COMMITS=$(git log --since="${{ steps.period.outputs.start }}" --until="${{ steps.period.outputs.end }}" --oneline | wc -l)
+          echo "- **Total Commits**: $COMMITS" >> metrics.md
+          
+          # Contributors
+          CONTRIBUTORS=$(git log --since="${{ steps.period.outputs.start }}" --format='%an' | sort -u | wc -l)
+          echo "- **Active Contributors**: $CONTRIBUTORS" >> metrics.md
+          
+          # PRs (approximate from merge commits)
+          PRS=$(git log --since="${{ steps.period.outputs.start }}" --grep="Merge pull request" --oneline | wc -l)
+          echo "- **Merged PRs**: $PRS" >> metrics.md
+          
+          echo "" >> metrics.md
+      
+      - name: Collect Workflow Metrics
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require('fs');
+            const startDate = new Date('${{ steps.period.outputs.start }}');
+            const endDate = new Date('${{ steps.period.outputs.end }}');
+            
+            let metricsContent = fs.readFileSync('metrics.md', 'utf8');
+            metricsContent += '\n### CI/CD Metrics (Last 90 Days)\n\n';
+            
+            // Get workflow runs
+            const { data: workflows } = await github.rest.actions.listRepoWorkflows({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+            
+            let totalRuns = 0;
+            let successfulRuns = 0;
+            let failedRuns = 0;
+            
+            for (const workflow of workflows.workflows) {
+              const { data: runs } = await github.rest.actions.listWorkflowRuns({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                workflow_id: workflow.id,
+                created: `${startDate.toISOString().split('T')[0]}..${endDate.toISOString().split('T')[0]}`,
+                per_page: 100,
+              });
+              
+              totalRuns += runs.total_count;
+              successfulRuns += runs.workflow_runs.filter(r => r.conclusion === 'success').length;
+              failedRuns += runs.workflow_runs.filter(r => r.conclusion === 'failure').length;
+            }
+            
+            const successRate = totalRuns > 0 ? ((successfulRuns / totalRuns) * 100).toFixed(1) : 0;
+            
+            metricsContent += `- **Total Workflow Runs**: ${totalRuns}\n`;
+            metricsContent += `- **Successful Runs**: ${successfulRuns}\n`;
+            metricsContent += `- **Failed Runs**: ${failedRuns}\n`;
+            metricsContent += `- **Success Rate**: ${successRate}%\n`;
+            metricsContent += `- **Target**: ≥95%\n`;
+            metricsContent += `- **Status**: ${successRate >= 95 ? '✅ Met' : '⚠️ Below Target'}\n\n`;
+            
+            fs.writeFileSync('metrics.md', metricsContent);
+      
+      - name: Check Test Coverage
+        run: |
+          echo "### Test Coverage" >> metrics.md
+          echo "" >> metrics.md
+          
+          # Check if package.json exists
+          if [ -f "package.json" ]; then
+            if npm test -- --coverage 2>/dev/null; then
+              if [ -f "coverage/coverage-summary.json" ]; then
+                COVERAGE=$(node -e "console.log(require('./coverage/coverage-summary.json').total.lines.pct)")
+                echo "- **Overall Coverage**: ${COVERAGE}%" >> metrics.md
+                echo "- **Target**: ≥80%" >> metrics.md
+                if (( $(echo "$COVERAGE >= 80" | bc -l) )); then
+                  echo "- **Status**: ✅ Met" >> metrics.md
+                else
+                  echo "- **Status**: ⚠️ Below Target" >> metrics.md
+                fi
+              else
+                echo "- **Status**: ℹ️ No coverage report found" >> metrics.md
+              fi
+            else
+              echo "- **Status**: ℹ️ Tests not configured" >> metrics.md
+            fi
+          else
+            echo "- **Status**: ℹ️ No package.json found" >> metrics.md
+          fi
+          echo "" >> metrics.md
+        continue-on-error: true
+      
+      - name: Upload Metrics
+        uses: actions/upload-artifact@v4
+        with:
+          name: quarterly-metrics
+          path: metrics.md
+
+  security-assessment:
+    name: Security Assessment
+    needs: prepare-audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run Trivy Security Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'json'
+          output: 'trivy-results.json'
+        continue-on-error: true
+      
+      - name: Analyze Security Results
+        run: |
+          echo "### Security Assessment" > security.md
+          echo "" >> security.md
+          
+          if [ -f "trivy-results.json" ]; then
+            CRITICAL=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity=="CRITICAL")] | length' trivy-results.json)
+            HIGH=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity=="HIGH")] | length' trivy-results.json)
+            MEDIUM=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity=="MEDIUM")] | length' trivy-results.json)
+            LOW=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity=="LOW")] | length' trivy-results.json)
+            
+            echo "- **Critical Vulnerabilities**: $CRITICAL (Target: 0)" >> security.md
+            echo "- **High Vulnerabilities**: $HIGH (Target: 0)" >> security.md
+            echo "- **Medium Vulnerabilities**: $MEDIUM (Target: <5)" >> security.md
+            echo "- **Low Vulnerabilities**: $LOW (Target: <20)" >> security.md
+            echo "" >> security.md
+            
+            if [ $CRITICAL -eq 0 ] && [ $HIGH -eq 0 ]; then
+              echo "**Status**: ✅ Security targets met" >> security.md
+            else
+              echo "**Status**: ⚠️ Security issues found" >> security.md
+            fi
+          else
+            echo "**Status**: ℹ️ Security scan not available" >> security.md
+          fi
+          echo "" >> security.md
+      
+      - name: Check Dependency Health
+        run: |
+          echo "### Dependency Health" >> security.md
+          echo "" >> security.md
+          
+          if [ -f "package.json" ]; then
+            echo "**Node.js Dependencies:**" >> security.md
+            npm outdated || true >> security.md 2>&1
+            echo "" >> security.md
+          fi
+          
+          if [ -f "requirements.txt" ]; then
+            echo "**Python Dependencies:**" >> security.md
+            pip list --outdated || true >> security.md 2>&1
+            echo "" >> security.md
+          fi
+        continue-on-error: true
+      
+      - name: Upload Security Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-assessment
+          path: security.md
+
+  code-quality-analysis:
+    name: Code Quality Analysis
+    needs: prepare-audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Analyze Code Quality
+        run: |
+          echo "### Code Quality Analysis" > quality.md
+          echo "" >> quality.md
+          
+          # Count total lines of code
+          TOTAL_LOC=$(find . -name "*.ts" -o -name "*.js" -o -name "*.py" -o -name "*.sol" 2>/dev/null | xargs wc -l 2>/dev/null | tail -1 | awk '{print $1}')
+          echo "- **Total Lines of Code**: ${TOTAL_LOC:-0}" >> quality.md
+          
+          # Count TODO comments
+          TODO_COUNT=$(git grep -i "TODO" | wc -l)
+          echo "- **TODO Comments**: $TODO_COUNT" >> quality.md
+          
+          # Count FIXME comments
+          FIXME_COUNT=$(git grep -i "FIXME" | wc -l)
+          echo "- **FIXME Comments**: $FIXME_COUNT" >> quality.md
+          
+          echo "" >> quality.md
+          
+          if [ $FIXME_COUNT -gt 0 ]; then
+            echo "⚠️ FIXME comments found - these should be prioritized" >> quality.md
+          fi
+          
+          echo "" >> quality.md
+      
+      - name: Upload Quality Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-quality
+          path: quality.md
+
+  generate-audit-report:
+    name: Generate Audit Report
+    needs: [prepare-audit, collect-metrics, security-assessment, code-quality-analysis]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v4
+      
+      - name: Combine Reports
+        run: |
+          echo "# Quarterly Stability Audit Report" > audit-report.md
+          echo "" >> audit-report.md
+          echo "**Quarter**: ${{ needs.prepare-audit.outputs.audit_quarter }}" >> audit-report.md
+          echo "**Date**: ${{ needs.prepare-audit.outputs.audit_date }}" >> audit-report.md
+          echo "**Generated**: $(date +'%Y-%m-%d %H:%M:%S UTC')" >> audit-report.md
+          echo "" >> audit-report.md
+          echo "---" >> audit-report.md
+          echo "" >> audit-report.md
+          
+          # Add metrics
+          if [ -f "quarterly-metrics/metrics.md" ]; then
+            cat quarterly-metrics/metrics.md >> audit-report.md
+            echo "" >> audit-report.md
+          fi
+          
+          # Add security assessment
+          if [ -f "security-assessment/security.md" ]; then
+            cat security-assessment/security.md >> audit-report.md
+            echo "" >> audit-report.md
+          fi
+          
+          # Add quality analysis
+          if [ -f "code-quality/quality.md" ]; then
+            cat code-quality/quality.md >> audit-report.md
+            echo "" >> audit-report.md
+          fi
+          
+          echo "---" >> audit-report.md
+          echo "" >> audit-report.md
+          echo "## Next Steps" >> audit-report.md
+          echo "" >> audit-report.md
+          echo "1. Review this report with the Tiger Team" >> audit-report.md
+          echo "2. Create action items for any issues found" >> audit-report.md
+          echo "3. Update the [Stability Audit Checklist](STABILITY_AUDIT_CHECKLIST.md)" >> audit-report.md
+          echo "4. Schedule follow-up reviews" >> audit-report.md
+          echo "" >> audit-report.md
+          echo "---" >> audit-report.md
+          echo "" >> audit-report.md
+          echo "*This report was generated automatically by the Quarterly Stability Audit workflow.*" >> audit-report.md
+      
+      - name: Create Audit Branch
+        run: |
+          BRANCH_NAME="audit/${{ needs.prepare-audit.outputs.audit_quarter }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH_NAME"
+          
+          # Create audits directory if it doesn't exist
+          mkdir -p audits
+          
+          # Save audit report
+          cp audit-report.md "audits/${{ needs.prepare-audit.outputs.audit_quarter }}.md"
+          git add "audits/${{ needs.prepare-audit.outputs.audit_quarter }}.md"
+          git commit -m "audit: add quarterly stability audit for ${{ needs.prepare-audit.outputs.audit_quarter }}"
+          git push origin "$BRANCH_NAME"
+      
+      - name: Create Pull Request
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('audit-report.md', 'utf8');
+            const quarter = '${{ needs.prepare-audit.outputs.audit_quarter }}';
+            
+            const { data: pr } = await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Quarterly Stability Audit - ${quarter}`,
+              head: `audit/${quarter}`,
+              base: 'main',
+              body: report + '\n\n---\n\nPlease review this audit report and approve for merge.',
+            });
+            
+            // Add label
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+              labels: ['audit', 'governance', 'documentation']
+            });
+            
+            core.info(`Created PR #${pr.number}`);

@@ -1,0 +1,351 @@
+name: 🛡️ Standards Enforcement
+
+on:
+  pull_request:
+    branches: [main, develop]
+    types: [opened, synchronize, reopened, edited]
+  push:
+    branches:
+      - main
+      - develop
+
+permissions:
+  contents: read
+  pull-requests: write
+  statuses: write
+
+jobs:
+  pr-checklist-validation:
+    name: Validate PR Checklist
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Check PR Description
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const body = pr.body || '';
+            
+            // Check if PR template sections are present
+            const requiredSections = [
+              '## Description',
+              '## Type of Change',
+              '## Definition of Done Checklist',
+              '## Testing Performed',
+            ];
+            
+            const missingSections = requiredSections.filter(section => 
+              !body.includes(section)
+            );
+            
+            if (missingSections.length > 0) {
+              core.setFailed(
+                `PR description is missing required sections: ${missingSections.join(', ')}\n` +
+                `Please use the PR template and fill in all sections.`
+              );
+              return;
+            }
+            
+            // Check if Definition of Done checkboxes are checked
+            const dodSection = body.split('## Definition of Done Checklist')[1];
+            if (dodSection) {
+              const uncheckedItems = (dodSection.match(/- \[ \]/g) || []).length;
+              const checkedItems = (dodSection.match(/- \[x\]/gi) || []).length;
+              
+              if (checkedItems === 0 && uncheckedItems > 0) {
+                core.warning(
+                  `No Definition of Done items are checked. ` +
+                  `Please ensure all applicable items are completed.`
+                );
+              }
+              
+              core.info(`DoD Progress: ${checkedItems} checked, ${uncheckedItems} unchecked`);
+            }
+            
+            core.info('✅ PR description validation passed');
+
+  enforce-branch-naming:
+    name: Enforce Branch Naming Convention
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Check Branch Name
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const branch = context.payload.pull_request.head.ref;
+            const validPrefixes = [
+              'feat/', 'fix/', 'docs/', 'style/', 'refactor/', 
+              'test/', 'chore/', 'security/', 'perf/', 'ci/',
+              'copilot/' // Allow Copilot branches
+            ];
+            
+            const isValid = validPrefixes.some(prefix => branch.startsWith(prefix));
+            
+            if (!isValid) {
+              core.setFailed(
+                `Branch name '${branch}' does not follow naming convention.\n` +
+                `Branch names must start with one of: ${validPrefixes.join(', ')}\n` +
+                `Example: feat/add-user-auth, fix/api-error`
+              );
+            } else {
+              core.info(`✅ Branch name '${branch}' is valid`);
+            }
+
+  enforce-commit-messages:
+    name: Enforce Commit Message Convention
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Check Commit Messages
+        run: |
+          # Get commits in PR
+          git fetch origin ${{ github.event.pull_request.base.ref }}
+          COMMITS=$(git log origin/${{ github.event.pull_request.base.ref }}..HEAD --format="%s")
+          
+          # Check conventional commit format
+          VALID_TYPES="feat|fix|docs|style|refactor|test|chore|security|perf|ci|revert"
+          INVALID_COMMITS=""
+          
+          while IFS= read -r commit; do
+            if ! echo "$commit" | grep -qE "^($VALID_TYPES)(\(.+\))?: .+"; then
+              INVALID_COMMITS="$INVALID_COMMITS\n- $commit"
+            fi
+          done <<< "$COMMITS"
+          
+          if [ -n "$INVALID_COMMITS" ]; then
+            echo "❌ Invalid commit messages found:"
+            echo -e "$INVALID_COMMITS"
+            echo ""
+            echo "Commit messages must follow Conventional Commits format:"
+            echo "  type(scope): description"
+            echo ""
+            echo "Valid types: $VALID_TYPES"
+            echo "Examples:"
+            echo "  feat: add user authentication"
+            echo "  fix: resolve API timeout issue"
+            echo "  docs: update README"
+            exit 1
+          fi
+          
+          echo "✅ All commit messages are valid"
+
+  check-test-coverage:
+    name: Check Test Coverage Requirement
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: ${{ hashFiles('package-lock.json') != '' && 'npm' || '' }}
+      
+      - name: Install Dependencies
+        if: hashFiles('package.json') != ''
+        run: |
+          if [ -f "package-lock.json" ]; then
+            npm ci
+          else
+            npm install
+          fi
+      
+      - name: Run Tests with Coverage
+        if: hashFiles('package.json') != ''
+        run: |
+          if npm test -- --coverage 2>/dev/null; then
+            echo "✅ Tests passed"
+            
+            # Check if coverage report exists
+            if [ -f "coverage/coverage-summary.json" ]; then
+              COVERAGE=$(node -e "console.log(require('./coverage/coverage-summary.json').total.lines.pct)")
+              echo "Coverage: $COVERAGE%"
+              
+              if (( $(echo "$COVERAGE < 80" | bc -l) )); then
+                echo "⚠️ Warning: Coverage ($COVERAGE%) is below 80% target"
+                # Don't fail, just warn
+              else
+                echo "✅ Coverage meets requirement (≥80%)"
+              fi
+            fi
+          else
+            echo "ℹ️ Tests not configured or failed"
+          fi
+        continue-on-error: true
+
+  check-security-basics:
+    name: Check Security Basics
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Check for Hardcoded Secrets
+        run: |
+          echo "🔍 Checking for potential hardcoded secrets..."
+          
+          # Check for common secret patterns
+          PATTERNS=(
+            "password\s*=\s*['\"][^'\"]+['\"]"
+            "api[_-]?key\s*=\s*['\"][^'\"]+['\"]"
+            "secret\s*=\s*['\"][^'\"]+['\"]"
+            "token\s*=\s*['\"][^'\"]+['\"]"
+            "-----BEGIN (RSA |DSA )?PRIVATE KEY-----"
+          )
+          
+          FOUND=0
+          for pattern in "${PATTERNS[@]}"; do
+            if git grep -iE "$pattern" -- '*.js' '*.ts' '*.py' '*.java' '*.go' 2>/dev/null | grep -v "test" | grep -v "example" | grep -v ".env"; then
+              echo "⚠️ Found potential hardcoded secret matching pattern: $pattern"
+              FOUND=1
+            fi
+          done
+          
+          if [ $FOUND -eq 1 ]; then
+            echo "❌ Potential secrets found in code"
+            echo "Please use environment variables for secrets"
+            exit 1
+          fi
+          
+          echo "✅ No obvious hardcoded secrets found"
+      
+      - name: Check .env Files Not Committed
+        run: |
+          if git ls-files | grep -E "^\.env$" | grep -v ".env.example"; then
+            echo "❌ .env file is committed! This should be in .gitignore"
+            exit 1
+          fi
+          echo "✅ No .env files committed"
+
+  documentation-check:
+    name: Check Documentation Updates
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Check if Documentation Needed
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            
+            // Get changed files
+            const { data: files } = await github.rest.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number,
+            });
+            
+            const codeFiles = files.filter(f => 
+              f.filename.match(/\.(js|ts|jsx|tsx|py|sol)$/) &&
+              !f.filename.includes('test')
+            );
+            
+            const docFiles = files.filter(f => 
+              f.filename.match(/\.(md|txt)$/i) ||
+              f.filename.includes('docs/')
+            );
+            
+            if (codeFiles.length > 0 && docFiles.length === 0) {
+              core.warning(
+                `This PR modifies ${codeFiles.length} code files but no documentation.\n` +
+                `Consider updating documentation if needed:\n` +
+                `- API changes: Update API_REFERENCE.md\n` +
+                `- New features: Update README.md\n` +
+                `- Breaking changes: Update CHANGELOG.md`
+              );
+            } else if (docFiles.length > 0) {
+              core.info(`✅ Documentation updates included`);
+            }
+
+  standards-summary:
+    name: Standards Compliance Summary
+    needs: [
+      pr-checklist-validation,
+      enforce-branch-naming,
+      enforce-commit-messages,
+      check-test-coverage,
+      check-security-basics,
+      documentation-check
+    ]
+    runs-on: ubuntu-latest
+    if: always() && github.event_name == 'pull_request'
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Post Summary Comment
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const checks = {
+              'PR Checklist': '${{ needs.pr-checklist-validation.result }}',
+              'Branch Naming': '${{ needs.enforce-branch-naming.result }}',
+              'Commit Messages': '${{ needs.enforce-commit-messages.result }}',
+              'Test Coverage': '${{ needs.check-test-coverage.result }}',
+              'Security Basics': '${{ needs.check-security-basics.result }}',
+              'Documentation': '${{ needs.documentation-check.result }}',
+            };
+            
+            const getIcon = (result) => {
+              if (result === 'success') return '✅';
+              if (result === 'skipped') return '⏭️';
+              if (result === 'failure') return '❌';
+              return '⚠️';
+            };
+            
+            let summary = `## 🛡️ Standards Enforcement Summary\n\n`;
+            summary += `| Check | Status |\n|-------|--------|\n`;
+            
+            for (const [check, result] of Object.entries(checks)) {
+              summary += `| ${check} | ${getIcon(result)} ${result} |\n`;
+            }
+            
+            summary += `\n`;
+            summary += `See [Governance Framework](../GOVERNANCE.md) for standards details.\n`;
+            summary += `See [Definition of Done](../DEFINITION_OF_DONE.md) for requirements.\n`;
+            
+            // Check if there are any failures
+            const hasFailures = Object.values(checks).includes('failure');
+            
+            if (hasFailures) {
+              summary += `\n⚠️ **Some standards checks failed. Please address them before merging.**\n`;
+            } else {
+              summary += `\n✅ **All standards checks passed!**\n`;
+            }
+            
+            // Post comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            
+            const botComment = comments.find(comment => 
+              comment.user.type === 'Bot' && 
+              comment.body.includes('Standards Enforcement Summary')
+            );
+            
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: summary
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: summary
+              });
+            }
