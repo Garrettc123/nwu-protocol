@@ -44,6 +44,7 @@ Please read these documents in order:
 #### Day 1: System Setup
 
 **Prerequisites**
+
 ```bash
 # Check your system
 node --version  # Should be >= 18.0.0
@@ -55,12 +56,14 @@ git --version
 ```
 
 **Clone Repository**
+
 ```bash
 git clone https://github.com/Garrettc123/nwu-protocol.git
 cd nwu-protocol
 ```
 
 **Environment Configuration**
+
 ```bash
 # Copy example environment file
 cp .env.example .env
@@ -71,6 +74,7 @@ nano .env
 ```
 
 **First Build**
+
 ```bash
 # Install dependencies
 npm install
@@ -86,6 +90,7 @@ make health
 ```
 
 **Verify Your Setup**
+
 ```bash
 # Should see all services running
 make validate
@@ -100,6 +105,7 @@ open http://localhost:8000/docs
 #### Day 2-3: Codebase Exploration
 
 **Understand the Architecture**
+
 ```bash
 # Read architecture documentation
 cat ARCHITECTURE.md
@@ -109,6 +115,7 @@ tree -L 2 -I 'node_modules|dist|build'
 ```
 
 **Key Directories**:
+
 - `backend/` - FastAPI backend service
 - `frontend/` - Next.js frontend application
 - `contracts/` - Solidity smart contracts
@@ -117,6 +124,7 @@ tree -L 2 -I 'node_modules|dist|build'
 - `scripts/` - Utility scripts
 
 **Run the Application**
+
 ```bash
 # Terminal 1: Backend and services
 ./deploy.sh
@@ -130,17 +138,20 @@ npm run dev
 #### Day 4-5: Make Your First Contribution
 
 **Find a Good First Issue**
+
 ```bash
 # Look for issues labeled "good first issue"
 # https://github.com/Garrettc123/nwu-protocol/labels/good%20first%20issue
 ```
 
 **Create a Branch**
+
 ```bash
 git checkout -b feature/my-first-contribution
 ```
 
 **Make Changes**
+
 ```bash
 # Edit files
 # Write tests
@@ -148,6 +159,7 @@ git checkout -b feature/my-first-contribution
 ```
 
 **Follow the Standards**
+
 ```bash
 # Run linting
 npm run lint
@@ -160,6 +172,7 @@ npm test -- --coverage
 ```
 
 **Submit PR**
+
 ```bash
 git add .
 git commit -m "feat: add feature xyz"
@@ -176,6 +189,7 @@ git push origin feature/my-first-contribution
 Pick one component to focus on:
 
 **Backend (FastAPI)**
+
 ```bash
 cd backend
 cat README.md
@@ -184,6 +198,7 @@ pytest
 ```
 
 **Frontend (Next.js)**
+
 ```bash
 cd frontend
 cat README.md
@@ -192,6 +207,7 @@ npm run dev
 ```
 
 **Smart Contracts (Solidity)**
+
 ```bash
 cd contracts
 cat README.md
@@ -200,6 +216,7 @@ npx hardhat test
 ```
 
 **AI Agent (Python)**
+
 ```bash
 cd agent-alpha
 cat README.md
@@ -210,6 +227,7 @@ python -m app.main
 #### Day 8-9: CI/CD Understanding
 
 **Study Workflows**
+
 ```bash
 # Review CI/CD workflows
 cat .github/workflows/ci-cd.yml
@@ -218,6 +236,7 @@ cat .github/workflows/defender-for-devops.yml
 ```
 
 **Watch a Pipeline Run**
+
 1. Make a change
 2. Push to your branch
 3. Watch GitHub Actions run
@@ -227,6 +246,7 @@ cat .github/workflows/defender-for-devops.yml
 #### Day 10: Security Training
 
 **Complete Security Training**
+
 - OWASP Top 10
 - Secure coding practices
 - Input validation
@@ -234,6 +254,7 @@ cat .github/workflows/defender-for-devops.yml
 - Secrets management
 
 **Security Checklist**
+
 - [ ] Never commit secrets
 - [ ] Always validate inputs
 - [ ] Use parameterized queries
@@ -245,23 +266,27 @@ cat .github/workflows/defender-for-devops.yml
 #### Week 3: Participate in Team Processes
 
 **Daily Standups**
+
 - Join daily team sync (15 minutes)
 - Share what you're working on
 - Ask questions
 - Listen to others
 
 **Code Reviews**
+
 - Start reviewing others' PRs
 - Provide constructive feedback
 - Learn from code review comments
 - Use the code review checklist
 
 **Tiger Team Meetings**
+
 - Observe weekly decision meetings
 - Understand governance in action
 - See how decisions are made
 
 **Pair Programming**
+
 - Schedule sessions with team members
 - Learn their workflows
 - Share your knowledge
@@ -279,6 +304,7 @@ cat .github/workflows/defender-for-devops.yml
    - Clarify with team if needed
 
 2. **Create Branch**
+
    ```bash
    git checkout -b type/description
    # Examples:
@@ -294,10 +320,11 @@ cat .github/workflows/defender-for-devops.yml
    - Run linting and tests locally
 
 4. **Commit**
+
    ```bash
    git add .
    git commit -m "type: description"
-   
+
    # Commit types:
    # feat: New feature
    # fix: Bug fix
@@ -309,9 +336,11 @@ cat .github/workflows/defender-for-devops.yml
    ```
 
 5. **Push & PR**
+
    ```bash
    git push origin your-branch-name
    ```
+
    - Create PR on GitHub
    - Fill out PR template completely
    - Link related issues
@@ -346,6 +375,7 @@ Before submitting a PR, ensure:
 ### Required Tools
 
 **Development**
+
 - **IDE**: VS Code (recommended) with extensions
   - ESLint
   - Prettier
@@ -355,12 +385,14 @@ Before submitting a PR, ensure:
   - GitLens
 
 **Terminal**
+
 - **Shell**: Bash/Zsh
 - **Git**: Latest version
 - **Docker**: For local services
 - **Make**: For convenience commands
 
 **Browsers**
+
 - Chrome/Firefox with DevTools
 - React DevTools extension
 
@@ -374,12 +406,14 @@ Before submitting a PR, ensure:
 ### Learning Resources
 
 **Documentation**
+
 - [FastAPI Docs](https://fastapi.tiangolo.com/)
 - [Next.js Docs](https://nextjs.org/docs)
 - [Solidity Docs](https://docs.soliditylang.org/)
 - [Docker Docs](https://docs.docker.com/)
 
 **Internal Resources**
+
 - Project documentation in `/docs`
 - API documentation at `/docs` endpoint
 - Architecture diagrams in `ARCHITECTURE.md`
@@ -400,15 +434,18 @@ Before submitting a PR, ensure:
 ### Support Channels
 
 **Daily Support**
+
 - Tiger Team office hours (1 hour daily)
 - Team Slack/Discord channel
 - Pair programming sessions
 
 **Weekly Support**
+
 - Technical Leader Q&A (1 hour weekly)
 - Team all-hands meeting
 
 **Resources**
+
 - [Contributing Guide](CONTRIBUTING.md)
 - [FAQ](FAQ.md) (if exists)
 - Team wiki
@@ -482,18 +519,21 @@ docker-compose up -d --build
 ### First 30 Days
 
 **Week 1**
+
 - Environment setup complete
 - First PR merged
 - All required reading done
 - Team introductions complete
 
 **Week 2**
+
 - Component deep dive complete
 - 3-5 PRs merged
 - Participating in code reviews
 - Understanding CI/CD
 
 **Week 3-4**
+
 - Independently picking up tasks
 - Providing meaningful code reviews
 - Contributing to discussions

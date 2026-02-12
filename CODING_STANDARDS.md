@@ -35,6 +35,7 @@ This document defines the mandatory coding standards for all code in the NWU Pro
 Follow the [Airbnb JavaScript Style Guide](https://github.com/airbnb/javascript) with these modifications:
 
 **File Structure**
+
 ```typescript
 // 1. Imports (grouped and sorted)
 import React from 'react';
@@ -62,6 +63,7 @@ export function UserProfile({ user, onUpdate }: Props) {
 ```
 
 **Naming Conventions**
+
 - **Variables/Functions**: `camelCase` (e.g., `getUserData`)
 - **Classes/Components**: `PascalCase` (e.g., `UserProfile`)
 - **Constants**: `UPPER_SNAKE_CASE` (e.g., `MAX_RETRIES`)
@@ -70,6 +72,7 @@ export function UserProfile({ user, onUpdate }: Props) {
 - **Types**: descriptive name ending in `Type` (e.g., `UserType`)
 
 **Code Quality**
+
 ```typescript
 // ✅ Good
 function calculateTotal(items: Item[]): number {
@@ -87,6 +90,7 @@ function calcTot(i: any) {
 ```
 
 **Error Handling**
+
 ```typescript
 // ✅ Good - Explicit error handling
 try {
@@ -107,6 +111,7 @@ try {
 ```
 
 **Async/Await**
+
 - Always use `async/await` over raw promises
 - Always handle errors in async functions
 - Use `Promise.all()` for concurrent operations
@@ -119,7 +124,7 @@ async function loadUserData(userId: string): Promise<UserData> {
     fetchPosts(userId),
     fetchComments(userId),
   ]);
-  
+
   return { user, posts, comments };
 }
 ```
@@ -127,6 +132,7 @@ async function loadUserData(userId: string): Promise<UserData> {
 #### TypeScript Specifics
 
 **Type Safety**
+
 ```typescript
 // ✅ Good - Explicit types
 interface User {
@@ -146,17 +152,20 @@ function getUser(id: any): any {
 ```
 
 **Strict Mode**
+
 - Always enable `strict: true` in tsconfig.json
 - No `any` types without explicit justification
 - Use `unknown` instead of `any` when type is truly unknown
 - Prefer union types over `any`
 
 **Linting & Formatting**
+
 - **Linter**: ESLint with TypeScript plugin
 - **Formatter**: Prettier
 - **Config**: See `.eslintrc.json` and `.prettierrc`
 
 **Required Rules**
+
 - `no-console`: Warn (use proper logging)
 - `no-debugger`: Error
 - `no-unused-vars`: Error
@@ -172,6 +181,7 @@ function getUser(id: any): any {
 Follow [PEP 8](https://pep8.org/) and [Google Python Style Guide](https://google.github.io/styleguide/pyguide.html)
 
 **File Structure**
+
 ```python
 """Module docstring describing the purpose of this module."""
 
@@ -195,10 +205,10 @@ DEFAULT_TIMEOUT = 30
 # 5. Classes
 class UserManager:
     """Manages user operations."""
-    
+
     def __init__(self, db_session):
         self.db_session = db_session
-    
+
     def get_user(self, user_id: str) -> Optional[User]:
         """Retrieve a user by ID."""
         pass
@@ -210,6 +220,7 @@ def calculate_total(items: List[dict]) -> float:
 ```
 
 **Naming Conventions**
+
 - **Variables/Functions**: `snake_case` (e.g., `get_user_data`)
 - **Classes**: `PascalCase` (e.g., `UserProfile`)
 - **Constants**: `UPPER_SNAKE_CASE` (e.g., `MAX_RETRIES`)
@@ -217,6 +228,7 @@ def calculate_total(items: List[dict]) -> float:
 - **Protected methods**: prefix with `_` (e.g., `_protected_method`)
 
 **Type Hints**
+
 ```python
 # ✅ Good - Type hints everywhere
 from typing import List, Optional, Dict
@@ -234,18 +246,19 @@ def process_users(users, filter_active=True):
 ```
 
 **Docstrings**
+
 ```python
 # ✅ Good - Google style docstring
 def fetch_user_data(user_id: str, include_posts: bool = False) -> dict:
     """Fetch comprehensive user data.
-    
+
     Args:
         user_id: The unique identifier for the user
         include_posts: Whether to include user's posts
-        
+
     Returns:
         A dictionary containing user data
-        
+
     Raises:
         UserNotFoundError: If the user doesn't exist
         DatabaseError: If database connection fails
@@ -254,6 +267,7 @@ def fetch_user_data(user_id: str, include_posts: bool = False) -> dict:
 ```
 
 **Error Handling**
+
 ```python
 # ✅ Good - Specific exceptions
 try:
@@ -273,12 +287,14 @@ except:
 ```
 
 **Linting & Formatting**
+
 - **Formatter**: Black (line length: 88)
 - **Linter**: Flake8
 - **Type Checker**: MyPy
 - **Import Sorter**: isort
 
 **Required Tools**
+
 ```bash
 black .
 flake8 .
@@ -295,6 +311,7 @@ isort .
 Follow the [Solidity Style Guide](https://docs.soliditylang.org/en/latest/style-guide.html)
 
 **Contract Structure**
+
 ```solidity
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
@@ -312,41 +329,41 @@ contract NWUToken is ERC20, Ownable {
         uint256 amount;
         uint256 timestamp;
     }
-    
+
     // 2. State variables
     mapping(address => Stake) public stakes;
     uint256 public constant MAX_SUPPLY = 1000000 * 10**18;
-    
+
     // 3. Events
     event Staked(address indexed user, uint256 amount);
     event Unstaked(address indexed user, uint256 amount);
-    
+
     // 4. Modifiers
     modifier onlyStaker() {
         require(stakes[msg.sender].amount > 0, "Not a staker");
         _;
     }
-    
+
     // 5. Constructor
     constructor() ERC20("NWU Token", "NWU") {
         _mint(msg.sender, MAX_SUPPLY);
     }
-    
+
     // 6. External functions
     function stake(uint256 amount) external {
         // ...
     }
-    
+
     // 7. Public functions
     function getStake(address user) public view returns (uint256) {
         return stakes[user].amount;
     }
-    
+
     // 8. Internal functions
     function _updateStake(address user, uint256 amount) internal {
         // ...
     }
-    
+
     // 9. Private functions
     function _calculateReward(uint256 amount) private pure returns (uint256) {
         // ...
@@ -355,6 +372,7 @@ contract NWUToken is ERC20, Ownable {
 ```
 
 **Naming Conventions**
+
 - **Contracts**: `PascalCase` (e.g., `NWUToken`)
 - **Functions**: `camelCase` (e.g., `transferFrom`)
 - **Events**: `PascalCase` (e.g., `Transfer`)
@@ -362,15 +380,16 @@ contract NWUToken is ERC20, Ownable {
 - **Constants**: `UPPER_SNAKE_CASE` (e.g., `MAX_SUPPLY`)
 
 **Security Best Practices**
+
 ```solidity
 // ✅ Good - Checks-Effects-Interactions pattern
 function withdraw(uint256 amount) external {
     // Checks
     require(stakes[msg.sender].amount >= amount, "Insufficient stake");
-    
+
     // Effects
     stakes[msg.sender].amount -= amount;
-    
+
     // Interactions
     (bool success, ) = msg.sender.call{value: amount}("");
     require(success, "Transfer failed");
@@ -383,6 +402,7 @@ function withdraw(uint256 amount) external {
 ```
 
 **Testing Requirements**
+
 - Test coverage ≥ 95%
 - All functions tested
 - Edge cases covered
@@ -405,14 +425,14 @@ function updateUser(data: UpdateUserRequest): User {
   if (data.age && (data.age < 0 || data.age > 150)) {
     throw new ValidationError('Invalid age');
   }
-  
+
   // Sanitize
   const sanitized = {
     email: sanitizeEmail(data.email),
     name: sanitizeHtml(data.name),
     age: data.age,
   };
-  
+
   return updateUserInDb(sanitized);
 }
 ```
@@ -428,11 +448,11 @@ def delete_user(user_id: str) -> bool:
     user = get_user(user_id)
     if not user:
         raise UserNotFoundError()
-    
+
     # Additional checks
     if user.is_super_admin:
         raise ForbiddenError("Cannot delete super admin")
-    
+
     return user.delete()
 ```
 
@@ -483,22 +503,20 @@ describe('UserService', () => {
       // Arrange
       const userId = '123';
       const expectedUser = { id: userId, name: 'Test User' };
-      
+
       // Act
       const result = await userService.getUser(userId);
-      
+
       // Assert
       expect(result).toEqual(expectedUser);
     });
-    
+
     it('should throw error when user not found', async () => {
       // Arrange
       const userId = 'nonexistent';
-      
+
       // Act & Assert
-      await expect(
-        userService.getUser(userId)
-      ).rejects.toThrow(UserNotFoundError);
+      await expect(userService.getUser(userId)).rejects.toThrow(UserNotFoundError);
     });
   });
 });
@@ -543,21 +561,21 @@ def calculate_weighted_average(
     weights: List[float]
 ) -> float:
     """Calculate the weighted average of values.
-    
+
     The weighted average is calculated as:
     sum(value * weight) / sum(weights)
-    
+
     Args:
         values: List of numeric values
         weights: List of weights corresponding to each value
-        
+
     Returns:
         The weighted average as a float
-        
+
     Raises:
         ValueError: If lengths of values and weights don't match
         ValueError: If sum of weights is zero
-        
+
     Example:
         >>> calculate_weighted_average([1, 2, 3], [1, 1, 1])
         2.0
@@ -566,7 +584,7 @@ def calculate_weighted_average(
         raise ValueError("Values and weights must have same length")
     if sum(weights) == 0:
         raise ValueError("Sum of weights cannot be zero")
-    
+
     return sum(v * w for v, w in zip(values, weights)) / sum(weights)
 ```
 
@@ -606,12 +624,10 @@ for user in users:
 ## Tool Configuration
 
 ### ESLint (.eslintrc.json)
+
 ```json
 {
-  "extends": [
-    "eslint:recommended",
-    "plugin:@typescript-eslint/recommended"
-  ],
+  "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
   "rules": {
     "@typescript-eslint/no-explicit-any": "error",
     "no-console": "warn"
@@ -620,6 +636,7 @@ for user in users:
 ```
 
 ### Black (pyproject.toml)
+
 ```toml
 [tool.black]
 line-length = 88
@@ -627,6 +644,7 @@ target-version = ['py311']
 ```
 
 ### Prettier (.prettierrc)
+
 ```json
 {
   "semi": true,
@@ -641,11 +659,13 @@ target-version = ['py311']
 ## Enforcement
 
 ### Automated
+
 - Pre-commit hooks run linters
 - CI/CD pipeline enforces standards
 - Pull requests blocked if checks fail
 
 ### Manual
+
 - Code review checklist includes standards
 - Tiger Team spot checks
 - Quarterly code quality audits

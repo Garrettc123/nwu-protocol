@@ -80,24 +80,28 @@ We follow strict coding standards for all languages. See [Coding Standards](CODI
 ### Quick Reference
 
 **JavaScript/TypeScript**
+
 - Follow Airbnb JavaScript Style Guide
 - Use ESLint + Prettier
 - No `any` types
 - Explicit return types
 
 **Python**
+
 - Follow PEP 8 and Google Python Style Guide
 - Use Black + Flake8 + MyPy
 - Type hints required
 - Google-style docstrings
 
 **Solidity**
+
 - Follow official Solidity Style Guide
 - Use OpenZeppelin standards
 - Security-first approach
 - Comprehensive testing (95%+ coverage)
 
 **Commit Messages**
+
 - Use Conventional Commits format
 - Examples: `feat:`, `fix:`, `docs:`, `refactor:`
 
@@ -182,6 +186,7 @@ git push origin your-branch-name
 ```
 
 Create a Pull Request on GitHub and:
+
 - Fill out the PR template completely
 - Link related issues
 - Request review from code owner
@@ -195,6 +200,7 @@ Create a Pull Request on GitHub and:
 - Get approval from code owner
 
 **Code Owner Approval Required**:
+
 - Backend: @Garrettc123
 - Frontend: @Garrettc123
 - Smart Contracts: @Garrettc123
@@ -203,6 +209,7 @@ Create a Pull Request on GitHub and:
 ### 7. Merge
 
 Once approved and all checks pass:
+
 - Squash and merge (preferred)
 - Delete branch after merge
 - Monitor deployment
@@ -212,6 +219,7 @@ Once approved and all checks pass:
 Your PR must pass these gates before merge:
 
 ### Automated Gates
+
 - ✅ All CI/CD checks pass
 - ✅ Linting passes
 - ✅ Tests pass
@@ -220,6 +228,7 @@ Your PR must pass these gates before merge:
 - ✅ Build succeeds
 
 ### Manual Gates
+
 - ✅ Code owner approval
 - ✅ Tiger Team approval (for significant changes)
 - ✅ No merge conflicts

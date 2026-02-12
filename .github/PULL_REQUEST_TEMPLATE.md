@@ -23,13 +23,14 @@
 
 <!-- List the specific changes made in this PR -->
 
-- 
-- 
-- 
+-
+-
+-
 
 ## Definition of Done Checklist
 
 ### ✅ Functionality
+
 - [ ] All acceptance criteria met
 - [ ] Feature works as specified
 - [ ] Edge cases handled
@@ -37,6 +38,7 @@
 - [ ] No known bugs
 
 ### ✅ Code Quality
+
 - [ ] Code follows [Coding Standards](../CODING_STANDARDS.md)
 - [ ] All linting checks pass
 - [ ] Code is properly formatted
@@ -44,6 +46,7 @@
 - [ ] Complexity is reasonable
 
 ### ✅ Testing
+
 - [ ] Unit tests written and passing
 - [ ] Integration tests written (if applicable)
 - [ ] Test coverage ≥ 80%
@@ -51,6 +54,7 @@
 - [ ] Error paths tested
 
 ### ✅ Security
+
 - [ ] Security scan passed (no high/critical vulnerabilities)
 - [ ] Input validation implemented
 - [ ] Authentication/authorization checked (if applicable)
@@ -58,6 +62,7 @@
 - [ ] Dependencies are secure and up-to-date
 
 ### ✅ Documentation
+
 - [ ] Code comments for complex logic
 - [ ] API documentation updated (if applicable)
 - [ ] README updated (if applicable)
@@ -65,6 +70,7 @@
 - [ ] Architecture decision recorded (for significant changes)
 
 ### ✅ CI/CD
+
 - [ ] All CI/CD checks pass
 - [ ] Build succeeds
 - [ ] No deployment blockers
@@ -74,10 +80,12 @@
 <!-- Describe the testing you performed -->
 
 ### Manual Testing
-- 
-- 
+
+-
+-
 
 ### Automated Testing
+
 - [ ] Unit tests pass locally
 - [ ] Integration tests pass locally
 - [ ] All CI checks pass

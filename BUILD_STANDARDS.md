@@ -32,6 +32,7 @@ All build processes must:
 ### Version Locking
 
 **Node.js**
+
 ```json
 {
   "engines": {
@@ -40,22 +41,26 @@ All build processes must:
   }
 }
 ```
+
 - Use `package-lock.json` (committed to repository)
 - Pin major versions of critical dependencies
 - Use `npm ci` instead of `npm install` in CI
 
 **Python**
+
 ```txt
 # requirements.txt - Use exact versions for production
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
 sqlalchemy==2.0.23
 ```
+
 - Use `requirements.txt` with pinned versions
 - Separate `requirements-dev.txt` for development tools
 - Use virtual environments (`venv` or `poetry`)
 
 **Docker**
+
 ```dockerfile
 # Pin base image versions with SHA
 FROM node:18.19.0-alpine@sha256:abc123...
@@ -71,6 +76,7 @@ RUN apk add --no-cache \
 #### Approved Ecosystems
 
 We support security scanning for these ecosystems:
+
 - npm (Node.js)
 - pip (Python)
 - maven (Java, if added)
@@ -91,6 +97,7 @@ We support security scanning for these ecosystems:
 5. Get Tiger Team approval for new critical dependencies
 
 **Dependency Scanning:**
+
 ```yaml
 # Automated scanning in CI/CD
 - Security audit (npm audit, pip-audit)
@@ -116,8 +123,7 @@ We support security scanning for these ecosystems:
 Every component must have a CI/CD pipeline with these stages:
 
 ```yaml
-stages:
-  1. ✅ Checkout & Setup
+stages: 1. ✅ Checkout & Setup
   2. ✅ Dependency Installation
   3. ✅ Linting & Formatting
   4. ✅ Type Checking (if applicable)
@@ -134,20 +140,22 @@ stages:
 #### 1. Code Quality Checks
 
 **Linting**
+
 ```yaml
 # JavaScript/TypeScript
 - name: Lint
   run: npm run lint
-  
+
 # Python
 - name: Lint with Flake8
   run: flake8 .
-  
+
 - name: Format check with Black
   run: black --check .
 ```
 
 **Type Checking**
+
 ```yaml
 # TypeScript
 - name: Type Check
@@ -161,6 +169,7 @@ stages:
 #### 2. Testing
 
 **Unit Tests**
+
 ```yaml
 - name: Run Tests
   run: npm test -- --coverage
@@ -177,6 +186,7 @@ stages:
 ```
 
 **Integration Tests**
+
 ```yaml
 - name: Start Test Services
   run: docker-compose -f docker-compose.test.yml up -d
@@ -192,6 +202,7 @@ stages:
 #### 3. Security Scanning
 
 **Vulnerability Scanning**
+
 ```yaml
 - name: Security Audit
   run: npm audit --audit-level=moderate
@@ -205,6 +216,7 @@ stages:
 ```
 
 **SAST (Static Application Security Testing)**
+
 ```yaml
 - name: CodeQL Analysis
   uses: github/codeql-action/analyze@v2
@@ -213,6 +225,7 @@ stages:
 ```
 
 **Secret Scanning**
+
 ```yaml
 - name: TruffleHog Secret Scan
   uses: trufflesecurity/trufflehog@main
@@ -225,6 +238,7 @@ stages:
 #### 4. Build Verification
 
 **Build Success**
+
 ```yaml
 - name: Build Application
   run: npm run build
@@ -238,6 +252,7 @@ stages:
 ```
 
 **Build Optimization**
+
 ```yaml
 - name: Check Bundle Size
   run: |
@@ -332,13 +347,13 @@ services:
     env_file:
       - .env
     ports:
-      - "8000:8000"
+      - '8000:8000'
     volumes:
       - ./logs:/app/logs
     networks:
       - nwu-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ['CMD', 'curl', '-f', 'http://localhost:8000/health']
       interval: 30s
       timeout: 10s
       retries: 3
@@ -347,8 +362,8 @@ services:
       db:
         condition: service_healthy
     labels:
-      - "com.nwu-protocol.service=backend"
-      - "com.nwu-protocol.version=${VERSION:-latest}"
+      - 'com.nwu-protocol.service=backend'
+      - 'com.nwu-protocol.version=${VERSION:-latest}'
 
   db:
     image: postgres:15-alpine
@@ -370,6 +385,7 @@ volumes:
 ### Environment Variables
 
 **Structure**
+
 ```bash
 # .env.example (committed to repository)
 DATABASE_URL=postgresql://user:password@localhost:5432/dbname
@@ -385,6 +401,7 @@ SECRET_KEY=local-secret-key
 ### CI/CD Secrets
 
 **GitHub Secrets**
+
 ```yaml
 - name: Deploy to Production
   env:
@@ -402,6 +419,7 @@ SECRET_KEY=local-secret-key
 - ✅ Audit trail for secret access
 
 **Tools**
+
 - TruffleHog
 - git-secrets
 - detect-secrets
@@ -413,6 +431,7 @@ SECRET_KEY=local-secret-key
 ### Build Artifacts
 
 **Requirements**
+
 - ✅ Versioned (semantic versioning)
 - ✅ Signed (for verification)
 - ✅ Immutable (cannot be overwritten)
@@ -420,6 +439,7 @@ SECRET_KEY=local-secret-key
 - ✅ Stored securely
 
 **Naming Convention**
+
 ```
 <component>-<version>-<commit-sha>.tar.gz
 nwu-backend-1.2.3-abc1234.tar.gz
@@ -428,6 +448,7 @@ nwu-backend-1.2.3-abc1234.tar.gz
 ### Container Images
 
 **Tagging Strategy**
+
 ```bash
 # Semantic version
 nwu-protocol/backend:1.2.3
@@ -470,6 +491,7 @@ nwu-protocol/backend:latest
 ### Deployment Process
 
 **Staging Deployment**
+
 ```yaml
 1. Automated on merge to develop branch
 2. Deploy to staging environment
@@ -478,6 +500,7 @@ nwu-protocol/backend:latest
 ```
 
 **Production Deployment**
+
 ```yaml
 1. Manual approval required
 2. Deploy during maintenance window
@@ -490,16 +513,19 @@ nwu-protocol/backend:latest
 ### Deployment Strategies
 
 **Blue-Green Deployment**
+
 - Zero-downtime deployments
 - Instant rollback capability
 - Full environment testing
 
 **Canary Deployment**
+
 - Gradual rollout (e.g., 10%, 25%, 50%, 100%)
 - Monitor metrics at each stage
 - Auto-rollback on error rate increase
 
 **Rolling Deployment**
+
 - Update instances gradually
 - Maintain service availability
 - Monitor health continuously
@@ -507,12 +533,14 @@ nwu-protocol/backend:latest
 ### Rollback Procedures
 
 **Automated Rollback Triggers**
+
 - Error rate > 5% increase
 - Response time > 2x baseline
 - Health check failures
 - Resource exhaustion
 
 **Manual Rollback**
+
 ```bash
 # Quick rollback to previous version
 ./scripts/rollback.sh --to-version=1.2.2
@@ -528,18 +556,21 @@ nwu-protocol/backend:latest
 ### Required Monitoring
 
 **Application Metrics**
+
 - Request rate
 - Response time (p50, p95, p99)
 - Error rate
 - Success rate
 
 **System Metrics**
+
 - CPU usage
 - Memory usage
 - Disk usage
 - Network I/O
 
 **Business Metrics**
+
 - User registrations
 - Active users
 - Contribution submissions
@@ -548,6 +579,7 @@ nwu-protocol/backend:latest
 ### Logging Standards
 
 **Log Levels**
+
 ```python
 # ERROR - System errors requiring attention
 logger.error("Database connection failed", exc_info=True)
@@ -563,6 +595,7 @@ logger.debug("Processing request", extra={"request_id": req_id})
 ```
 
 **Structured Logging**
+
 ```json
 {
   "timestamp": "2026-02-12T02:19:35.295Z",
@@ -578,12 +611,14 @@ logger.debug("Processing request", extra={"request_id": req_id})
 ### Alerting
 
 **Critical Alerts** (Immediate notification)
+
 - Production down
 - Database connection lost
 - Security breach detected
 - Error rate > 10%
 
 **Warning Alerts** (Within 1 hour)
+
 - Error rate > 5%
 - Response time > 2x baseline
 - Disk space > 80%
@@ -623,6 +658,7 @@ logger.debug("Processing request", extra={"request_id": req_id})
 ### Build Traceability
 
 Every build must be traceable:
+
 ```yaml
 Build Metadata:
   - Git commit SHA
@@ -636,6 +672,7 @@ Build Metadata:
 ### Audit Requirements
 
 **Quarterly Audit**
+
 - Review all CI/CD configurations
 - Verify security scanning enabled
 - Check secrets management
@@ -643,6 +680,7 @@ Build Metadata:
 - Validate rollback procedures
 
 **Documentation**
+
 - Keep build logs for 90 days
 - Retain deployment records for 1 year
 - Archive critical incidents indefinitely
@@ -658,9 +696,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 permissions:
   contents: read
@@ -669,34 +707,34 @@ permissions:
 jobs:
   test-and-build:
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Lint
         run: npm run lint
-      
+
       - name: Type check
         run: npm run type-check
-      
+
       - name: Test
         run: npm test -- --coverage
-      
+
       - name: Security audit
         run: npm audit --audit-level=moderate
-      
+
       - name: Build
         run: npm run build
-      
+
       - name: Upload coverage
         uses: codecov/codecov-action@v3
         with:
@@ -710,16 +748,19 @@ jobs:
 ### Metrics Review
 
 **Weekly**
+
 - CI/CD success rate
 - Build time trends
 - Test coverage trends
 
 **Monthly**
+
 - Deployment frequency
 - Mean time to recovery
 - Change failure rate
 
 **Quarterly**
+
 - Standards compliance audit
 - Tool and process review
 - Performance optimization review

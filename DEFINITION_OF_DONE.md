@@ -11,6 +11,7 @@ This document defines the comprehensive "Definition of Done" (DoD) for all work 
 All work items, regardless of type, must meet these baseline requirements:
 
 ### ✅ Functionality
+
 - [ ] All acceptance criteria met
 - [ ] Feature works as specified
 - [ ] Edge cases handled
@@ -18,6 +19,7 @@ All work items, regardless of type, must meet these baseline requirements:
 - [ ] No known bugs
 
 ### ✅ Code Quality
+
 - [ ] Code follows [Coding Standards](CODING_STANDARDS.md)
 - [ ] All linting checks pass
 - [ ] Code is properly formatted
@@ -25,6 +27,7 @@ All work items, regardless of type, must meet these baseline requirements:
 - [ ] Complexity is reasonable (cognitive complexity < 15)
 
 ### ✅ Testing
+
 - [ ] Unit tests written and passing
 - [ ] Integration tests written and passing (if applicable)
 - [ ] Test coverage ≥ 80%
@@ -32,6 +35,7 @@ All work items, regardless of type, must meet these baseline requirements:
 - [ ] Error paths tested
 
 ### ✅ Security
+
 - [ ] Security scan passed (no high/critical vulnerabilities)
 - [ ] Input validation implemented
 - [ ] Authentication/authorization checked
@@ -39,6 +43,7 @@ All work items, regardless of type, must meet these baseline requirements:
 - [ ] Dependencies are up-to-date and secure
 
 ### ✅ Documentation
+
 - [ ] Code comments for complex logic
 - [ ] API documentation updated (if applicable)
 - [ ] README updated (if applicable)
@@ -46,18 +51,21 @@ All work items, regardless of type, must meet these baseline requirements:
 - [ ] Architecture decision recorded (for significant changes)
 
 ### ✅ Review & Approval
+
 - [ ] Code reviewed by designated code owner
 - [ ] All review comments addressed
 - [ ] Tiger Team approval (for significant changes)
 - [ ] No merge conflicts
 
 ### ✅ CI/CD
+
 - [ ] All CI/CD checks pass
 - [ ] Build succeeds
 - [ ] No deployment blockers
 - [ ] Deployment plan documented (for infrastructure changes)
 
 ### ✅ Business Value
+
 - [ ] Linked to clear business outcome
 - [ ] Value proposition documented
 - [ ] Success metrics defined

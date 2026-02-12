@@ -26,39 +26,46 @@ All metrics are accessible through:
 ### 1. Reliability Metrics
 
 #### System Uptime
+
 - **Definition**: Percentage of time system is operational and accessible
 - **Target**: ≥ 99.9% (43.2 minutes downtime/month max)
 - **Measurement**: Automated health checks every 60 seconds
 - **Owner**: DevOps Lead
 
 **Calculation**:
+
 ```
 Uptime % = (Total Time - Downtime) / Total Time × 100
 ```
 
 **Traffic Light Indicators**:
+
 - 🟢 Green: ≥ 99.9%
 - 🟡 Yellow: 99.5% - 99.9%
 - 🔴 Red: < 99.5%
 
 #### Mean Time Between Failures (MTBF)
+
 - **Definition**: Average time between system failures
 - **Target**: > 720 hours (30 days)
 - **Measurement**: Time between incidents requiring intervention
 - **Owner**: DevOps Lead
 
 #### Mean Time to Recovery (MTTR)
+
 - **Definition**: Average time to restore service after failure
 - **Target**: < 1 hour
 - **Measurement**: Time from incident detection to resolution
 - **Owner**: DevOps Lead
 
 **Calculation**:
+
 ```
 MTTR = Total Recovery Time / Number of Incidents
 ```
 
 **Traffic Light Indicators**:
+
 - 🟢 Green: < 30 minutes
 - 🟡 Yellow: 30-60 minutes
 - 🔴 Red: > 60 minutes
@@ -68,51 +75,60 @@ MTTR = Total Recovery Time / Number of Incidents
 ### 2. Deployment Metrics
 
 #### Deployment Frequency
+
 - **Definition**: How often code is deployed to production
 - **Target**: ≥ 1 per week (moving toward daily)
 - **Measurement**: Count of production deployments
 - **Owner**: Technical Leader
 
 **Maturity Levels**:
+
 - Elite: Multiple times per day
 - High: Once per day to once per week
 - Medium: Once per week to once per month
 - Low: Less than once per month
 
 #### Deployment Success Rate
+
 - **Definition**: Percentage of deployments that succeed without rollback
 - **Target**: ≥ 95%
 - **Measurement**: Successful deployments / Total deployments × 100
 - **Owner**: DevOps Lead
 
 **Traffic Light Indicators**:
+
 - 🟢 Green: ≥ 95%
 - 🟡 Yellow: 90% - 95%
 - 🔴 Red: < 90%
 
 #### Lead Time for Changes
+
 - **Definition**: Time from code commit to production deployment
 - **Target**: < 24 hours
 - **Measurement**: Time from first commit to production deployment
 - **Owner**: Technical Leader
 
 **Calculation**:
+
 ```
 Lead Time = Deployment Time - First Commit Time
 ```
 
 **Traffic Light Indicators**:
+
 - 🟢 Green: < 24 hours
 - 🟡 Yellow: 24-72 hours
 - 🔴 Red: > 72 hours
 
 #### Change Failure Rate
+
 - **Definition**: Percentage of changes that cause production incidents
 - **Target**: < 5%
 - **Measurement**: Failed changes / Total changes × 100
 - **Owner**: Technical Leader
 
 **Traffic Light Indicators**:
+
 - 🟢 Green: < 5%
 - 🟡 Yellow: 5% - 15%
 - 🔴 Red: > 15%
@@ -122,51 +138,60 @@ Lead Time = Deployment Time - First Commit Time
 ### 3. Quality Metrics
 
 #### Test Coverage
+
 - **Definition**: Percentage of code covered by automated tests
 - **Target**: ≥ 80% overall, ≥ 95% for critical paths
 - **Measurement**: Lines covered / Total lines × 100
 - **Owner**: Tiger Team
 
 **By Component**:
+
 - Backend API: Target ≥ 85%
 - Frontend: Target ≥ 80%
 - Smart Contracts: Target ≥ 95%
 - AI Agents: Target ≥ 80%
 
 **Traffic Light Indicators**:
+
 - 🟢 Green: ≥ 80%
 - 🟡 Yellow: 70% - 80%
 - 🔴 Red: < 70%
 
 #### Code Review Turnaround Time
+
 - **Definition**: Average time from PR creation to approval
 - **Target**: < 24 hours
 - **Measurement**: Time from PR open to first approval
 - **Owner**: Tiger Team
 
 **Traffic Light Indicators**:
+
 - 🟢 Green: < 24 hours
 - 🟡 Yellow: 24-48 hours
 - 🔴 Red: > 48 hours
 
 #### Critical Bug Escape Rate
+
 - **Definition**: Number of critical bugs reaching production
 - **Target**: < 1 per month
 - **Measurement**: Count of critical bugs found in production
 - **Owner**: Technical Leader
 
 **Traffic Light Indicators**:
+
 - 🟢 Green: 0 per month
 - 🟡 Yellow: 1 per month
 - 🔴 Red: > 1 per month
 
 #### Technical Debt Ratio
+
 - **Definition**: Ratio of time to fix code vs. time to write it
 - **Target**: < 5%
 - **Measurement**: (Remediation cost / Development cost) × 100
 - **Owner**: Technical Leader
 
 **Traffic Light Indicators**:
+
 - 🟢 Green: < 5%
 - 🟡 Yellow: 5% - 10%
 - 🔴 Red: > 10%
@@ -176,41 +201,48 @@ Lead Time = Deployment Time - First Commit Time
 ### 4. Security Metrics
 
 #### Vulnerabilities by Severity
+
 - **Definition**: Count of vulnerabilities by severity level
 - **Target**: 0 critical, 0 high
 - **Measurement**: Security scan results
 - **Owner**: Security Lead
 
 **Targets by Severity**:
+
 - Critical: 0 (patch within 24h)
 - High: 0 (patch within 72h)
 - Medium: < 5 (patch within 30 days)
 - Low: < 20 (patch within 90 days)
 
 #### Time to Patch Critical Issues
+
 - **Definition**: Average time to patch critical vulnerabilities
 - **Target**: < 24 hours
 - **Measurement**: Time from discovery to patch deployment
 - **Owner**: Security Lead
 
 **Traffic Light Indicators**:
+
 - 🟢 Green: < 24 hours
 - 🟡 Yellow: 24-48 hours
 - 🔴 Red: > 48 hours
 
 #### Security Scan Coverage
+
 - **Definition**: Percentage of code/containers with security scanning
 - **Target**: 100%
 - **Measurement**: (Scanned components / Total components) × 100
 - **Owner**: Security Lead
 
 #### Dependency Health Score
+
 - **Definition**: Percentage of dependencies up-to-date and secure
 - **Target**: ≥ 95%
 - **Measurement**: (Healthy deps / Total deps) × 100
 - **Owner**: DevOps Lead
 
 **Traffic Light Indicators**:
+
 - 🟢 Green: ≥ 95%
 - 🟡 Yellow: 90% - 95%
 - 🔴 Red: < 90%
@@ -220,29 +252,34 @@ Lead Time = Deployment Time - First Commit Time
 ### 5. Adoption & Compliance Metrics
 
 #### Standards Compliance Rate
+
 - **Definition**: Percentage of code meeting all standards
 - **Target**: 100%
 - **Measurement**: (Compliant PRs / Total PRs) × 100
 - **Owner**: Tiger Team
 
 **Traffic Light Indicators**:
+
 - 🟢 Green: 100%
 - 🟡 Yellow: 95% - 99%
 - 🔴 Red: < 95%
 
 #### CI/CD Pipeline Adoption
+
 - **Definition**: Percentage of components with CI/CD pipelines
 - **Target**: 100%
 - **Measurement**: (Components with CI/CD / Total components) × 100
 - **Owner**: DevOps Lead
 
 #### Documentation Coverage
+
 - **Definition**: Percentage of code with adequate documentation
 - **Target**: ≥ 90%
 - **Measurement**: Manual review + automated checks
 - **Owner**: Technical Leader
 
 #### Training Completion Rate
+
 - **Definition**: Percentage of team completing required training
 - **Target**: 100% within 30 days
 - **Measurement**: (Completed training / Total team) × 100
@@ -297,6 +334,7 @@ Lead Time = Deployment Time - First Commit Time
 Accessible via GitHub repository insights and custom dashboards.
 
 **Daily Metrics**:
+
 - CI/CD pipeline status
 - Active PRs and review status
 - Open issues by priority
@@ -307,6 +345,7 @@ Accessible via GitHub repository insights and custom dashboards.
 ### Developer Dashboard (Real-Time)
 
 **Individual Metrics**:
+
 - My open PRs and status
 - PRs awaiting my review
 - My assigned issues
@@ -319,29 +358,34 @@ Accessible via GitHub repository insights and custom dashboards.
 ## Reporting Cadence
 
 ### Daily
+
 - Automated dashboard updates
 - Alert notifications
 - Team standup metrics review
 
 ### Weekly
+
 - Executive Committee review
 - Tiger Team metrics analysis
 - Trend identification
 - Action item creation
 
 ### Bi-Weekly
+
 - Comprehensive KPI review
 - Deep dive on specific metrics
 - Adjustment of targets if needed
 - Communication to broader team
 
 ### Monthly
+
 - Detailed trend analysis
 - Success story identification
 - Challenge resolution review
 - Strategic adjustments
 
 ### Quarterly
+
 - Comprehensive stability audit
 - Full governance review
 - Annual planning updates
@@ -354,6 +398,7 @@ Accessible via GitHub repository insights and custom dashboards.
 ### Automated Collection
 
 **GitHub API**
+
 ```python
 # Example: Collect deployment metrics
 def get_deployment_metrics(repo, start_date, end_date):
@@ -362,10 +407,10 @@ def get_deployment_metrics(repo, start_date, end_date):
         created_after=start_date,
         created_before=end_date
     )
-    
+
     total = len(deployments)
     successful = len([d for d in deployments if d.state == 'success'])
-    
+
     return {
         'total': total,
         'successful': successful,
@@ -374,11 +419,13 @@ def get_deployment_metrics(repo, start_date, end_date):
 ```
 
 **CI/CD Metrics**
+
 - GitHub Actions API for workflow metrics
 - Test results from CI pipeline
 - Coverage reports from Codecov
 
 **Security Metrics**
+
 - Trivy/Snyk API for vulnerability data
 - Dependabot alerts
 - CodeQL results
@@ -386,6 +433,7 @@ def get_deployment_metrics(repo, start_date, end_date):
 ### Manual Collection
 
 **Quarterly Audits**
+
 - Code quality spot checks
 - Documentation review
 - Compliance verification
@@ -396,18 +444,21 @@ def get_deployment_metrics(repo, start_date, end_date):
 ## Action Thresholds
 
 ### Yellow Zone (Warning)
+
 - **Action**: Monitor closely
 - **Timeline**: Address within 1 week
 - **Owner**: Component owner
 - **Escalation**: Tiger Team if not improving
 
 ### Red Zone (Critical)
+
 - **Action**: Immediate attention required
 - **Timeline**: Address within 24 hours
 - **Owner**: Tiger Team + Component owner
 - **Escalation**: Executive Committee
 
 ### Persistent Issues
+
 - **Definition**: Metric in yellow/red for 2+ weeks
 - **Action**: Root cause analysis required
 - **Timeline**: Resolution plan within 3 days
@@ -420,6 +471,7 @@ def get_deployment_metrics(repo, start_date, end_date):
 ### Metric Evolution
 
 **Add New Metrics**:
+
 1. Propose metric with business justification
 2. Define measurement method
 3. Set realistic targets
@@ -427,6 +479,7 @@ def get_deployment_metrics(repo, start_date, end_date):
 5. Adopt or adjust
 
 **Remove/Modify Metrics**:
+
 1. Review quarterly
 2. Assess continued relevance
 3. Get Tiger Team approval
