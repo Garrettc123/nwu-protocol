@@ -5,6 +5,14 @@
 [![Microsoft Defender for DevOps](https://github.com/Garrettc123/nwu-protocol/actions/workflows/defender-for-devops.yml/badge.svg)](https://github.com/Garrettc123/nwu-protocol/actions)
 [![codecov](https://codecov.io/gh/Garrettc123/nwu-protocol/branch/main/graph/badge.svg)](https://codecov.io/gh/Garrettc123/nwu-protocol)
 
+## 🎯 Stability & Excellence Initiative
+
+**NWU Protocol operates under a zero-tolerance stability mandate.** We maintain world-class engineering standards with strict governance, comprehensive testing, and security-first practices.
+
+📋 **[Read our Stability Mandate](STABILITY_MANDATE.md)** | 🏛️ **[Governance Framework](GOVERNANCE.md)** | ✅ **[Definition of Done](DEFINITION_OF_DONE.md)**
+
+---
+
 ## 🚀 Perfect One-Command Deployment
 
 ```bash
@@ -180,12 +188,31 @@ make test-all
 
 See [BACKEND_VERIFICATION.md](BACKEND_VERIFICATION.md) for complete details on what gets tested.
 
-## 📚 Documentation
+## 📖 Documentation
 
-- **[DEPLOY_NOW.md](DEPLOY_NOW.md)** - Quick deployment guide with troubleshooting
-- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Comprehensive deployment documentation
-- **[API_REFERENCE.md](API_REFERENCE.md)** - Complete API documentation
-- **[IMPLEMENTATION_COMPLETE.md](IMPLEMENTATION_COMPLETE.md)** - Implementation checklist
+### Getting Started
+- **[Quick Start Guide](DEPLOY_NOW.md)** - Get running in minutes
+- **[Onboarding Guide](ONBOARDING.md)** - New to the project? Start here
+- **[Deployment Guide](DEPLOYMENT.md)** - Comprehensive deployment documentation
+- **[API Reference](API_REFERENCE.md)** - Complete API documentation
+
+### Governance & Standards
+- **[Governance Framework](GOVERNANCE.md)** - Decision-making, roles, and accountability
+- **[Stability Mandate](STABILITY_MANDATE.md)** - Our commitment to excellence
+- **[Definition of Done](DEFINITION_OF_DONE.md)** - Completion criteria for all work
+- **[Coding Standards](CODING_STANDARDS.md)** - Code style and quality guidelines
+- **[Build Standards](BUILD_STANDARDS.md)** - CI/CD and deployment requirements
+- **[Metrics Dashboard](METRICS_DASHBOARD.md)** - KPIs and performance tracking
+- **[Stability Audit Checklist](STABILITY_AUDIT_CHECKLIST.md)** - Quarterly audit process
+
+### Contributing
+- **[Contributing Guide](CONTRIBUTING.md)** - How to contribute effectively
+- **[Security Policy](SECURITY.md)** - Security practices and reporting
+- **[Code of Conduct](CODE_OF_CONDUCT.md)** - Community guidelines
+
+### Additional Resources
+- **[Architecture](ARCHITECTURE.md)** - System architecture and design
+- **[Implementation Status](IMPLEMENTATION_COMPLETE.md)** - Implementation checklist
 
 ## 🔍 Service Details
 
@@ -336,6 +363,31 @@ npx hardhat test
 npx hardhat node  # Start local blockchain
 npx hardhat run scripts/deploy.js --network localhost
 ```
+
+## 🏛️ Governance & Quality
+
+NWU Protocol follows a comprehensive governance model to ensure stability and excellence:
+
+- **Tiger Team**: Elite cross-functional squad with authority to enforce standards
+- **Code Owners**: All changes require approval from designated code owners
+- **Quality Gates**: Automated checks enforce coding standards, testing, and security
+- **Metrics-Driven**: KPIs tracked bi-weekly with transparent dashboards
+- **Quarterly Audits**: Regular stability audits to prevent regression
+
+See [Governance Framework](GOVERNANCE.md) for complete details.
+
+## 📊 Our Standards
+
+- ✅ **80%+ Test Coverage** across all components
+- ✅ **Zero Critical Vulnerabilities** in production
+- ✅ **95%+ Deployment Success Rate** 
+- ✅ **< 24h Lead Time** from commit to production
+- ✅ **99.9% System Uptime** target
+- ✅ **100% Code Review** requirement
+- ✅ **Comprehensive Security Scanning** in CI/CD
+- ✅ **Signed and Traceable Builds**
+
+View real-time metrics in our [Metrics Dashboard](METRICS_DASHBOARD.md).
 
 ## Testing
 
