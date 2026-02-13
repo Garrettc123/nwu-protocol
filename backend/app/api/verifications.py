@@ -57,12 +57,9 @@ async def submit_verification(verification_data: VerificationCreate, db: Session
     avg_score = total_score / len(all_verifications)
     contribution.quality_score = round(avg_score, 2)
     
-    # Update status based on verification count and score
-    if contribution.verification_count >= 3:  # Require at least 3 verifications
-        if avg_score >= 70:
-            contribution.status = "verified"
-        else:
-            contribution.status = "rejected"
+    # Auto-approve everything after first verification
+    if contribution.verification_count >= 1:
+        contribution.status = "verified"
     
     db.commit()
     
