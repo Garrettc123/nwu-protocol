@@ -1,4 +1,10 @@
-"""Verification Engine Service - The Nervous System."""
+"""Verification Engine Service - The Nervous System.
+
+NOTE: This module is configured for AUTO-APPROVE mode.
+Consensus threshold is set to 0.0, meaning all contributions with at least
+one verification are automatically approved. This is intentional behavior
+per system requirements.
+"""
 
 import logging
 from typing import Optional, List
