@@ -1,0 +1,273 @@
+name: 🔄 Auto-Merge
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, labeled, ready_for_review]
+  check_suite:
+    types: [completed]
+  pull_request_review:
+    types: [submitted]
+
+permissions:
+  contents: write
+  pull-requests: write
+  checks: read
+
+jobs:
+  # Auto-approve safe PRs
+  auto-approve:
+    name: Auto-Approve Safe PRs
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'pull_request_target' && 
+      github.event.pull_request.draft == false
+    steps:
+      - name: Check if PR is safe to auto-approve
+        id: check-safe
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            
+            // Get changed files
+            const { data: files } = await github.rest.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number,
+            });
+            
+            const changedFiles = files.map(f => f.filename);
+            core.info(`Changed files: ${changedFiles.join(', ')}`);
+            
+            // Check if PR is from dependabot
+            const isDependabot = pr.user.login === 'dependabot[bot]';
+            
+            // Check if PR only changes documentation
+            const onlyDocs = changedFiles.every(file => 
+              file.endsWith('.md') || 
+              file.startsWith('docs/') ||
+              file.endsWith('.txt')
+            );
+            
+            // Check if PR only changes minor config files
+            const onlyMinorConfig = changedFiles.every(file => 
+              file === '.prettierrc' ||
+              file === '.eslintrc.json' ||
+              file === '.editorconfig' ||
+              file === '.gitignore' ||
+              file.endsWith('.yml') && file.includes('.github/workflows') === false
+            );
+            
+            // Check if PR is small (less than 10 lines changed)
+            const isSmall = pr.additions + pr.deletions < 10;
+            
+            let shouldApprove = false;
+            let reason = '';
+            
+            if (isDependabot) {
+              shouldApprove = true;
+              reason = 'Dependabot PR';
+            } else if (onlyDocs && isSmall) {
+              shouldApprove = true;
+              reason = 'Documentation-only changes (small)';
+            } else if (onlyMinorConfig && isSmall) {
+              shouldApprove = true;
+              reason = 'Minor configuration changes';
+            }
+            
+            core.setOutput('should_approve', shouldApprove);
+            core.setOutput('reason', reason);
+            
+            return { shouldApprove, reason };
+      
+      - name: Auto-approve PR
+        if: steps.check-safe.outputs.should_approve == 'true'
+        uses: hmarr/auto-approve-action@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          review-message: |
+            🤖 **Auto-approved:** ${{ steps.check-safe.outputs.reason }}
+            
+            This PR has been automatically approved because it meets the criteria for safe automatic approval.
+
+  # Auto-merge approved PRs
+  auto-merge:
+    name: Auto-Merge Approved PRs
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'pull_request_target' ||
+      github.event_name == 'pull_request_review' ||
+      github.event_name == 'check_suite'
+    steps:
+      - name: Check if PR can be auto-merged
+        id: check-merge
+        uses: actions/github-script@v8
+        with:
+          script: |
+            let pr;
+            
+            // Get PR number based on event type
+            if (context.eventName === 'pull_request_target') {
+              pr = context.payload.pull_request;
+            } else if (context.eventName === 'pull_request_review') {
+              pr = context.payload.pull_request;
+            } else if (context.eventName === 'check_suite') {
+              // Get PRs associated with the check suite
+              const checkSuite = context.payload.check_suite;
+              const { data: prs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                commit_sha: checkSuite.head_sha
+              });
+              
+              if (prs.length === 0) {
+                core.info('No PRs associated with this check suite');
+                return { shouldMerge: false };
+              }
+              
+              pr = prs[0];
+            } else {
+              core.info('Event type not supported');
+              return { shouldMerge: false };
+            }
+            
+            core.info(`Checking PR #${pr.number}`);
+            
+            // Skip if PR is draft
+            if (pr.draft) {
+              core.info('PR is draft, skipping auto-merge');
+              return { shouldMerge: false };
+            }
+            
+            // Skip if PR has 'no-auto-merge' label
+            if (pr.labels.some(label => label.name === 'no-auto-merge')) {
+              core.info('PR has no-auto-merge label, skipping');
+              return { shouldMerge: false };
+            }
+            
+            // Check if PR has 'auto-merge' label
+            const hasAutoMergeLabel = pr.labels.some(label => label.name === 'auto-merge');
+            
+            // Check if PR is from dependabot
+            const isDependabot = pr.user.login === 'dependabot[bot]';
+            
+            // Get reviews
+            const { data: reviews } = await github.rest.pulls.listReviews({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number
+            });
+            
+            // Get latest review from each reviewer
+            const latestReviews = {};
+            reviews.forEach(review => {
+              if (!latestReviews[review.user.login] || 
+                  new Date(review.submitted_at) > new Date(latestReviews[review.user.login].submitted_at)) {
+                latestReviews[review.user.login] = review;
+              }
+            });
+            
+            const approvedCount = Object.values(latestReviews).filter(r => r.state === 'APPROVED').length;
+            const changesRequestedCount = Object.values(latestReviews).filter(r => r.state === 'CHANGES_REQUESTED').length;
+            
+            // Check CI status
+            const { data: checkRuns } = await github.rest.checks.listForRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: pr.head.sha
+            });
+            
+            const allChecksPassed = checkRuns.check_runs.every(check => 
+              check.status === 'completed' && 
+              (check.conclusion === 'success' || check.conclusion === 'neutral' || check.conclusion === 'skipped')
+            );
+            
+            core.info(`Checks status: ${allChecksPassed ? 'passed' : 'not passed'}`);
+            core.info(`Approvals: ${approvedCount}, Changes requested: ${changesRequestedCount}`);
+            
+            // Determine if should merge
+            let shouldMerge = false;
+            let reason = '';
+            
+            if (changesRequestedCount > 0) {
+              core.info('Cannot merge: changes requested');
+              return { shouldMerge: false };
+            }
+            
+            if (!allChecksPassed) {
+              core.info('Cannot merge: checks not passed');
+              return { shouldMerge: false };
+            }
+            
+            if (!pr.mergeable) {
+              core.info('Cannot merge: has conflicts');
+              return { shouldMerge: false };
+            }
+            
+            // Merge if:
+            // 1. Has auto-merge label AND at least 1 approval AND all checks pass
+            // 2. Is dependabot AND all checks pass (already auto-approved)
+            if (hasAutoMergeLabel && approvedCount >= 1) {
+              shouldMerge = true;
+              reason = 'Has auto-merge label and required approvals';
+            } else if (isDependabot && approvedCount >= 1) {
+              shouldMerge = true;
+              reason = 'Dependabot PR with approval';
+            }
+            
+            core.setOutput('should_merge', shouldMerge);
+            core.setOutput('pr_number', pr.number);
+            core.setOutput('reason', reason);
+            
+            return { shouldMerge, reason, prNumber: pr.number };
+      
+      - name: Enable auto-merge
+        if: steps.check-merge.outputs.should_merge == 'true'
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const prNumber = parseInt('${{ steps.check-merge.outputs.pr_number }}');
+            
+            try {
+              // Enable auto-merge with squash merge
+              await github.graphql(`
+                mutation {
+                  enablePullRequestAutoMerge(input: {
+                    pullRequestId: "${context.payload.pull_request.node_id}",
+                    mergeMethod: SQUASH
+                  }) {
+                    pullRequest {
+                      id
+                      number
+                    }
+                  }
+                }
+              `);
+              
+              core.info(`✅ Auto-merge enabled for PR #${prNumber}`);
+              
+              // Add comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body: `🤖 **Auto-merge enabled:** ${{ steps.check-merge.outputs.reason }}\n\nThis PR will be automatically merged when all requirements are met.`
+              });
+            } catch (error) {
+              core.warning(`Failed to enable auto-merge: ${error.message}`);
+              
+              // Fallback: Try direct merge
+              try {
+                await github.rest.pulls.merge({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: prNumber,
+                  merge_method: 'squash',
+                  commit_title: `Merge PR #${prNumber}: ${{ steps.check-merge.outputs.reason }}`
+                });
+                
+                core.info(`✅ PR #${prNumber} merged successfully`);
+              } catch (mergeError) {
+                core.error(`Failed to merge: ${mergeError.message}`);
+              }
+            }
