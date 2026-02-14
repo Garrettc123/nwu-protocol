@@ -1,0 +1,443 @@
+name: 🤖 PR Automation
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, edited, ready_for_review]
+  pull_request_target:
+    types: [opened, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  # Auto-label PRs based on file changes
+  auto-label:
+    name: Auto Label PR
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/labeler@v5
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          configuration-path: .github/labeler.yml
+          sync-labels: true
+
+  # Add PR size labels
+  pr-size-labeling:
+    name: Label PR Size
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Calculate PR Size
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            
+            // Get PR files
+            const { data: files } = await github.rest.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number,
+            });
+            
+            // Calculate total changes
+            const additions = files.reduce((sum, file) => sum + file.additions, 0);
+            const deletions = files.reduce((sum, file) => sum + file.deletions, 0);
+            const totalChanges = additions + deletions;
+            const fileCount = files.length;
+            
+            // Determine size
+            let size, color;
+            if (totalChanges < 10) {
+              size = 'size: XS';
+              color = '3CBF00';
+            } else if (totalChanges < 100) {
+              size = 'size: S';
+              color = '5D9801';
+            } else if (totalChanges < 500) {
+              size = 'size: M';
+              color = 'F9D0C4';
+            } else if (totalChanges < 1000) {
+              size = 'size: L';
+              color = 'F2B8B5';
+            } else {
+              size = 'size: XL';
+              color = 'E11D21';
+            }
+            
+            core.info(`PR Size: ${totalChanges} changes across ${fileCount} files → ${size}`);
+            
+            // Remove old size labels
+            const oldSizeLabels = ['size: XS', 'size: S', 'size: M', 'size: L', 'size: XL'];
+            const currentLabels = pr.labels.map(label => label.name);
+            
+            for (const oldLabel of oldSizeLabels) {
+              if (currentLabels.includes(oldLabel) && oldLabel !== size) {
+                try {
+                  await github.rest.issues.removeLabel({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: pr.number,
+                    name: oldLabel
+                  });
+                } catch (error) {
+                  // Label might not exist, ignore
+                }
+              }
+            }
+            
+            // Ensure size label exists
+            try {
+              await github.rest.issues.getLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: size
+              });
+            } catch (error) {
+              // Create label if it doesn't exist
+              await github.rest.issues.createLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: size,
+                color: color,
+                description: `PR with ${size.split(': ')[1]} size changes`
+              });
+            }
+            
+            // Add size label
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+              labels: [size]
+            });
+            
+            // Add warning comment for large PRs
+            if (totalChanges >= 1000) {
+              const comment = `## ⚠️ Large PR Warning\n\n` +
+                `This PR contains **${totalChanges} changes** across **${fileCount} files**.\n\n` +
+                `Large PRs are harder to review and more likely to introduce bugs. Consider:\n` +
+                `- Breaking this into smaller, focused PRs\n` +
+                `- Ensuring adequate test coverage\n` +
+                `- Providing detailed context in the description\n`;
+              
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                body: comment
+              });
+            }
+
+  # Auto-assign reviewers based on CODEOWNERS
+  auto-assign-reviewers:
+    name: Auto-Assign Reviewers
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && github.event.action == 'opened'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Assign Reviewers from CODEOWNERS
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require('fs');
+            const pr = context.payload.pull_request;
+            
+            // Check if CODEOWNERS file exists
+            if (!fs.existsSync('.github/CODEOWNERS')) {
+              core.info('No CODEOWNERS file found, skipping reviewer assignment');
+              return;
+            }
+            
+            // Get changed files in PR
+            const { data: files } = await github.rest.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number,
+            });
+            
+            const changedFiles = files.map(f => f.filename);
+            core.info(`Changed files: ${changedFiles.join(', ')}`);
+            
+            // Parse CODEOWNERS
+            const codeowners = fs.readFileSync('.github/CODEOWNERS', 'utf8');
+            const reviewers = new Set();
+            
+            for (const line of codeowners.split('\n')) {
+              const trimmed = line.trim();
+              if (!trimmed || trimmed.startsWith('#')) continue;
+              
+              const [pattern, ...owners] = trimmed.split(/\s+/);
+              
+              // Simple pattern matching (this is basic, GitHub uses more sophisticated matching)
+              const regex = new RegExp(pattern.replace('*', '.*').replace('/', '\\/'));
+              
+              for (const file of changedFiles) {
+                if (regex.test(file)) {
+                  owners.forEach(owner => {
+                    // Remove @ prefix and skip teams (they start with @org/)
+                    const cleanOwner = owner.replace('@', '');
+                    if (!cleanOwner.includes('/') && cleanOwner !== pr.user.login) {
+                      reviewers.add(cleanOwner);
+                    }
+                  });
+                }
+              }
+            }
+            
+            if (reviewers.size === 0) {
+              core.info('No reviewers found in CODEOWNERS for changed files');
+              return;
+            }
+            
+            // Request reviews (max 15 reviewers allowed by GitHub API)
+            const reviewerArray = Array.from(reviewers).slice(0, 15);
+            core.info(`Requesting reviews from: ${reviewerArray.join(', ')}`);
+            
+            try {
+              await github.rest.pulls.requestReviewers({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+                reviewers: reviewerArray
+              });
+              core.info('✅ Reviewers assigned successfully');
+            } catch (error) {
+              core.warning(`Failed to assign reviewers: ${error.message}`);
+            }
+
+  # Detect merge conflicts
+  conflict-detection:
+    name: Detect Merge Conflicts
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Check for Conflicts
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            
+            if (pr.mergeable === false) {
+              const comment = `## ⚠️ Merge Conflict Detected\n\n` +
+                `This PR has merge conflicts with the base branch (\`${pr.base.ref}\`).\n\n` +
+                `**To resolve:**\n` +
+                `1. Sync your branch with the latest changes from \`${pr.base.ref}\`\n` +
+                `2. Resolve the conflicts locally\n` +
+                `3. Push the resolved changes\n\n` +
+                `\`\`\`bash\n` +
+                `git fetch origin\n` +
+                `git merge origin/${pr.base.ref}\n` +
+                `# Resolve conflicts\n` +
+                `git commit\n` +
+                `git push\n` +
+                `\`\`\``;
+              
+              // Check if conflict comment already exists
+              const { data: comments } = await github.rest.issues.listComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+              });
+              
+              const hasConflictComment = comments.some(comment => 
+                comment.body.includes('Merge Conflict Detected')
+              );
+              
+              if (!hasConflictComment) {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pr.number,
+                  body: comment
+                });
+                
+                // Add conflict label
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pr.number,
+                  labels: ['status: conflict']
+                });
+              }
+            } else if (pr.mergeable === true) {
+              // Remove conflict label if resolved
+              try {
+                await github.rest.issues.removeLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pr.number,
+                  name: 'status: conflict'
+                });
+              } catch (error) {
+                // Label might not exist, ignore
+              }
+            }
+
+  # Welcome first-time contributors
+  welcome-contributors:
+    name: Welcome First-Time Contributors
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && github.event.action == 'opened'
+    steps:
+      - name: Welcome Message
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            
+            // Check if this is user's first PR
+            const { data: userPRs } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'all',
+              creator: pr.user.login
+            });
+            
+            if (userPRs.length === 1) {
+              const welcomeMessage = `## 👋 Welcome to NWU Protocol!\n\n` +
+                `Thank you @${pr.user.login} for your first contribution! 🎉\n\n` +
+                `We're excited to have you as part of our community. Here's what happens next:\n\n` +
+                `1. **Automated Checks**: Our CI/CD pipeline will run automated tests and quality checks\n` +
+                `2. **Review Process**: A maintainer will review your changes\n` +
+                `3. **Feedback**: We may provide feedback or request changes\n` +
+                `4. **Merge**: Once approved, your PR will be merged!\n\n` +
+                `**Resources:**\n` +
+                `- 📖 [Contributing Guidelines](../CONTRIBUTING.md)\n` +
+                `- 📋 [Definition of Done](../DEFINITION_OF_DONE.md)\n` +
+                `- 🎯 [Coding Standards](../CODING_STANDARDS.md)\n\n` +
+                `Feel free to ask questions in the comments. Happy coding! 💻`;
+              
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                body: welcomeMessage
+              });
+              
+              // Add first-time contributor label
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                labels: ['first-time contributor']
+              });
+            }
+
+  # PR summary automation
+  pr-summary:
+    name: Generate PR Summary
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize')
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Generate Summary
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            
+            // Get PR files
+            const { data: files } = await github.rest.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number,
+            });
+            
+            // Categorize files
+            const categorized = {
+              backend: [],
+              frontend: [],
+              contracts: [],
+              tests: [],
+              docs: [],
+              config: [],
+              other: []
+            };
+            
+            files.forEach(file => {
+              if (file.filename.includes('backend/') || file.filename.includes('src/api/')) {
+                categorized.backend.push(file.filename);
+              } else if (file.filename.includes('frontend/') || file.filename.match(/\.(tsx|jsx)$/)) {
+                categorized.frontend.push(file.filename);
+              } else if (file.filename.includes('contracts/') || file.filename.endsWith('.sol')) {
+                categorized.contracts.push(file.filename);
+              } else if (file.filename.includes('test') || file.filename.match(/\.(test|spec)\./)) {
+                categorized.tests.push(file.filename);
+              } else if (file.filename.endsWith('.md') || file.filename.includes('docs/')) {
+                categorized.docs.push(file.filename);
+              } else if (file.filename.match(/\.(json|yml|yaml|config\.)/) || file.filename.includes('.github/')) {
+                categorized.config.push(file.filename);
+              } else {
+                categorized.other.push(file.filename);
+              }
+            });
+            
+            // Build summary
+            let summary = `## 📊 PR Summary\n\n`;
+            summary += `**Stats:** ${files.length} files changed, `;
+            summary += `+${pr.additions} additions, -${pr.deletions} deletions\n\n`;
+            
+            summary += `### Changed Areas\n\n`;
+            
+            for (const [category, items] of Object.entries(categorized)) {
+              if (items.length > 0) {
+                const emoji = {
+                  backend: '🔧',
+                  frontend: '💻',
+                  contracts: '📝',
+                  tests: '🧪',
+                  docs: '📚',
+                  config: '⚙️',
+                  other: '📦'
+                }[category];
+                
+                summary += `${emoji} **${category.charAt(0).toUpperCase() + category.slice(1)}** (${items.length} files)\n`;
+                
+                if (items.length <= 5) {
+                  items.forEach(item => summary += `  - \`${item}\`\n`);
+                } else {
+                  items.slice(0, 3).forEach(item => summary += `  - \`${item}\`\n`);
+                  summary += `  - _...and ${items.length - 3} more_\n`;
+                }
+                summary += `\n`;
+              }
+            }
+            
+            // Check for existing summary comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+            });
+            
+            const botComment = comments.find(comment => 
+              comment.user.type === 'Bot' && 
+              comment.body.includes('📊 PR Summary')
+            );
+            
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: summary
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                body: summary
+              });
+            }
