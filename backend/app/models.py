@@ -176,7 +176,7 @@ class APIKey(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     key_hash = Column(String(255), unique=True, nullable=False, index=True)
     name = Column(String(100), nullable=False)
-    prefix = Column(String(20), nullable=False)  # First 8 chars for display
+    prefix = Column(String(20), nullable=False)  # First 12 chars for display
     tier = Column(SQLEnum(SubscriptionTier), nullable=False, default=SubscriptionTier.FREE)
     is_active = Column(Boolean, default=True)
     last_used_at = Column(DateTime, nullable=True)

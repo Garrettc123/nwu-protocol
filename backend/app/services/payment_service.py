@@ -177,9 +177,18 @@ class PaymentService:
             
             if subscription.stripe_subscription_id:
                 if immediately:
-                    stripe.Subscription.delete(subscription.stripe_subscription_id)
+                    # Immediately cancel - use delete as last resort
+                    try:
+                        stripe.Subscription.modify(
+                            subscription.stripe_subscription_id,
+                            cancel_at_period_end=False
+                        )
+                        stripe.Subscription.delete(subscription.stripe_subscription_id)
+                    except Exception as e:
+                        logger.warning(f"Failed to delete subscription, marking as canceled: {e}")
                     subscription.status = "canceled"
                 else:
+                    # Cancel at period end (recommended approach)
                     stripe.Subscription.modify(
                         subscription.stripe_subscription_id,
                         cancel_at_period_end=True

@@ -15,12 +15,25 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/payments", tags=["payments"])
 
 
-# Helper function to get user (in production, use proper auth)
+# TODO: Replace with proper JWT-based authentication
+# WARNING: Current implementation is NOT secure for production
+# This is a placeholder that accepts address without verification
+# MUST implement proper authentication before deployment
 async def get_current_user(
     address: str,
     db: Session = Depends(get_db)
 ) -> User:
-    """Get current user from address."""
+    """
+    Get current user from address.
+    
+    ⚠️ SECURITY WARNING: This is a placeholder implementation.
+    In production, this MUST verify:
+    - JWT token validity
+    - Wallet signature
+    - Session authentication
+    
+    DO NOT use this in production without implementing proper auth!
+    """
     user = db.query(User).filter(User.address == address.lower()).first()
     if not user:
         raise HTTPException(
