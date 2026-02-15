@@ -9,9 +9,11 @@ This guide covers all the automation features that eliminate repetitive tasks an
 ### First-Time Setup
 
 1. **Install Automation Scripts**
+
    ```bash
    ./scripts/setup-automation.sh
    ```
+
    This will:
    - Make all scripts executable
    - Install Git pre-commit hooks
@@ -19,9 +21,11 @@ This guide covers all the automation features that eliminate repetitive tasks an
    - Test all automation scripts
 
 2. **Configure Environment**
+
    ```bash
    ./configure.sh
    ```
+
    Interactive wizard that:
    - Guides you through environment setup
    - Validates API keys
@@ -43,12 +47,14 @@ This guide covers all the automation features that eliminate repetitive tasks an
 **Location:** `scripts/test-runner.sh` (alias: `./test-all.sh`)
 
 **Features:**
+
 - **Smart Caching**: Skips passing tests from last 5 minutes
 - **Parallel Execution**: Runs independent tests simultaneously
 - **Selective Testing**: Choose specific test categories
 - **Clear Output**: Color-coded results with summary
 
 **Usage:**
+
 ```bash
 # Run all tests with caching
 ./test-all.sh
@@ -67,12 +73,14 @@ This guide covers all the automation features that eliminate repetitive tasks an
 ```
 
 **Categories:**
+
 - `infrastructure` - Docker, containers, services
 - `health` - Service health checks
 - `api` - Backend API endpoints
 - `integration` - Service integrations
 
 **Benefits:**
+
 - ⏱️ Saves 5-10 minutes per test run with caching
 - 🚀 Parallel execution is 2-3x faster
 - 🎯 Selective testing when you know what changed
@@ -85,6 +93,7 @@ This guide covers all the automation features that eliminate repetitive tasks an
 **Location:** `scripts/config-wizard.sh` (alias: `./configure.sh`)
 
 **Features:**
+
 - **Interactive Prompts**: Step-by-step environment setup
 - **Smart Defaults**: Suggests common values
 - **API Key Validation**: Tests OpenAI keys before saving
@@ -92,6 +101,7 @@ This guide covers all the automation features that eliminate repetitive tasks an
 - **Multi-Environment**: Creates both root and frontend configs
 
 **Usage:**
+
 ```bash
 # Run interactive wizard
 ./configure.sh
@@ -101,6 +111,7 @@ This guide covers all the automation features that eliminate repetitive tasks an
 ```
 
 **What It Configures:**
+
 - PostgreSQL, MongoDB, Redis, RabbitMQ, IPFS
 - OpenAI API key with validation
 - JWT secret (auto-generated)
@@ -108,6 +119,7 @@ This guide covers all the automation features that eliminate repetitive tasks an
 - Environment type (development/production)
 
 **Benefits:**
+
 - ⏱️ Saves 5-10 minutes per setup
 - ✅ Reduces configuration errors
 - 🔐 Ensures secure defaults
@@ -141,6 +153,7 @@ This guide covers all the automation features that eliminate repetitive tasks an
    - Examples: `feat(api): add endpoint`, `fix(ui): button color`
 
 **Installation:**
+
 ```bash
 # Installed automatically by setup-automation.sh
 ./scripts/setup-automation.sh
@@ -151,11 +164,13 @@ chmod +x .git/hooks/pre-commit
 ```
 
 **Bypass (not recommended):**
+
 ```bash
 git commit --no-verify
 ```
 
 **Benefits:**
+
 - 🔐 Prevents secret leaks automatically
 - ✨ Code always formatted consistently
 - 📝 Enforces commit message standards
@@ -168,6 +183,7 @@ git commit --no-verify
 **Location:** `scripts/service-registry.sh`
 
 **Central source of truth for:**
+
 - Service names and descriptions
 - Health check URLs
 - Container names
@@ -175,6 +191,7 @@ git commit --no-verify
 - Startup order
 
 **Usage in Scripts:**
+
 ```bash
 #!/bin/bash
 source "$(dirname "$0")/service-registry.sh"
@@ -193,6 +210,7 @@ wait_for_service "backend" 60
 ```
 
 **Benefits:**
+
 - 📦 DRY principle - no duplication
 - 🔧 Easy maintenance - change once, update everywhere
 - 🎨 Consistent logging and output
@@ -243,11 +261,11 @@ cp .env.prod .env
 
 ## 📊 Performance Improvements
 
-| Task | Before | After | Savings |
-|------|--------|-------|---------|
-| Full test run | 10-15 min | 2-5 min | **70%** |
-| Environment setup | 10-15 min | 2 min | **85%** |
-| Pre-commit checks | Manual | Automatic | **100%** |
+| Task                  | Before    | After       | Savings             |
+| --------------------- | --------- | ----------- | ------------------- |
+| Full test run         | 10-15 min | 2-5 min     | **70%**             |
+| Environment setup     | 10-15 min | 2 min       | **85%**             |
+| Pre-commit checks     | Manual    | Automatic   | **100%**            |
 | Service health checks | Scattered | Centralized | **Maintainability** |
 
 ---
@@ -257,6 +275,7 @@ cp .env.prod .env
 ### Test Runner Issues
 
 **Problem:** Tests fail but services are running
+
 ```bash
 # Clear test cache
 rm -rf /tmp/nwu-test-cache
@@ -264,6 +283,7 @@ rm -rf /tmp/nwu-test-cache
 ```
 
 **Problem:** Permission denied
+
 ```bash
 chmod +x scripts/*.sh
 ```
@@ -271,23 +291,27 @@ chmod +x scripts/*.sh
 ### Configuration Wizard Issues
 
 **Problem:** OpenAI key validation fails
+
 - Check internet connectivity
 - Verify key starts with `sk-`
 - Use `--skip-validation` flag (add if needed)
 
 **Problem:** .env file not created
+
 - Check write permissions in directory
 - Ensure script is run from repo root
 
 ### Pre-Commit Hook Issues
 
 **Problem:** Hook not running
+
 ```bash
 # Reinstall hook
 ./scripts/setup-automation.sh
 ```
 
 **Problem:** False positive on secrets
+
 - Add exception to `.gitignore`
 - Use environment variables instead
 
@@ -296,6 +320,7 @@ chmod +x scripts/*.sh
 ## 💡 Best Practices
 
 1. **Run setup-automation.sh once per clone**
+
    ```bash
    git clone <repo>
    cd nwu-protocol
@@ -303,11 +328,13 @@ chmod +x scripts/*.sh
    ```
 
 2. **Use configuration wizard for new environments**
+
    ```bash
    ./configure.sh
    ```
 
 3. **Run test-all.sh before committing major changes**
+
    ```bash
    ./test-all.sh
    git commit -m "feat: major feature"
@@ -352,6 +379,7 @@ chmod +x scripts/*.sh
 ## 🎯 What's Automated
 
 ### ✅ Fully Automated
+
 - [x] Code formatting (Prettier, Black)
 - [x] Pre-commit quality checks
 - [x] Test execution and caching
@@ -360,11 +388,13 @@ chmod +x scripts/*.sh
 - [x] Service health monitoring
 
 ### 🔄 Partially Automated
+
 - [x] Test result caching (5 min TTL)
 - [x] API key validation (requires internet)
 - [x] Commit message validation
 
 ### 📋 Manual (as designed)
+
 - [ ] Pull request creation (use GitHub UI)
 - [ ] Production deployments (require approval)
 - [ ] Security incident response
@@ -374,6 +404,7 @@ chmod +x scripts/*.sh
 ## 🆘 Support
 
 For issues or questions:
+
 1. Check [troubleshooting](#-troubleshooting) section
 2. Review script source code in `scripts/`
 3. Open an issue on GitHub
@@ -381,4 +412,4 @@ For issues or questions:
 
 ---
 
-*Last updated: February 2026*
+_Last updated: February 2026_
