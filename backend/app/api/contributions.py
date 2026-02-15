@@ -89,7 +89,7 @@ async def create_contribution(
         file_size=file_size,
         title=title,
         description=description,
-        metadata=json.dumps(metadata_dict) if metadata_dict else None,
+        meta_data=json.dumps(metadata_dict) if metadata_dict else None,
         status="pending"
     )
     

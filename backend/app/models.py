@@ -39,7 +39,7 @@ class Contribution(Base):
     file_size = Column(Integer, nullable=False)
     title = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
-    metadata = Column(Text, nullable=True)  # JSON string
+    meta_data = Column("metadata", Text, nullable=True)  # JSON string
     status = Column(String(50), default="pending", index=True)  # pending, verifying, verified, rejected
     quality_score = Column(Float, nullable=True)
     verification_count = Column(Integer, default=0)
