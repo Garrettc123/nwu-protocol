@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from typing import List
 
 from ..database import get_db
@@ -86,9 +87,16 @@ def get_user_rewards(
         Reward.user_id == user.id
     ).offset(skip).limit(limit).all()
     
-    # Calculate totals
-    pending_amount = sum(r.amount for r in rewards if r.status == "pending")
-    distributed_amount = sum(r.amount for r in rewards if r.status == "distributed")
+    # Calculate totals using database aggregation
+    pending_amount = db.query(func.sum(Reward.amount)).filter(
+        Reward.user_id == user.id,
+        Reward.status == "pending"
+    ).scalar() or 0.0
+    
+    distributed_amount = db.query(func.sum(Reward.amount)).filter(
+        Reward.user_id == user.id,
+        Reward.status == "distributed"
+    ).scalar() or 0.0
     
     return {
         "user_address": address,
@@ -109,17 +117,23 @@ def get_user_stats(address: str, db: Session = Depends(get_db)):
             detail="User not found"
         )
     
-    # Get contribution stats
-    contributions = db.query(Contribution).filter(Contribution.user_id == user.id).all()
-    verified_count = sum(1 for c in contributions if c.status == "verified")
-    avg_quality_score = sum(c.quality_score or 0 for c in contributions) / len(contributions) if contributions else 0
+    # Get contribution stats using database aggregations
+    verified_count = db.query(func.count(Contribution.id)).filter(
+        Contribution.user_id == user.id,
+        Contribution.status == "verified"
+    ).scalar() or 0
+    
+    avg_quality_score = db.query(func.avg(Contribution.quality_score)).filter(
+        Contribution.user_id == user.id,
+        Contribution.quality_score.isnot(None)
+    ).scalar() or 0.0
     
     return {
         "user_address": address,
         "reputation_score": user.reputation_score,
         "total_contributions": user.total_contributions,
         "verified_contributions": verified_count,
-        "average_quality_score": round(avg_quality_score, 2),
+        "average_quality_score": round(float(avg_quality_score), 2),
         "total_rewards": user.total_rewards,
         "joined_at": user.created_at
     }
