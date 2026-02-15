@@ -159,6 +159,8 @@ This deployment automatically starts:
 
 ## 💡 Useful Commands
 
+### Standard Commands
+
 ```bash
 make help          # Show all available commands
 make status        # Check service status
@@ -170,6 +172,18 @@ make test-all      # Full system validation
 make frontend      # Start frontend dev server
 make clean         # Clean up everything
 ```
+
+### 🤖 Automation Commands (New!)
+
+```bash
+./scripts/setup-automation.sh   # Install all automation (run once)
+./configure.sh                  # Interactive environment setup
+./test-all.sh                   # Smart test runner with caching
+./test-all.sh --no-cache        # Force run all tests
+./test-all.sh api health        # Run specific test categories
+```
+
+**See [AUTOMATION_GUIDE.md](AUTOMATION_GUIDE.md) for complete automation documentation.**
 
 ## 🔍 Backend Verification
 
@@ -193,6 +207,7 @@ See [BACKEND_VERIFICATION.md](BACKEND_VERIFICATION.md) for complete details on w
 ### Getting Started
 
 - **[Quick Start Guide](DEPLOY_NOW.md)** - Get running in minutes
+- **[Automation Guide](AUTOMATION_GUIDE.md)** - Eliminate repetitive tasks ⚡ **NEW!**
 - **[Onboarding Guide](ONBOARDING.md)** - New to the project? Start here
 - **[Deployment Guide](DEPLOYMENT.md)** - Comprehensive deployment documentation
 - **[API Reference](API_REFERENCE.md)** - Complete API documentation
