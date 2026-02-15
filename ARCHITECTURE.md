@@ -14,7 +14,7 @@ The NWU Protocol follows a hierarchical tree structure where each component repr
              |                |                |
       ______|______      _____|_____      ____|____
      |      |      |    |     |     |    |    |    |
-   Contrib Verif Reward AgentA AgentB Msg K8s Docker RMQ
+   Contrib Verif Reward Agent-Alpha Agent-Beta Msg K8s Docker RMQ
    Manager Engine  Calc Alpha Beta  Bus
                               |
                          🌿 BRANCHES
