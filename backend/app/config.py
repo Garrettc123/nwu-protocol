@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     # IPFS
     ipfs_host: str = "ipfs"
     ipfs_port: int = 5001
+    ipfs_thread_pool_size: int = 4  # Thread pool size for async IPFS operations
     
     # JWT Authentication
     jwt_secret_key: str = "CHANGE-ME-IN-PRODUCTION-USE-ENV-VARIABLE"

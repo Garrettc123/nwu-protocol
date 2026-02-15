@@ -50,16 +50,11 @@ async def submit_verification(verification_data: VerificationCreate, db: Session
     contribution.verification_count += 1
     
     # Calculate average quality score using database aggregation
-    result = db.query(
-        func.avg(Verification.vote_score),
-        func.count(Verification.id)
-    ).filter(
+    avg_score_result = db.query(func.avg(Verification.vote_score)).filter(
         Verification.contribution_id == contribution.id
-    ).first()
+    ).scalar()
     
-    avg_score = float(result[0]) if result[0] is not None else 0.0
-    total_verifications = result[1] or 0
-    
+    avg_score = float(avg_score_result) if avg_score_result is not None else 0.0
     contribution.quality_score = round(avg_score, 2)
     
     # Update status based on verification count and score

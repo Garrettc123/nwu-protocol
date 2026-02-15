@@ -16,7 +16,7 @@ class IPFSService:
     def __init__(self):
         """Initialize IPFS client."""
         self.client = None
-        self._executor = ThreadPoolExecutor(max_workers=4)
+        self._executor = ThreadPoolExecutor(max_workers=settings.ipfs_thread_pool_size)
         self._connect()
     
     def _connect(self):
