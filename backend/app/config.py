@@ -44,6 +44,16 @@ class Settings(BaseSettings):
     eth_rpc_url: Optional[str] = None
     contract_address: Optional[str] = None
     
+    # Payment Integration (Stripe)
+    stripe_api_key: Optional[str] = None
+    stripe_webhook_secret: Optional[str] = None
+    stripe_publishable_key: Optional[str] = None
+    
+    # Subscription Tiers
+    subscription_tier_free_rate_limit: int = 100  # requests per day
+    subscription_tier_pro_rate_limit: int = 10000  # requests per day
+    subscription_tier_enterprise_rate_limit: int = 100000  # requests per day
+    
     class Config:
         env_file = ".env"
         case_sensitive = False
