@@ -104,6 +104,7 @@ The project includes comprehensive GitHub Actions workflows for continuous integ
 - **Universal CI/CD** (`ci-cd.yml`) - Auto-detecting pipeline for Python, Node.js, and Docker environments
 - **FastAPI Entrypoint Verification** (`fastapi-check.yml`) - Validates FastAPI backend configuration
 - **Project Initialization Helper** (`project-init.yml`) - Automated project setup and configuration
+- **PR Merger Tool** (`scripts/pr-merger.sh`) - CLI tool for managing and batch merging pull requests
 
 All workflows are configured with appropriate permissions and security best practices.
 
@@ -227,6 +228,15 @@ See [BACKEND_VERIFICATION.md](BACKEND_VERIFICATION.md) for complete details on w
 - **[Contributing Guide](CONTRIBUTING.md)** - How to contribute effectively
 - **[Security Policy](SECURITY.md)** - Security practices and reporting
 - **[Code of Conduct](CODE_OF_CONDUCT.md)** - Community guidelines
+
+### Maintainer Tools
+
+- **[PR Merger Guide](PR_MERGER_GUIDE.md)** - Tool for managing and merging multiple pull requests
+  - List open PRs with status
+  - Check merge readiness automatically
+  - Batch merge multiple PRs
+  - Auto-merge all ready PRs
+  - Dry run mode for testing
 
 ### Additional Resources
 
