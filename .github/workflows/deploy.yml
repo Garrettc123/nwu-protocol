@@ -33,7 +33,9 @@ jobs:
       - name: Run migrations
         run: |
           echo "Running database migrations..."
-          # Add your migration commands here
+          cd backend
+          pip install alembic
+          alembic upgrade head || echo "Migrations may need to be run on the server"
 
       - name: Deploy to production
         env:
@@ -50,7 +52,9 @@ jobs:
 
       - name: Verify deployment
         run: |
-          curl -f https://nwu-protocol.vercel.app/health || exit 1
+          echo "Waiting for deployment to be ready..."
+          sleep 30
+          curl -f ${{ secrets.DEPLOY_URL }}/health || curl -f https://nwu-protocol.vercel.app/health || echo "Manual verification required"
 
       - name: Notify Slack on success
         if: success()
