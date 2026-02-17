@@ -33,7 +33,18 @@
 make deploy
 ```
 
-See [DEPLOY_NOW.md](DEPLOY_NOW.md) for the complete quick-start guide.
+**Verify before deploying:**
+
+```bash
+./verify-deployment.sh
+```
+
+### 📚 Deployment Documentation
+
+- **Quick Start**: [QUICKSTART_DEPLOY.md](QUICKSTART_DEPLOY.md) - Deploy in 3 steps
+- **Development**: [DEPLOY_NOW.md](DEPLOY_NOW.md) - Complete development guide
+- **Production**: [PRODUCTION_DEPLOYMENT.md](PRODUCTION_DEPLOYMENT.md) - Production deployment with security
+- **Detailed Guide**: [DEPLOYMENT.md](DEPLOYMENT.md) - Comprehensive deployment documentation
 
 ## Overview
 
