@@ -75,7 +75,7 @@ class Verification(Base):
 class Reward(Base):
     """Reward model."""
     __tablename__ = "rewards"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     contribution_id = Column(Integer, ForeignKey("contributions.id"), nullable=False)
@@ -85,6 +85,46 @@ class Reward(Base):
     blockchain = Column(String(50), default="ethereum")
     created_at = Column(DateTime, default=datetime.utcnow)
     distributed_at = Column(DateTime, nullable=True)
-    
+
     user = relationship("User", back_populates="rewards")
     contribution = relationship("Contribution", back_populates="rewards")
+
+
+class BusinessAgent(Base):
+    """Business Agent model for tracking specialized agents."""
+    __tablename__ = "business_agents"
+
+    id = Column(Integer, primary_key=True, index=True)
+    agent_id = Column(String(100), unique=True, nullable=False, index=True)
+    agent_type = Column(String(50), nullable=False)  # sales, marketing, operations, etc.
+    name = Column(String(255), nullable=False)
+    status = Column(String(50), default="idle")  # idle, busy, paused, error, terminated
+    capabilities = Column(Text, nullable=True)  # JSON string
+    config = Column(Text, nullable=True)  # JSON string
+    tasks_completed = Column(Integer, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    last_active = Column(DateTime, default=datetime.utcnow)
+    terminated_at = Column(DateTime, nullable=True)
+
+    tasks = relationship("BusinessTask", back_populates="agent")
+
+
+class BusinessTask(Base):
+    """Business Task model for tracking tasks processed by agents."""
+    __tablename__ = "business_tasks"
+
+    id = Column(Integer, primary_key=True, index=True)
+    task_id = Column(String(100), unique=True, nullable=False, index=True)
+    task_type = Column(String(100), nullable=False)
+    category = Column(String(100), nullable=True)
+    priority = Column(Integer, default=5)
+    status = Column(String(50), default="pending")  # pending, analyzing, executing, completed, failed, error
+    agent_id = Column(String(100), ForeignKey("business_agents.agent_id"), nullable=True)
+    task_data = Column(Text, nullable=True)  # JSON string
+    result = Column(Text, nullable=True)  # JSON string
+    error = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    started_at = Column(DateTime, nullable=True)
+    completed_at = Column(DateTime, nullable=True)
+
+    agent = relationship("BusinessAgent", back_populates="tasks")
