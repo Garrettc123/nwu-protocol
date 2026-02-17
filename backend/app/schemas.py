@@ -175,3 +175,68 @@ class APIInfo(BaseModel):
     version: str
     docs_url: str
     endpoints: list[str]
+
+
+# Business Agent Schemas
+class BusinessAgentBase(BaseModel):
+    """Base business agent schema."""
+    agent_id: str
+    agent_type: str
+    name: str
+
+
+class BusinessAgentCreate(BusinessAgentBase):
+    """Business agent creation schema."""
+    status: str = "idle"
+    capabilities: Optional[list[str]] = None
+    config: Optional[Dict[str, Any]] = None
+
+
+class BusinessAgentResponse(BusinessAgentBase):
+    """Business agent response schema."""
+    id: int
+    status: str
+    capabilities: Optional[str]
+    config: Optional[str]
+    tasks_completed: int
+    created_at: datetime
+    last_active: datetime
+    terminated_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+
+class BusinessAgentStatus(BaseModel):
+    """Business agent status update schema."""
+    status: str = Field(..., pattern="^(idle|busy|paused|error|terminated)$")
+
+
+# Business Task Schemas
+class BusinessTaskBase(BaseModel):
+    """Base business task schema."""
+    task_id: str
+    task_type: str
+    category: Optional[str] = None
+    priority: int = Field(default=5, ge=1, le=10)
+
+
+class BusinessTaskCreate(BusinessTaskBase):
+    """Business task creation schema."""
+    task_data: Optional[Dict[str, Any]] = None
+
+
+class BusinessTaskResponse(BusinessTaskBase):
+    """Business task response schema."""
+    id: int
+    status: str
+    agent_id: Optional[str]
+    task_data: Optional[str]
+    result: Optional[str]
+    error: Optional[str]
+    created_at: datetime
+    started_at: Optional[datetime]
+    completed_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
