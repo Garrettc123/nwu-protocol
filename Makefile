@@ -1,4 +1,4 @@
-.PHONY: help deploy start stop restart logs status clean test build
+.PHONY: help deploy start stop restart logs status clean test build pr-list pr-check pr-merge pr-batch pr-auto
 
 # Default target
 help:
@@ -21,6 +21,13 @@ help:
 	@echo "  make frontend   - Start frontend dev server"
 	@echo "  make migrate    - Run database migrations"
 	@echo "  make contracts  - Deploy smart contracts"
+	@echo ""
+	@echo "PR Management:"
+	@echo "  make pr-list    - List all open pull requests"
+	@echo "  make pr-check PR=<num> - Check if PR is ready to merge"
+	@echo "  make pr-merge PR=<num> - Merge a specific PR"
+	@echo "  make pr-batch PRS='<nums>' - Batch merge multiple PRs"
+	@echo "  make pr-auto    - Auto-merge all ready PRs"
 	@echo ""
 
 # Perfect deployment
@@ -169,3 +176,43 @@ dev-setup:
 	@cd contracts && npm install
 	@echo "✅ Development environment ready"
 	@echo "Edit .env and frontend/.env.local with your settings"
+
+# PR Management
+pr-list:
+	@echo "Listing all open pull requests..."
+	@./scripts/pr-merger.sh list
+
+pr-check:
+ifndef PR
+	@echo "Error: Please specify PR number with PR=<number>"
+	@echo "Example: make pr-check PR=88"
+	@exit 1
+endif
+	@./scripts/pr-merger.sh check $(PR)
+
+pr-merge:
+ifndef PR
+	@echo "Error: Please specify PR number with PR=<number>"
+	@echo "Example: make pr-merge PR=88"
+	@exit 1
+endif
+	@./scripts/pr-merger.sh merge $(PR)
+
+pr-batch:
+ifndef PRS
+	@echo "Error: Please specify PR numbers with PRS='<numbers>'"
+	@echo "Example: make pr-batch PRS='84 86 87 88'"
+	@exit 1
+endif
+	@./scripts/pr-merger.sh batch $(PRS)
+
+pr-auto:
+	@echo "Auto-merging all ready PRs..."
+	@./scripts/pr-merger.sh auto
+
+pr-auto-dry:
+	@echo "Dry run: Checking which PRs would be merged..."
+	@DRY_RUN=true ./scripts/pr-merger.sh auto
+
+pr-help:
+	@./scripts/pr-merger.sh help
