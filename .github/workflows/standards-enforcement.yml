@@ -78,7 +78,8 @@ jobs:
             const validPrefixes = [
               'feat/', 'fix/', 'docs/', 'style/', 'refactor/', 
               'test/', 'chore/', 'security/', 'perf/', 'ci/',
-              'copilot/' // Allow Copilot branches
+              'copilot/', // Allow Copilot branches
+              'claude/' // Allow Claude AI branches
             ];
             
             const isValid = validPrefixes.some(prefix => branch.startsWith(prefix));
