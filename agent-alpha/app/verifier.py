@@ -1,12 +1,20 @@
 """Verification logic for Agent-Alpha."""
 
 import logging
+import re
 from typing import Dict, Any, Optional
 from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from .config import config
 
 logger = logging.getLogger(__name__)
+
+# Compile regex patterns once at module level for better performance
+SCORE_PATTERN = re.compile(r'(\d+(?:\.\d+)?)')
+QUALITY_PATTERN = re.compile(r'quality.*?(\d+(?:\.\d+)?)', re.IGNORECASE)
+ORIGINALITY_PATTERN = re.compile(r'originality.*?(\d+(?:\.\d+)?)', re.IGNORECASE)
+SECURITY_PATTERN = re.compile(r'security.*?(\d+(?:\.\d+)?)', re.IGNORECASE)
+DOCUMENTATION_PATTERN = re.compile(r'documentation.*?(\d+(?:\.\d+)?)', re.IGNORECASE)
 
 
 class Verifier:
@@ -130,38 +138,32 @@ class Verifier:
             return self._mock_verification("document")
     
     def _parse_response(self, response: str, file_type: str) -> Dict[str, Any]:
-        """Parse LLM response into structured scores."""
-        import re
-        
-        lines = response.split('\n')
-        
+        """Parse LLM response into structured scores using pre-compiled regex patterns."""
         scores = {
             'quality_score': 75.0,
             'originality_score': 70.0,
             'security_score': 65.0 if file_type == "code" else None,
             'documentation_score': 60.0
         }
-        
-        # Try to extract scores from response using regex
-        for line in lines:
-            # Match patterns like "Quality: 85" or "Quality Score: 85.5"
-            if 'quality' in line.lower():
-                match = re.search(r'(\d+(?:\.\d+)?)', line)
-                if match:
-                    scores['quality_score'] = float(match.group(1))
-            elif 'originality' in line.lower():
-                match = re.search(r'(\d+(?:\.\d+)?)', line)
-                if match:
-                    scores['originality_score'] = float(match.group(1))
-            elif 'security' in line.lower() and file_type == "code":
-                match = re.search(r'(\d+(?:\.\d+)?)', line)
-                if match:
-                    scores['security_score'] = float(match.group(1))
-            elif 'documentation' in line.lower():
-                match = re.search(r'(\d+(?:\.\d+)?)', line)
-                if match:
-                    scores['documentation_score'] = float(match.group(1))
-        
+
+        # Use pre-compiled patterns for better performance
+        quality_match = QUALITY_PATTERN.search(response)
+        if quality_match:
+            scores['quality_score'] = float(quality_match.group(1))
+
+        originality_match = ORIGINALITY_PATTERN.search(response)
+        if originality_match:
+            scores['originality_score'] = float(originality_match.group(1))
+
+        if file_type == "code":
+            security_match = SECURITY_PATTERN.search(response)
+            if security_match:
+                scores['security_score'] = float(security_match.group(1))
+
+        documentation_match = DOCUMENTATION_PATTERN.search(response)
+        if documentation_match:
+            scores['documentation_score'] = float(documentation_match.group(1))
+
         # Calculate overall vote score
         vote_score = sum(s for s in scores.values() if s is not None) / len([s for s in scores.values() if s is not None])
         
