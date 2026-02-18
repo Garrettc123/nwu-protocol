@@ -30,20 +30,20 @@ class User(Base):
 class Contribution(Base):
     """Contribution model."""
     __tablename__ = "contributions"
-    
+
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     ipfs_hash = Column(String(100), unique=True, nullable=False)
     file_name = Column(String(255), nullable=False)
-    file_type = Column(String(50), nullable=False)  # code, dataset, document
+    file_type = Column(String(50), nullable=False)
     file_size = Column(Integer, nullable=False)
     title = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
     metadata = Column(Text, nullable=True)  # JSON string
-    status = Column(String(50), default="pending")  # pending, verifying, verified, rejected
+    status = Column(String(50), default="pending", index=True)  # pending, verifying, verified, rejected
     quality_score = Column(Float, nullable=True)
     verification_count = Column(Integer, default=0)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     user = relationship("User", back_populates="contributions")
@@ -54,9 +54,9 @@ class Contribution(Base):
 class Verification(Base):
     """Verification model."""
     __tablename__ = "verifications"
-    
+
     id = Column(Integer, primary_key=True, index=True)
-    contribution_id = Column(Integer, ForeignKey("contributions.id"), nullable=False)
+    contribution_id = Column(Integer, ForeignKey("contributions.id"), nullable=False, index=True)
     agent_id = Column(String(100), nullable=False)
     agent_type = Column(String(50), nullable=False)  # alpha, beta, etc.
     vote_score = Column(Float, nullable=False)  # 0-100
@@ -75,12 +75,12 @@ class Verification(Base):
 class Reward(Base):
     """Reward model."""
     __tablename__ = "rewards"
-    
+
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    contribution_id = Column(Integer, ForeignKey("contributions.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    contribution_id = Column(Integer, ForeignKey("contributions.id"), nullable=False, index=True)
     amount = Column(Float, nullable=False)
-    status = Column(String(50), default="pending")  # pending, processing, distributed, failed
+    status = Column(String(50), default="pending", index=True)  # pending, processing, distributed, failed
     tx_hash = Column(String(100), nullable=True)
     blockchain = Column(String(50), default="ethereum")
     created_at = Column(DateTime, default=datetime.utcnow)
