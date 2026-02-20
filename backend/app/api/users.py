@@ -7,6 +7,7 @@ from typing import List
 from ..database import get_db
 from ..models import User, Contribution, Reward
 from ..schemas import UserResponse, UserCreate
+from ..utils import get_user_by_address_or_404
 
 router = APIRouter(prefix="/api/v1/users", tags=["users"])
 
@@ -32,12 +33,7 @@ def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
 @router.get("/{address}", response_model=UserResponse)
 def get_user(address: str, db: Session = Depends(get_db)):
     """Get user by Ethereum address."""
-    user = db.query(User).filter(User.address == address).first()
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
+    user = get_user_by_address_or_404(db, address)
     return user
 
 
@@ -49,17 +45,12 @@ def get_user_contributions(
     db: Session = Depends(get_db)
 ):
     """Get all contributions by a user."""
-    user = db.query(User).filter(User.address == address).first()
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
-    
+    user = get_user_by_address_or_404(db, address)
+
     contributions = db.query(Contribution).filter(
         Contribution.user_id == user.id
     ).offset(skip).limit(limit).all()
-    
+
     return {
         "user_address": address,
         "total_contributions": user.total_contributions,
@@ -75,21 +66,16 @@ def get_user_rewards(
     db: Session = Depends(get_db)
 ):
     """Get all rewards for a user."""
-    user = db.query(User).filter(User.address == address).first()
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
-    
+    user = get_user_by_address_or_404(db, address)
+
     rewards = db.query(Reward).filter(
         Reward.user_id == user.id
     ).offset(skip).limit(limit).all()
-    
+
     # Calculate totals
     pending_amount = sum(r.amount for r in rewards if r.status == "pending")
     distributed_amount = sum(r.amount for r in rewards if r.status == "distributed")
-    
+
     return {
         "user_address": address,
         "total_rewards": user.total_rewards,
@@ -102,18 +88,13 @@ def get_user_rewards(
 @router.get("/{address}/stats")
 def get_user_stats(address: str, db: Session = Depends(get_db)):
     """Get user statistics."""
-    user = db.query(User).filter(User.address == address).first()
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
-    
+    user = get_user_by_address_or_404(db, address)
+
     # Get contribution stats
     contributions = db.query(Contribution).filter(Contribution.user_id == user.id).all()
     verified_count = sum(1 for c in contributions if c.status == "verified")
     avg_quality_score = sum(c.quality_score or 0 for c in contributions) / len(contributions) if contributions else 0
-    
+
     return {
         "user_address": address,
         "reputation_score": user.reputation_score,

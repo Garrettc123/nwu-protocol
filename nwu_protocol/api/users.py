@@ -7,6 +7,7 @@ from nwu_protocol.models.user import User, UserCreate, UserStats
 from nwu_protocol.services.user_manager import UserManager
 from nwu_protocol.services.contribution_manager import ContributionManager
 from nwu_protocol.core.dependencies import get_user_manager, get_contribution_manager
+from nwu_protocol.utils import get_or_404, handle_value_error, handle_generic_error
 
 router = APIRouter(prefix="/api/v1/users", tags=["users"])
 
@@ -29,9 +30,9 @@ async def create_user(
     try:
         return manager.create_user(user_data)
     except ValueError as e:
-        raise HTTPException(status_code=409, detail=str(e))
+        handle_value_error(e)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to create user: {str(e)}")
+        handle_generic_error(e, "create user")
 
 
 @router.get("", response_model=List[User])
@@ -68,9 +69,7 @@ async def get_user(
         User details
     """
     user = manager.get_user(user_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user
+    return get_or_404(user, "User not found")
 
 
 @router.get("/address/{address}", response_model=User)
@@ -89,9 +88,7 @@ async def get_user_by_address(
         User details
     """
     user = manager.get_user_by_address(address)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user
+    return get_or_404(user, "User not found")
 
 
 @router.get("/{user_id}/stats", response_model=UserStats)
@@ -111,12 +108,8 @@ async def get_user_stats(
     Returns:
         User statistics
     """
-    user = user_manager.get_user(user_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = get_or_404(user_manager.get_user(user_id), "User not found")
 
     contributions = contribution_manager.list_contributions(submitter=user.address)
     stats = user_manager.get_user_stats(user_id, contributions)
-    if stats is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    return stats
+    return get_or_404(stats, "User not found")
