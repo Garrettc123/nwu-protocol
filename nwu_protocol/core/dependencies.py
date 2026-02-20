@@ -4,6 +4,7 @@ from functools import lru_cache
 from nwu_protocol.services.contribution_manager import ContributionManager
 from nwu_protocol.services.verification_engine import VerificationEngine
 from nwu_protocol.services.reward_calculator import RewardCalculator
+from nwu_protocol.services.user_manager import UserManager
 
 
 @lru_cache()
@@ -22,3 +23,9 @@ def get_verification_engine() -> VerificationEngine:
 def get_reward_calculator() -> RewardCalculator:
     """Get or create the reward calculator singleton."""
     return RewardCalculator()
+
+
+@lru_cache()
+def get_user_manager() -> UserManager:
+    """Get or create the user manager singleton."""
+    return UserManager()
