@@ -14,6 +14,7 @@ from ..schemas import (
     ContributionStatus
 )
 from ..services import ipfs_service, rabbitmq_service
+from ..utils import get_or_create_user, get_contribution_by_id_or_404, validate_file_type
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/contributions", tags=["contributions"])
@@ -31,7 +32,7 @@ async def create_contribution(
 ):
     """
     Upload a new contribution.
-    
+
     - **file**: File to upload
     - **title**: Title of the contribution
     - **description**: Optional description
@@ -40,19 +41,10 @@ async def create_contribution(
     - **metadata**: Optional metadata as JSON string
     """
     # Validate file type
-    if file_type not in ["code", "dataset", "document"]:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid file type. Must be 'code', 'dataset', or 'document'"
-        )
-    
+    file_type = validate_file_type(file_type)
+
     # Get or create user
-    user = db.query(User).filter(User.address == user_address).first()
-    if not user:
-        user = User(address=user_address)
-        db.add(user)
-        db.commit()
-        db.refresh(user)
+    user = get_or_create_user(db, user_address)
     
     # Read file content
     file_content = await file.read()
@@ -119,25 +111,15 @@ async def create_contribution(
 @router.get("/{contribution_id}", response_model=ContributionResponse)
 def get_contribution(contribution_id: int, db: Session = Depends(get_db)):
     """Get contribution by ID."""
-    contribution = db.query(Contribution).filter(Contribution.id == contribution_id).first()
-    if not contribution:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Contribution not found"
-        )
+    contribution = get_contribution_by_id_or_404(db, contribution_id)
     return contribution
 
 
 @router.get("/{contribution_id}/status")
 def get_contribution_status(contribution_id: int, db: Session = Depends(get_db)):
     """Get verification status of a contribution."""
-    contribution = db.query(Contribution).filter(Contribution.id == contribution_id).first()
-    if not contribution:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Contribution not found"
-        )
-    
+    contribution = get_contribution_by_id_or_404(db, contribution_id)
+
     return {
         "contribution_id": contribution.id,
         "status": contribution.status,
@@ -175,20 +157,15 @@ def list_contributions(
 @router.get("/{contribution_id}/file")
 async def get_contribution_file(contribution_id: int, db: Session = Depends(get_db)):
     """Download the original file from IPFS."""
-    contribution = db.query(Contribution).filter(Contribution.id == contribution_id).first()
-    if not contribution:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Contribution not found"
-        )
-    
+    contribution = get_contribution_by_id_or_404(db, contribution_id)
+
     file_content = ipfs_service.get_file(contribution.ipfs_hash)
     if not file_content:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve file from IPFS"
         )
-    
+
     from fastapi.responses import Response
     return Response(
         content=file_content,
