@@ -7,6 +7,7 @@ from nwu_protocol.models.verification import Verification, VerificationCreate
 from nwu_protocol.services.verification_engine import VerificationEngine
 from nwu_protocol.services.contribution_manager import ContributionManager
 from nwu_protocol.core.dependencies import get_verification_engine, get_contribution_manager
+from nwu_protocol.utils import get_or_404, handle_generic_error
 
 router = APIRouter(prefix="/api/v1/verifications", tags=["verifications"])
 
@@ -30,16 +31,17 @@ async def submit_verification(
     """
     try:
         # Check if contribution exists
-        contribution = manager.get_contribution(verification_data.contribution_id)
-        if not contribution:
-            raise HTTPException(status_code=404, detail="Contribution not found")
+        contribution = get_or_404(
+            manager.get_contribution(verification_data.contribution_id),
+            "Contribution not found"
+        )
 
         verification = engine.submit_verification(verification_data)
         return verification
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to submit verification: {str(e)}")
+        handle_generic_error(e, "submit verification")
 
 
 @router.get("/{verification_id}", response_model=Verification)
@@ -58,9 +60,7 @@ async def get_verification(
         Verification details
     """
     verification = engine.get_verification(verification_id)
-    if not verification:
-        raise HTTPException(status_code=404, detail="Verification not found")
-    return verification
+    return get_or_404(verification, "Verification not found")
 
 
 @router.get("/contribution/{contribution_id}", response_model=List[Verification])
@@ -81,9 +81,10 @@ async def get_contribution_verifications(
         List of verifications
     """
     # Check if contribution exists
-    contribution = manager.get_contribution(contribution_id)
-    if not contribution:
-        raise HTTPException(status_code=404, detail="Contribution not found")
+    contribution = get_or_404(
+        manager.get_contribution(contribution_id),
+        "Contribution not found"
+    )
 
     return engine.get_verifications_for_contribution(contribution_id)
 
@@ -106,9 +107,10 @@ async def get_contribution_consensus(
         Consensus information
     """
     # Check if contribution exists
-    contribution = manager.get_contribution(contribution_id)
-    if not contribution:
-        raise HTTPException(status_code=404, detail="Contribution not found")
+    contribution = get_or_404(
+        manager.get_contribution(contribution_id),
+        "Contribution not found"
+    )
 
     consensus = engine.calculate_consensus(contribution_id)
     return {
