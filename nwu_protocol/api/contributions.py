@@ -10,6 +10,7 @@ from nwu_protocol.models.contribution import (
 )
 from nwu_protocol.services.contribution_manager import ContributionManager
 from nwu_protocol.core.dependencies import get_contribution_manager
+from nwu_protocol.utils import get_or_404, handle_generic_error
 
 router = APIRouter(prefix="/api/v1/contributions", tags=["contributions"])
 
@@ -35,7 +36,7 @@ async def create_contribution(
         contribution = manager.create_contribution(submitter, contribution_data)
         return contribution
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to create contribution: {str(e)}")
+        handle_generic_error(e, "create contribution")
 
 
 @router.get("/{contribution_id}", response_model=Contribution)
@@ -54,9 +55,7 @@ async def get_contribution(
         Contribution details
     """
     contribution = manager.get_contribution(contribution_id)
-    if not contribution:
-        raise HTTPException(status_code=404, detail="Contribution not found")
-    return contribution
+    return get_or_404(contribution, "Contribution not found")
 
 
 @router.get("/{contribution_id}/status")
@@ -74,9 +73,10 @@ async def get_contribution_status(
     Returns:
         Status information
     """
-    contribution = manager.get_contribution(contribution_id)
-    if not contribution:
-        raise HTTPException(status_code=404, detail="Contribution not found")
+    contribution = get_or_404(
+        manager.get_contribution(contribution_id),
+        "Contribution not found"
+    )
 
     return {
         "contribution_id": contribution_id,
