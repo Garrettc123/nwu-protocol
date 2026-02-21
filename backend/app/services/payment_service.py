@@ -423,7 +423,8 @@ class PaymentService:
         if payment:
             payment.status = PaymentStatus.SUCCEEDED
             db.commit()
-fix(security): Use bcrypt for secure API key hashing instead of SHA256
+            logger.info(f"Payment {payment.id} succeeded")
+
     async def _handle_payment_failed(self, db: Session, payment_intent: Any):
         """Handle failed payment."""
         payment = db.query(Payment).filter(
