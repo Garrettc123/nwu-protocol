@@ -88,6 +88,7 @@ A complete, production-ready platform for submitting code, datasets, and documen
 - ✅ Webhook integration for real-time updates
 
 **Pricing:**
+
 - **Free**: $0/month - 100 API requests/day
 - **Pro**: $99/month - 10,000 API requests/day + advanced features
 - **Enterprise**: $999/month - 100,000 API requests/day + premium support

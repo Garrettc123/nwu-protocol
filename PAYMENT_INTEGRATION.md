@@ -34,6 +34,7 @@ The NWU Protocol now includes a comprehensive payment integration system using S
 ## Subscription Tiers
 
 ### Free Tier
+
 - **Price:** $0/month
 - **Rate Limit:** 100 requests/day
 - **Features:**
@@ -42,6 +43,7 @@ The NWU Protocol now includes a comprehensive payment integration system using S
   - Standard API access
 
 ### Pro Tier
+
 - **Price:** $99/month
 - **Rate Limit:** 10,000 requests/day
 - **Features:**
@@ -52,6 +54,7 @@ The NWU Protocol now includes a comprehensive payment integration system using S
   - Extended API access
 
 ### Enterprise Tier
+
 - **Price:** $999/month
 - **Rate Limit:** 100,000 requests/day
 - **Features:**
@@ -68,11 +71,13 @@ The NWU Protocol now includes a comprehensive payment integration system using S
 ### Subscription Management
 
 #### Create Subscription
+
 ```http
 POST /api/v1/payments/subscriptions/create
 ```
 
 **Request Body:**
+
 ```json
 {
   "address": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb",
@@ -82,6 +87,7 @@ POST /api/v1/payments/subscriptions/create
 ```
 
 **Response:**
+
 ```json
 {
   "subscription_id": 1,
@@ -94,11 +100,13 @@ POST /api/v1/payments/subscriptions/create
 ```
 
 #### Get Subscription
+
 ```http
 GET /api/v1/payments/subscriptions/{address}
 ```
 
 **Response:**
+
 ```json
 {
   "subscription_id": 1,
@@ -112,14 +120,17 @@ GET /api/v1/payments/subscriptions/{address}
 ```
 
 #### Cancel Subscription
+
 ```http
 POST /api/v1/payments/subscriptions/{subscription_id}/cancel
 ```
 
 **Query Parameters:**
+
 - `immediately` (optional): Cancel immediately vs at period end
 
 **Response:**
+
 ```json
 {
   "message": "Subscription canceled successfully",
@@ -130,45 +141,51 @@ POST /api/v1/payments/subscriptions/{subscription_id}/cancel
 ### Payment Management
 
 #### Create Payment Intent
+
 ```http
 POST /api/v1/payments/payment-intent/create
 ```
 
 **Request Body:**
+
 ```json
 {
   "address": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb",
-  "amount": 99.00,
+  "amount": 99.0,
   "description": "Pro subscription - Monthly"
 }
 ```
 
 **Response:**
+
 ```json
 {
   "payment_id": 1,
   "client_secret": "pi_xxxxxxxxxxxx_secret_xxxxxxxxxxxx",
-  "amount": 99.00,
+  "amount": 99.0,
   "currency": "usd"
 }
 ```
 
 #### Get Payment History
+
 ```http
 GET /api/v1/payments/payments/{address}
 ```
 
 **Query Parameters:**
+
 - `skip` (optional): Pagination offset
 - `limit` (optional): Number of results (max 100)
 
 **Response:**
+
 ```json
 {
   "payments": [
     {
       "id": 1,
-      "amount": 99.00,
+      "amount": 99.0,
       "currency": "usd",
       "status": "succeeded",
       "description": "Pro subscription - Monthly",
@@ -182,11 +199,13 @@ GET /api/v1/payments/payments/{address}
 ### API Key Management
 
 #### Create API Key
+
 ```http
 POST /api/v1/payments/api-keys/create
 ```
 
 **Request Body:**
+
 ```json
 {
   "address": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb",
@@ -196,6 +215,7 @@ POST /api/v1/payments/api-keys/create
 ```
 
 **Response:**
+
 ```json
 {
   "id": 1,
@@ -210,11 +230,13 @@ POST /api/v1/payments/api-keys/create
 ⚠️ **Important:** The full API key is only returned once. Store it securely!
 
 #### List API Keys
+
 ```http
 GET /api/v1/payments/api-keys/{address}
 ```
 
 **Response:**
+
 ```json
 {
   "keys": [
@@ -233,11 +255,13 @@ GET /api/v1/payments/api-keys/{address}
 ```
 
 #### Revoke API Key
+
 ```http
 DELETE /api/v1/payments/api-keys/{key_id}?address={address}
 ```
 
 **Response:**
+
 ```json
 {
   "message": "API key revoked successfully"
@@ -247,11 +271,13 @@ DELETE /api/v1/payments/api-keys/{key_id}?address={address}
 ### Pricing Information
 
 #### Get Pricing
+
 ```http
 GET /api/v1/payments/pricing
 ```
 
 **Response:**
+
 ```json
 {
   "tiers": [
@@ -289,14 +315,17 @@ GET /api/v1/payments/pricing
 ### Webhook Handling
 
 #### Stripe Webhook
+
 ```http
 POST /api/v1/payments/webhook
 ```
 
 **Headers:**
+
 - `stripe-signature`: Stripe webhook signature for verification
 
 This endpoint handles Stripe webhook events:
+
 - `payment_intent.succeeded` - Payment successful
 - `payment_intent.payment_failed` - Payment failed
 - `customer.subscription.updated` - Subscription updated
@@ -305,6 +334,7 @@ This endpoint handles Stripe webhook events:
 ## Database Schema
 
 ### Subscriptions Table
+
 ```sql
 CREATE TABLE subscriptions (
     id INTEGER PRIMARY KEY,
@@ -324,6 +354,7 @@ CREATE TABLE subscriptions (
 ```
 
 ### Payments Table
+
 ```sql
 CREATE TABLE payments (
     id INTEGER PRIMARY KEY,
@@ -342,6 +373,7 @@ CREATE TABLE payments (
 ```
 
 ### API Keys Table
+
 ```sql
 CREATE TABLE api_keys (
     id INTEGER PRIMARY KEY,
@@ -358,6 +390,7 @@ CREATE TABLE api_keys (
 ```
 
 ### Usage Records Table
+
 ```sql
 CREATE TABLE usage_records (
     id INTEGER PRIMARY KEY,
@@ -399,12 +432,13 @@ SUBSCRIPTION_TIER_ENTERPRISE_RATE_LIMIT=100000
    - Store securely in `.env`
 
 3. **Create Products and Prices**
+
    ```bash
    # Pro Tier
    stripe products create \
      --name "NWU Pro Subscription" \
      --description "10,000 requests/day with advanced features"
-   
+
    stripe prices create \
      --product prod_xxxxxxxxxxxx \
      --unit-amount 9900 \
@@ -441,18 +475,21 @@ This will run migration `003_add_payment_tables.py`.
 ## Security Considerations
 
 ### API Key Security
+
 - API keys are hashed using SHA-256 before storage
 - Full keys are only displayed once at creation
 - Keys can be revoked at any time
 - Keys have expiration dates (1 year default)
 
 ### Payment Security
+
 - All payment processing handled by Stripe
 - PCI compliance managed by Stripe
 - No credit card data stored in our database
 - Webhook signatures verified for authenticity
 
 ### Rate Limiting
+
 - Enforced per subscription tier
 - Prevents abuse of API resources
 - Can be adjusted per tier in configuration
@@ -462,6 +499,7 @@ This will run migration `003_add_payment_tables.py`.
 ### Frontend Integration
 
 #### Subscribe to Pro Tier
+
 ```javascript
 // 1. Create subscription on backend
 const response = await fetch('/api/v1/payments/subscriptions/create', {
@@ -470,8 +508,8 @@ const response = await fetch('/api/v1/payments/subscriptions/create', {
   body: JSON.stringify({
     address: userAddress,
     tier: 'pro',
-    stripe_price_id: 'price_xxxxxxxxxxxx'
-  })
+    stripe_price_id: 'price_xxxxxxxxxxxx',
+  }),
 });
 
 const { subscription_id, api_key } = await response.json();
@@ -481,20 +519,22 @@ localStorage.setItem('nwu_api_key', api_key);
 ```
 
 #### Make API Request with Key
+
 ```javascript
 const apiKey = localStorage.getItem('nwu_api_key');
 
 const response = await fetch('/api/v1/contributions', {
   headers: {
     'X-API-Key': apiKey,
-    'Content-Type': 'application/json'
-  }
+    'Content-Type': 'application/json',
+  },
 });
 ```
 
 ### Backend Integration
 
 #### Verify API Key Middleware
+
 ```python
 from fastapi import Header, HTTPException, Depends
 from sqlalchemy.orm import Session
@@ -505,18 +545,18 @@ async def verify_api_key(
 ):
     """Verify API key and enforce rate limits."""
     from app.services.payment_service import payment_service
-    
+
     api_key_obj = await payment_service.verify_api_key(db, x_api_key)
-    
+
     if not api_key_obj:
         raise HTTPException(
             status_code=401,
             detail="Invalid or expired API key"
         )
-    
+
     # Check rate limits (implement your rate limiting logic)
     # ...
-    
+
     return api_key_obj
 
 # Use in endpoint
@@ -532,6 +572,7 @@ async def protected_endpoint(
 ### Test Mode
 
 Use Stripe test keys for development:
+
 - Test Secret Key: `sk_test_...`
 - Test Publishable Key: `pk_test_...`
 
@@ -544,6 +585,7 @@ Requires Auth: 4000 0025 0000 3155
 ```
 
 ### Example Test
+
 ```python
 import pytest
 from app.services.payment_service import payment_service
@@ -557,7 +599,7 @@ async def test_create_subscription(db_session, test_user):
         SubscriptionTier.PRO,
         "price_test_xxxxx"
     )
-    
+
     assert subscription is not None
     assert subscription.tier == SubscriptionTier.PRO
     assert subscription.api_key is not None
@@ -569,24 +611,29 @@ async def test_create_subscription(db_session, test_user):
 ### Common Issues
 
 #### 1. Stripe Not Configured
+
 **Error:** `Stripe API key not configured`
 **Solution:** Add `STRIPE_API_KEY` to `.env` file
 
 #### 2. Webhook Signature Failed
+
 **Error:** `Webhook handling failed`
 **Solution:** Verify `STRIPE_WEBHOOK_SECRET` is correct
 
 #### 3. Payment Intent Failed
+
 **Error:** `Failed to create payment intent`
 **Solution:** Check Stripe dashboard for error details
 
 #### 4. API Key Invalid
+
 **Error:** `Invalid or expired API key`
 **Solution:** Generate a new API key or check expiration date
 
 ## Support
 
 For payment integration issues:
+
 1. Check Stripe Dashboard for detailed logs
 2. Review application logs for error messages
 3. Test with Stripe CLI in development
@@ -595,6 +642,7 @@ For payment integration issues:
 ## Roadmap
 
 Future enhancements planned:
+
 - [ ] Usage-based billing (metered pricing)
 - [ ] Annual subscription discounts
 - [ ] Team/organization accounts
