@@ -7,7 +7,6 @@ on:
   push:
     branches: [main, master, develop]
 
-
 permissions:
   contents: write
   pull-requests: write
@@ -18,23 +17,18 @@ jobs:
   auto-fix:
     if: github.event.workflow_run.conclusion == 'failure' || github.event_name == 'push'
     runs-on: ubuntu-latest
-    
+
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-    
+
     steps:
-      - name: Checkout Failing Ref
+      - name: Checkout Trusted Ref
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          # Use the merge commit SHA (trusted) instead of the PR head SHA
+          # This prevents untrusted code from a PR from running in a privileged context
+          ref: ${{ github.sha }}
           fetch-depth: 0
-
-      - name: Fetch PR and Branch References
-        env:
-          HEAD_BRANCH_REF: ${{ github.event.workflow_run.head_branch || github.ref_name }}
-        run: |
-          git fetch origin '+refs/pull/*/head:refs/remotes/origin/pr/*' || true
-          git fetch origin "$HEAD_BRANCH_REF" || true
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -50,59 +44,59 @@ jobs:
         run: |
           # Install OpenAI CLI
           pip install openai requests PyYAML
-          
+
           # Create fix script
           cat > autofix.py << 'EOFPYTHON'
           import os, json, openai, subprocess
           from datetime import datetime
-          
+
           openai.api_key = os.environ["OPENAI_API_KEY"]
-          
+
           # Get failure logs
           try:
               logs = subprocess.run(["npm", "test"], capture_output=True, text=True).stderr
           except:
               logs = "No test logs available"
-          
+
           # Get repository context
           files = subprocess.run(["git", "ls-files"], capture_output=True, text=True).stdout
-          
+
           # Generate fix with Codex
           response = openai.ChatCompletion.create(
               model="gpt-4",
               messages=[
                   {"role": "system", "content": "You are an expert CI/CD debugger. Analyze failures and provide precise fixes."},
                   {"role": "user", "content": f"""CI Pipeline Failed:
-          
+
           LOGS:
           {logs[:3000]}
-          
+
           FILES:
           {files[:1000]}
-          
+
           Provide:
           1. Root cause analysis
           2. Exact file changes needed with full file paths
           3. Fixed code
-          
+
           Format as JSON: {{"analysis": "...", "fixes": [{{"file": "path", "content": "..."}}]}}"""}
               ],
               temperature=0.2
           )
-          
+
           result = json.loads(response.choices[0].message.content)
-          
+
           # Apply fixes
           for fix in result["fixes"]:
               with open(fix["file"], "w") as f:
                   f.write(fix["content"])
               print(f"Fixed {fix['file']}")
-          
+
           # Output for PR
           with open(os.environ["GITHUB_OUTPUT"], "a") as f:
               f.write(f"analysis<<EOF\n{result['analysis']}\nEOF\n")
           EOFPYTHON
-          
+
           python autofix.py
 
       - name: Verify Tests
@@ -119,16 +113,16 @@ jobs:
           title: "🤖 Auto-fix: ${{ github.event.workflow_run.name || 'CI Failure' }}"
           body: |
             ## Automated Fix Applied
-            
+
             **Triggered by:** Failed workflow run #${{ github.event.workflow_run.run_number || github.run_number }}
-            
+
             **Analysis:**
             ${{ steps.codex.outputs.analysis }}
-            
+
             ---
-            
+
             ⚠️ **Review Required:** Please verify this fix before merging.
-            
+
             **Original run:** ${{ github.event.workflow_run.html_url || github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
             **Triggering branch:** ${{ github.event.workflow_run.head_branch || github.ref_name }}
           delete-branch: true
