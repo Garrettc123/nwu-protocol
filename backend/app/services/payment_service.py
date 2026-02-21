@@ -9,38 +9,42 @@ from datetime import datetime, timedelta
 from ..config import settings
 from ..models import Subscription, Payment, APIKey, SubscriptionTier, PaymentStatus, User
 from sqlalchemy.orm import Session
+# Import passlib for secure hashing
+from passlib.context import CryptContext
 
 logger = logging.getLogger(__name__)
+
+# Initialize secure hashing context
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Initialize Stripe
 if settings.stripe_api_key:
     stripe.api_key = settings.stripe_api_key
 
-
 class PaymentService:
     """Service for handling payment operations with Stripe."""
-    
+
     def __init__(self):
         """Initialize payment service."""
         self.stripe_configured = bool(settings.stripe_api_key)
         if not self.stripe_configured:
             logger.warning("Stripe API key not configured. Payment features will be disabled.")
-    
+
     async def create_customer(self, user: User, email: Optional[str] = None) -> Optional[str]:
         """
         Create a Stripe customer for a user.
-        
+
         Args:
             user: User object
             email: Optional email address
-            
+
         Returns:
             Stripe customer ID or None if failed
         """
         if not self.stripe_configured:
             logger.error("Stripe not configured")
             return None
-        
+
         try:
             customer = stripe.Customer.create(
                 email=email or user.email,
@@ -55,7 +59,7 @@ class PaymentService:
         except Exception as e:
             logger.error(f"Failed to create Stripe customer: {e}")
             return None
-    
+
     async def create_subscription(
         self,
         db: Session,
@@ -65,31 +69,31 @@ class PaymentService:
     ) -> Optional[Subscription]:
         """
         Create a subscription for a user.
-        
+
         Args:
             db: Database session
             user: User object
             tier: Subscription tier
             stripe_price_id: Stripe price ID
-            
+
         Returns:
             Subscription object or None if failed
         """
         if not self.stripe_configured:
             logger.error("Stripe not configured")
             return None
-        
+
         try:
             # Check if user has existing subscription
             existing_sub = db.query(Subscription).filter(
                 Subscription.user_id == user.id,
                 Subscription.status == "active"
             ).first()
-            
+
             if existing_sub:
                 logger.warning(f"User {user.id} already has an active subscription")
                 return None
-            
+
             # Get or create Stripe customer
             stripe_customer_id = None
             if hasattr(user, 'subscriptions') and user.subscriptions:
@@ -97,12 +101,13 @@ class PaymentService:
                     if sub.stripe_customer_id:
                         stripe_customer_id = sub.stripe_customer_id
                         break
-            
+
             if not stripe_customer_id:
                 stripe_customer_id = await self.create_customer(user)
-                if not stripe_customer_id:
-                    return None
-            
+
+            if not stripe_customer_id:
+                return None
+
             # Create Stripe subscription
             stripe_sub = stripe.Subscription.create(
                 customer=stripe_customer_id,
@@ -112,17 +117,17 @@ class PaymentService:
                     "tier": tier.value
                 }
             )
-            
+
             # Determine rate limit based on tier
             rate_limits = {
                 SubscriptionTier.FREE: settings.subscription_tier_free_rate_limit,
                 SubscriptionTier.PRO: settings.subscription_tier_pro_rate_limit,
                 SubscriptionTier.ENTERPRISE: settings.subscription_tier_enterprise_rate_limit
             }
-            
+
             # Generate API key
             api_key = self.generate_api_key()
-            
+
             # Create subscription in database
             subscription = Subscription(
                 user_id=user.id,
@@ -135,19 +140,19 @@ class PaymentService:
                 api_key=api_key,
                 rate_limit=rate_limits.get(tier, 100)
             )
-            
+
             db.add(subscription)
             db.commit()
             db.refresh(subscription)
-            
+
             logger.info(f"Created subscription {subscription.id} for user {user.id}")
             return subscription
-            
+
         except Exception as e:
             db.rollback()
             logger.error(f"Failed to create subscription: {e}")
             return None
-    
+
     async def cancel_subscription(
         self,
         db: Session,
@@ -156,28 +161,28 @@ class PaymentService:
     ) -> bool:
         """
         Cancel a subscription.
-        
+
         Args:
             db: Database session
             subscription_id: Subscription ID
             immediately: If True, cancel immediately; otherwise at period end
-            
+
         Returns:
             True if successful, False otherwise
         """
         if not self.stripe_configured:
             logger.error("Stripe not configured")
             return False
-        
+
         try:
             subscription = db.query(Subscription).filter(Subscription.id == subscription_id).first()
             if not subscription:
                 logger.error(f"Subscription {subscription_id} not found")
                 return False
-            
+
             if subscription.stripe_subscription_id:
                 if immediately:
-                    # Immediately cancel - use delete as last resort
+                    # Immediately cancel
                     try:
                         stripe.Subscription.modify(
                             subscription.stripe_subscription_id,
@@ -186,26 +191,25 @@ class PaymentService:
                         stripe.Subscription.delete(subscription.stripe_subscription_id)
                     except Exception as e:
                         logger.warning(f"Failed to delete subscription, marking as canceled: {e}")
-                    subscription.status = "canceled"
+                        subscription.status = "canceled"
                 else:
-                    # Cancel at period end (recommended approach)
+                    # Cancel at period end
                     stripe.Subscription.modify(
                         subscription.stripe_subscription_id,
                         cancel_at_period_end=True
                     )
                     subscription.cancel_at_period_end = True
-                
+
                 db.commit()
                 logger.info(f"Canceled subscription {subscription_id}")
                 return True
-            
+
             return False
-            
         except Exception as e:
             db.rollback()
             logger.error(f"Failed to cancel subscription: {e}")
             return False
-    
+
     async def create_payment_intent(
         self,
         db: Session,
@@ -216,25 +220,15 @@ class PaymentService:
     ) -> Optional[Dict[str, Any]]:
         """
         Create a Stripe payment intent.
-        
-        Args:
-            db: Database session
-            user: User object
-            amount: Amount in dollars
-            currency: Currency code
-            description: Payment description
-            
-        Returns:
-            Payment intent details or None if failed
         """
         if not self.stripe_configured:
             logger.error("Stripe not configured")
             return None
-        
+
         try:
             # Convert amount to cents
             amount_cents = int(amount * 100)
-            
+
             # Get or create Stripe customer
             stripe_customer_id = None
             if hasattr(user, 'subscriptions') and user.subscriptions:
@@ -242,10 +236,10 @@ class PaymentService:
                     if sub.stripe_customer_id:
                         stripe_customer_id = sub.stripe_customer_id
                         break
-            
+
             if not stripe_customer_id:
                 stripe_customer_id = await self.create_customer(user)
-            
+
             # Create payment intent
             intent = stripe.PaymentIntent.create(
                 amount=amount_cents,
@@ -257,7 +251,7 @@ class PaymentService:
                     "address": user.address
                 }
             )
-            
+
             # Create payment record
             payment = Payment(
                 user_id=user.id,
@@ -267,47 +261,44 @@ class PaymentService:
                 status=PaymentStatus.PENDING,
                 description=description
             )
-            
+
             db.add(payment)
             db.commit()
             db.refresh(payment)
-            
+
             return {
                 "payment_id": payment.id,
                 "client_secret": intent.client_secret,
                 "amount": amount,
                 "currency": currency
             }
-            
         except Exception as e:
             db.rollback()
             logger.error(f"Failed to create payment intent: {e}")
             return None
-    
+
     def generate_api_key(self) -> str:
         """
         Generate a secure API key.
-        
-        Returns:
-            API key string
         """
         # Generate random key with prefix
         random_key = secrets.token_urlsafe(32)
         prefix = "nwu"
         return f"{prefix}_{random_key}"
-    
+
     def hash_api_key(self, api_key: str) -> str:
         """
-        Hash an API key for storage.
-        
-        Args:
-            api_key: API key to hash
-            
-        Returns:
-            Hashed API key
+        Hash an API key for storage using secure bcrypt.
         """
-        return hashlib.sha256(api_key.encode()).hexdigest()
-    
+        # Using pwd_context.hash for secure one-way hashing
+        return pwd_context.hash(api_key)
+
+    def verify_hashed_key(self, api_key: str, hashed_key: str) -> bool:
+        """
+        Verify an API key against its hash.
+        """
+        return pwd_context.verify(api_key, hashed_key)
+
     async def create_api_key(
         self,
         db: Session,
@@ -317,25 +308,16 @@ class PaymentService:
     ) -> Optional[Dict[str, Any]]:
         """
         Create an API key for a user.
-        
-        Args:
-            db: Database session
-            user: User object
-            name: Key name/description
-            tier: Subscription tier
-            
-        Returns:
-            API key details or None if failed
         """
         try:
             # Generate API key
             api_key = self.generate_api_key()
             key_hash = self.hash_api_key(api_key)
-            prefix = api_key[:12]  # Store first 12 chars for display
-            
+            prefix = api_key[:12] # Store first 12 chars for display
+
             # Set expiration (1 year from now)
             expires_at = datetime.utcnow() + timedelta(days=365)
-            
+
             # Create API key record
             db_key = APIKey(
                 user_id=user.id,
@@ -345,27 +327,26 @@ class PaymentService:
                 tier=tier,
                 expires_at=expires_at
             )
-            
+
             db.add(db_key)
             db.commit()
             db.refresh(db_key)
-            
+
             logger.info(f"Created API key {db_key.id} for user {user.id}")
-            
+
             return {
                 "id": db_key.id,
-                "key": api_key,  # Return full key only once
+                "key": api_key, # Return full key only once
                 "prefix": prefix,
                 "name": name,
                 "tier": tier.value,
                 "expires_at": expires_at.isoformat()
             }
-            
         except Exception as e:
             db.rollback()
             logger.error(f"Failed to create API key: {e}")
             return None
-    
+
     async def verify_api_key(
         self,
         db: Session,
@@ -373,39 +354,34 @@ class PaymentService:
     ) -> Optional[APIKey]:
         """
         Verify an API key.
-        
-        Args:
-            db: Database session
-            api_key: API key to verify
-            
-        Returns:
-            APIKey object if valid, None otherwise
         """
         try:
-            key_hash = self.hash_api_key(api_key)
+            # Extract prefix for faster lookup if possible, or search by prefix
+            prefix = api_key[:12]
             
-            db_key = db.query(APIKey).filter(
-                APIKey.key_hash == key_hash,
+            # Find candidate keys by prefix
+            candidates = db.query(APIKey).filter(
+                APIKey.prefix == prefix,
                 APIKey.is_active == True
-            ).first()
-            
-            if not db_key:
-                return None
-            
-            # Check expiration
-            if db_key.expires_at and db_key.expires_at < datetime.utcnow():
-                return None
-            
-            # Update last used timestamp
-            db_key.last_used_at = datetime.utcnow()
-            db.commit()
-            
-            return db_key
-            
+            ).all()
+
+            for db_key in candidates:
+                # Verify using secure timing-safe comparison
+                if self.verify_hashed_key(api_key, db_key.key_hash):
+                    # Check expiration
+                    if db_key.expires_at and db_key.expires_at < datetime.utcnow():
+                        continue
+                    
+                    # Update last used timestamp
+                    db_key.last_used_at = datetime.utcnow()
+                    db.commit()
+                    return db_key
+
+            return None
         except Exception as e:
             logger.error(f"Failed to verify API key: {e}")
             return None
-    
+
     async def handle_webhook(
         self,
         db: Session,
@@ -414,24 +390,16 @@ class PaymentService:
     ) -> bool:
         """
         Handle Stripe webhook events.
-        
-        Args:
-            db: Database session
-            payload: Webhook payload
-            signature: Stripe signature header
-            
-        Returns:
-            True if handled successfully, False otherwise
         """
         if not self.stripe_configured or not settings.stripe_webhook_secret:
             logger.error("Stripe webhook not configured")
             return False
-        
+
         try:
             event = stripe.Webhook.construct_event(
                 payload, signature, settings.stripe_webhook_secret
             )
-            
+
             # Handle different event types
             if event.type == "payment_intent.succeeded":
                 await self._handle_payment_succeeded(db, event.data.object)
@@ -441,59 +409,52 @@ class PaymentService:
                 await self._handle_subscription_updated(db, event.data.object)
             elif event.type == "customer.subscription.deleted":
                 await self._handle_subscription_deleted(db, event.data.object)
-            
+
             return True
-            
         except Exception as e:
             logger.error(f"Failed to handle webhook: {e}")
             return False
-    
+
     async def _handle_payment_succeeded(self, db: Session, payment_intent: Any):
         """Handle successful payment."""
         payment = db.query(Payment).filter(
             Payment.stripe_payment_id == payment_intent.id
         ).first()
-        
         if payment:
             payment.status = PaymentStatus.SUCCEEDED
             db.commit()
-            logger.info(f"Payment {payment.id} succeeded")
-    
+fix(security): Use bcrypt for secure API key hashing instead of SHA256
     async def _handle_payment_failed(self, db: Session, payment_intent: Any):
         """Handle failed payment."""
         payment = db.query(Payment).filter(
             Payment.stripe_payment_id == payment_intent.id
         ).first()
-        
         if payment:
             payment.status = PaymentStatus.FAILED
             db.commit()
             logger.info(f"Payment {payment.id} failed")
-    
+
     async def _handle_subscription_updated(self, db: Session, subscription: Any):
         """Handle subscription update."""
         sub = db.query(Subscription).filter(
             Subscription.stripe_subscription_id == subscription.id
         ).first()
-        
         if sub:
             sub.status = subscription.status
             sub.current_period_start = datetime.fromtimestamp(subscription.current_period_start)
             sub.current_period_end = datetime.fromtimestamp(subscription.current_period_end)
             db.commit()
             logger.info(f"Subscription {sub.id} updated")
-    
+
     async def _handle_subscription_deleted(self, db: Session, subscription: Any):
         """Handle subscription deletion."""
         sub = db.query(Subscription).filter(
             Subscription.stripe_subscription_id == subscription.id
         ).first()
-        
         if sub:
             sub.status = "canceled"
             db.commit()
             logger.info(f"Subscription {sub.id} canceled")
-
 
 # Global payment service instance
 payment_service = PaymentService()
