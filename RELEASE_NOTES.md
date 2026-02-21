@@ -1,4 +1,52 @@
-# 🚀 NWU Protocol: Genesis Release (v1.0.0-alpha)
+# 🚀 NWU Protocol Release Notes
+
+---
+
+## 🔄 v1.0.1-alpha - Auto-Approve Mode (February 2026)
+
+**Status:** Development Branch  
+**Branch:** copilot/approve-everything
+
+### 🎯 Major Changes
+
+#### Auto-Approve Verification System
+
+The verification system has been configured to operate in **AUTO-APPROVE mode**, where all contributions are automatically approved with maximum scores regardless of content quality.
+
+**Modified Components:**
+
+1. **Agent-Alpha Verifier** (`agent-alpha/app/verifier.py`)
+   - All verification scores hardcoded to 95.0
+   - Both LLM analysis and mock verification return maximum scores
+   - Original analysis preserved in details but not used for scoring
+
+2. **Backend API** (`backend/app/api/verifications.py`)
+   - Verification requirement reduced from 3 to 1 verification
+   - Score threshold check removed (was ≥70)
+   - Contributions auto-verified on first verification
+
+3. **Verification Engine** (`nwu_protocol/services/verification_engine.py`)
+   - Consensus threshold set to 0.0% (was 70%)
+   - Simplified logic always approves if minimum verifications met
+   - No rejection path - only "pending" or "verified" states
+
+**Behavior:**
+- Every contribution receives scores of 95.0 across all metrics
+- Immediate verification after first agent review
+- Quality gates disabled while maintaining audit trail
+
+**Testing:**
+- ✅ All existing tests pass
+- ✅ CodeQL security scan clean
+- ✅ No breaking changes to API contracts
+
+**Documentation:**
+- Clear inline documentation added to all modified modules
+- Auto-approve mode explicitly documented in docstrings
+
+---
+
+## 🚀 v1.0.0-alpha - Genesis Release (December 2025)
 
 > **"Safeguarding humanity through decentralized intelligence and verified truth."**
 

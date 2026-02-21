@@ -1,4 +1,10 @@
-"""Verification Engine Service - The Nervous System."""
+"""Verification Engine Service - The Nervous System.
+
+NOTE: This module is configured for AUTO-APPROVE mode.
+Consensus threshold is set to 0.0, meaning all contributions with at least
+one verification are automatically approved. This is intentional behavior
+per system requirements.
+"""
 
 import logging
 from typing import Optional, List
@@ -22,9 +28,9 @@ class VerificationEngine:
         self._verifications: dict[str, Verification] = {}
         self._verifications_by_contribution: dict[str, List[Verification]] = {}
         self._contribution_manager = contribution_manager
-        self.consensus_threshold = 0.7  # 70% approval needed
+        self.consensus_threshold = 0.0  # Auto-approve everything (0% threshold)
         self.min_verifications = 1  # Minimum verifications before consensus
-        logger.info("Verification Engine initialized")
+        logger.info("Verification Engine initialized (auto-approve mode)")
 
     def submit_verification(
         self,
@@ -114,12 +120,11 @@ class VerificationEngine:
         scores = [v.score for v in verifications if v.vote != VerificationVote.ABSTAIN]
         average_score = sum(scores) / len(scores) if scores else 0.0
 
-        consensus_reached = (
-            total >= self.min_verifications
-            and approval_rate >= self.consensus_threshold
-        )
+        # Auto-approve: consensus always reached if we have minimum verifications
+        consensus_reached = total >= self.min_verifications
 
-        status = "verified" if consensus_reached else "rejected" if total >= self.min_verifications else "pending"
+        # Always verified (auto-approve mode)
+        status = "verified" if total >= self.min_verifications else "pending"
 
         return {
             "consensus_reached": consensus_reached,
