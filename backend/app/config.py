@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     # IPFS
     ipfs_host: str = "ipfs"
     ipfs_port: int = 5001
+    ipfs_thread_pool_size: int = 4  # Thread pool size for async IPFS operations
     
     # JWT Authentication
     jwt_secret_key: str = "CHANGE-ME-IN-PRODUCTION-USE-ENV-VARIABLE"
@@ -42,6 +43,16 @@ class Settings(BaseSettings):
     # Blockchain
     eth_rpc_url: Optional[str] = None
     contract_address: Optional[str] = None
+    
+    # Payment Integration (Stripe)
+    stripe_api_key: Optional[str] = None
+    stripe_webhook_secret: Optional[str] = None
+    stripe_publishable_key: Optional[str] = None
+    
+    # Subscription Tiers
+    subscription_tier_free_rate_limit: int = 100  # requests per day
+    subscription_tier_pro_rate_limit: int = 10000  # requests per day
+    subscription_tier_enterprise_rate_limit: int = 100000  # requests per day
     
     class Config:
         env_file = ".env"

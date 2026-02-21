@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from typing import List
 import json
 import logging
@@ -48,13 +49,12 @@ async def submit_verification(verification_data: VerificationCreate, db: Session
     # Update contribution verification count and status
     contribution.verification_count += 1
     
-    # Calculate average quality score
-    all_verifications = db.query(Verification).filter(
+    # Calculate average quality score using database aggregation
+    avg_score_result = db.query(func.avg(Verification.vote_score)).filter(
         Verification.contribution_id == contribution.id
-    ).all()
+    ).scalar()
     
-    total_score = sum(v.vote_score for v in all_verifications)
-    avg_score = total_score / len(all_verifications)
+    avg_score = float(avg_score_result) if avg_score_result is not None else 0.0
     contribution.quality_score = round(avg_score, 2)
     
     # Update status based on verification count and score

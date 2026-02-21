@@ -20,6 +20,7 @@ class VerificationEngine:
     def __init__(self, contribution_manager=None):
         """Initialize the verification engine."""
         self._verifications: dict[str, Verification] = {}
+        self._verifications_by_contribution: dict[str, List[Verification]] = {}
         self._contribution_manager = contribution_manager
         self.consensus_threshold = 0.7  # 70% approval needed
         self.min_verifications = 1  # Minimum verifications before consensus
@@ -52,6 +53,12 @@ class VerificationEngine:
 
         self._verifications[verification_id] = verification
         
+        # Add to contribution index for faster lookups
+        contrib_id = verification_data.contribution_id
+        if contrib_id not in self._verifications_by_contribution:
+            self._verifications_by_contribution[contrib_id] = []
+        self._verifications_by_contribution[contrib_id].append(verification)
+        
         # Increment verification count
         if self._contribution_manager:
             self._contribution_manager.increment_verification_count(
@@ -77,10 +84,7 @@ class VerificationEngine:
         contribution_id: str
     ) -> List[Verification]:
         """Get all verifications for a contribution."""
-        return [
-            v for v in self._verifications.values()
-            if v.contribution_id == contribution_id
-        ]
+        return self._verifications_by_contribution.get(contribution_id, [])
 
     def calculate_consensus(self, contribution_id: str) -> dict:
         """

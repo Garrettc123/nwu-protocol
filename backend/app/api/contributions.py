@@ -58,16 +58,16 @@ async def create_contribution(
     file_content = await file.read()
     file_size = len(file_content)
     
-    # Upload to IPFS
-    ipfs_hash = ipfs_service.add_file(file_content, file.filename)
+    # Upload to IPFS asynchronously
+    ipfs_hash = await ipfs_service.add_file_async(file_content, file.filename)
     if not ipfs_hash:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to upload file to IPFS"
         )
     
-    # Pin the file for persistence
-    ipfs_service.pin_file(ipfs_hash)
+    # Pin the file for persistence asynchronously
+    await ipfs_service.pin_file_async(ipfs_hash)
     
     # Parse metadata
     metadata_dict = None
@@ -89,7 +89,7 @@ async def create_contribution(
         file_size=file_size,
         title=title,
         description=description,
-        metadata=json.dumps(metadata_dict) if metadata_dict else None,
+        meta_data=json.dumps(metadata_dict) if metadata_dict else None,
         status="pending"
     )
     
@@ -182,7 +182,7 @@ async def get_contribution_file(contribution_id: int, db: Session = Depends(get_
             detail="Contribution not found"
         )
     
-    file_content = ipfs_service.get_file(contribution.ipfs_hash)
+    file_content = await ipfs_service.get_file_async(contribution.ipfs_hash)
     if not file_content:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

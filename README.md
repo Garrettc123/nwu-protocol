@@ -51,6 +51,9 @@ A complete, production-ready platform for submitting code, datasets, and documen
 - ✅ RabbitMQ message queue for async processing
 - ✅ PostgreSQL database with SQLAlchemy ORM
 - ✅ RESTful API with automatic OpenAPI documentation
+- ✅ **Payment integration with Stripe for subscriptions**
+- ✅ **API key management and rate limiting**
+- ✅ **Three-tier subscription system (Free, Pro, Enterprise)**
 
 ### 🤖 Agent-Alpha (AI Verification)
 
@@ -74,6 +77,22 @@ A complete, production-ready platform for submitting code, datasets, and documen
 - ✅ Verification Registry for on-chain results
 - ✅ Reward Distribution with quality-based calculations
 - ✅ OpenZeppelin security standards
+
+### 💳 Payment System (Stripe)
+
+- ✅ Three-tier subscription system (Free, Pro, Enterprise)
+- ✅ Secure API key generation and management
+- ✅ Rate limiting per subscription tier
+- ✅ Payment processing and billing
+- ✅ Usage metering foundation
+- ✅ Webhook integration for real-time updates
+
+**Pricing:**
+- **Free**: $0/month - 100 API requests/day
+- **Pro**: $99/month - 10,000 API requests/day + advanced features
+- **Enterprise**: $999/month - 100,000 API requests/day + premium support
+
+See [PAYMENT_INTEGRATION.md](PAYMENT_INTEGRATION.md) for complete documentation.
 
 ## 🔧 CI/CD & Automation
 
