@@ -8,6 +8,7 @@ from typing import List
 from ..database import get_db
 from ..models import User, Contribution, Reward
 from ..schemas import UserResponse, UserCreate
+from ..utils.db_helpers import get_user_by_address_or_404
 
 router = APIRouter(prefix="/api/v1/users", tags=["users"])
 
@@ -33,13 +34,7 @@ def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
 @router.get("/{address}", response_model=UserResponse)
 def get_user(address: str, db: Session = Depends(get_db)):
     """Get user by Ethereum address."""
-    user = db.query(User).filter(User.address == address).first()
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
-    return user
+    return get_user_by_address_or_404(db, address)
 
 
 @router.get("/{address}/contributions")
@@ -50,12 +45,7 @@ def get_user_contributions(
     db: Session = Depends(get_db)
 ):
     """Get all contributions by a user."""
-    user = db.query(User).filter(User.address == address).first()
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
+    user = get_user_by_address_or_404(db, address)
     
     contributions = db.query(Contribution).filter(
         Contribution.user_id == user.id
@@ -76,12 +66,7 @@ def get_user_rewards(
     db: Session = Depends(get_db)
 ):
     """Get all rewards for a user."""
-    user = db.query(User).filter(User.address == address).first()
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
+    user = get_user_by_address_or_404(db, address)
     
     rewards = db.query(Reward).filter(
         Reward.user_id == user.id
@@ -110,12 +95,7 @@ def get_user_rewards(
 @router.get("/{address}/stats")
 def get_user_stats(address: str, db: Session = Depends(get_db)):
     """Get user statistics."""
-    user = db.query(User).filter(User.address == address).first()
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
+    user = get_user_by_address_or_404(db, address)
     
     # Get contribution stats using database aggregations
     verified_count = db.query(func.count(Contribution.id)).filter(
