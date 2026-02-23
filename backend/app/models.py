@@ -1,6 +1,6 @@
 """Database models for NWU Protocol."""
 
-from sqlalchemy import Column, String, Integer, Float, DateTime, Boolean, Text, ForeignKey, Enum as SQLEnum
+from sqlalchemy import Column, String, Integer, Float, DateTime, Boolean, Text, ForeignKey, Enum as SQLEnum, Index
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -136,12 +136,12 @@ class Subscription(Base):
 class Payment(Base):
     """Payment model for tracking transactions."""
     __tablename__ = "payments"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     subscription_id = Column(Integer, ForeignKey("subscriptions.id"), nullable=True, index=True)
-    stripe_payment_id = Column(String(100), unique=True, nullable=True)
-    stripe_invoice_id = Column(String(100), nullable=True)
+    stripe_payment_id = Column(String(100), unique=True, nullable=True, index=True)
+    stripe_invoice_id = Column(String(100), nullable=True, index=True)
     amount = Column(Float, nullable=False)
     currency = Column(String(10), default="usd")
     status = Column(SQLEnum(PaymentStatus), nullable=False, default=PaymentStatus.PENDING)
@@ -149,7 +149,7 @@ class Payment(Base):
     metadata = Column(Text, nullable=True)  # JSON string
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
+
     user = relationship("User", back_populates="payments")
     subscription = relationship("Subscription", back_populates="payments")
 
@@ -157,14 +157,17 @@ class Payment(Base):
 class UsageRecord(Base):
     """Usage tracking for metered billing."""
     __tablename__ = "usage_records"
-    
+    __table_args__ = (
+        Index('ix_usage_subscription_date', 'subscription_id', 'record_date'),
+    )
+
     id = Column(Integer, primary_key=True, index=True)
     subscription_id = Column(Integer, ForeignKey("subscriptions.id"), nullable=False, index=True)
     endpoint = Column(String(255), nullable=False)
     request_count = Column(Integer, default=0)
     record_date = Column(DateTime, default=datetime.utcnow, index=True)
     created_at = Column(DateTime, default=datetime.utcnow)
-    
+
     subscription = relationship("Subscription", back_populates="usage_records")
 
 

@@ -1,12 +1,16 @@
 """Verification logic for Agent-Alpha."""
 
 import logging
+import re
 from typing import Dict, Any, Optional
 from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from .config import config
 
 logger = logging.getLogger(__name__)
+
+# Compile regex patterns at module level for better performance
+SCORE_PATTERN = re.compile(r'(\d+(?:\.\d+)?)')
 
 
 class Verifier:
@@ -131,40 +135,38 @@ class Verifier:
     
     def _parse_response(self, response: str, file_type: str) -> Dict[str, Any]:
         """Parse LLM response into structured scores."""
-        import re
-        
         lines = response.split('\n')
-        
+
         scores = {
             'quality_score': 75.0,
             'originality_score': 70.0,
             'security_score': 65.0 if file_type == "code" else None,
             'documentation_score': 60.0
         }
-        
-        # Try to extract scores from response using regex
+
+        # Try to extract scores from response using pre-compiled regex
         for line in lines:
             # Match patterns like "Quality: 85" or "Quality Score: 85.5"
             if 'quality' in line.lower():
-                match = re.search(r'(\d+(?:\.\d+)?)', line)
+                match = SCORE_PATTERN.search(line)
                 if match:
                     scores['quality_score'] = float(match.group(1))
             elif 'originality' in line.lower():
-                match = re.search(r'(\d+(?:\.\d+)?)', line)
+                match = SCORE_PATTERN.search(line)
                 if match:
                     scores['originality_score'] = float(match.group(1))
             elif 'security' in line.lower() and file_type == "code":
-                match = re.search(r'(\d+(?:\.\d+)?)', line)
+                match = SCORE_PATTERN.search(line)
                 if match:
                     scores['security_score'] = float(match.group(1))
             elif 'documentation' in line.lower():
-                match = re.search(r'(\d+(?:\.\d+)?)', line)
+                match = SCORE_PATTERN.search(line)
                 if match:
                     scores['documentation_score'] = float(match.group(1))
-        
+
         # Calculate overall vote score
         vote_score = sum(s for s in scores.values() if s is not None) / len([s for s in scores.values() if s is not None])
-        
+
         return {
             'vote_score': round(vote_score, 2),
             'quality_score': scores['quality_score'],
