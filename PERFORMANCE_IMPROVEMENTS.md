@@ -4,6 +4,34 @@
 
 This document describes the performance optimizations made to improve the efficiency of slow or inefficient code in the NWU Protocol codebase.
 
+## Table of Contents
+
+### Completed Optimizations
+1. [Missing Database Indexes (Critical)](#1-missing-database-indexes-critical) - ✅ **Fixed**
+2. [In-Memory Computations → Database Aggregations (Critical)](#2-in-memory-computations--database-aggregations-critical) - ✅ **Fixed**
+3. [Verification Score Calculation (High Impact)](#3-verification-score-calculation-high-impact) - ✅ **Fixed**
+4. [Inefficient List Filtering → Indexed Dictionary (Medium Impact)](#4-inefficient-list-filtering--indexed-dictionary-medium-impact) - ✅ **Fixed**
+5. [Blocking I/O → Async Operations (High Impact)](#5-blocking-io--async-operations-high-impact) - ✅ **Fixed**
+6. [Fixed SQLAlchemy Conflict](#6-fixed-sqlalchemy-conflict) - ✅ **Fixed**
+
+### Newly Identified Issues (Pending)
+7. [Additional Performance Issues Identified](#7-additional-performance-issues-identified)
+   - 7.1 [Missing Payment Table Indexes (Critical)](#71-missing-payment-table-indexes-critical) - ✅ **Fixed**
+   - 7.2 [N+1 Query Pattern in Payment APIs (High Priority)](#72-n1-query-pattern-in-payment-apis-high-priority) - ⏳ **Pending**
+   - 7.3 [Blocking Stripe API Calls (Critical)](#73-blocking-stripe-api-calls-critical) - ⏳ **Pending**
+   - 7.4 [No Pagination on List Endpoints (High Priority)](#74-no-pagination-on-list-endpoints-high-priority) - ⏳ **Pending**
+   - 7.5 [Regex Compilation in Hot Path (Medium Priority)](#75-regex-compilation-in-hot-path-medium-priority) - ✅ **Fixed**
+   - 7.6 [Connection Pool Inefficiencies (Medium Priority)](#76-connection-pool-inefficiencies-medium-priority) - ⏳ **Pending**
+   - 7.7 [Frontend Performance Issues (Medium Priority)](#77-frontend-performance-issues-medium-priority) - ⏳ **Pending**
+   - 7.8 [Full File Loading into Memory (High Priority)](#78-full-file-loading-into-memory-high-priority) - ⏳ **Pending**
+
+### Quick Reference
+- [Priority Matrix](#priority-matrix) - What to fix first
+- [Recommendations for Future Improvements](#recommendations-for-future-improvements) - Next steps
+- [Testing Recommendations](#testing-recommendations) - How to validate improvements
+
+---
+
 ## Issues Identified and Fixed
 
 ### 1. Missing Database Indexes (Critical)
