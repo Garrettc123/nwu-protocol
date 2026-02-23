@@ -163,7 +163,7 @@ class Verifier:
                     scores['documentation_score'] = float(match.group(1))
         
         # Calculate overall vote score
-        vote_score = sum(s for s in scores.values() if s is not None) / len([s for s in scores.values() if s is not None])
+        vote_score = sum(score_value for score_value in scores.values() if score_value is not None) / len([score_value for score_value in scores.values() if score_value is not None])
         
         return {
             'vote_score': round(vote_score, 2),

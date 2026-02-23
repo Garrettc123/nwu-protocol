@@ -15,6 +15,10 @@ from .websocket import notify_contribution_update
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/verifications", tags=["verifications"])
 
+# Constants for verification thresholds
+MINIMUM_VERIFICATIONS_REQUIRED = 3  # Minimum number of verifications before status update
+QUALITY_SCORE_VERIFICATION_THRESHOLD = 70  # Minimum quality score to verify a contribution
+
 
 @router.post("/", response_model=VerificationResponse, status_code=status.HTTP_201_CREATED)
 async def submit_verification(verification_data: VerificationCreate, db: Session = Depends(get_db)):
@@ -56,10 +60,10 @@ async def submit_verification(verification_data: VerificationCreate, db: Session
     
     avg_score = float(avg_score_result) if avg_score_result is not None else 0.0
     contribution.quality_score = round(avg_score, 2)
-    
+
     # Update status based on verification count and score
-    if contribution.verification_count >= 3:  # Require at least 3 verifications
-        if avg_score >= 70:
+    if contribution.verification_count >= MINIMUM_VERIFICATIONS_REQUIRED:
+        if avg_score >= QUALITY_SCORE_VERIFICATION_THRESHOLD:
             contribution.status = "verified"
         else:
             contribution.status = "rejected"

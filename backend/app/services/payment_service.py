@@ -14,6 +14,10 @@ from passlib.context import CryptContext
 
 logger = logging.getLogger(__name__)
 
+# Constants
+API_KEY_PREFIX_DISPLAY_LENGTH = 12  # Number of characters to store for display purposes
+API_KEY_DEFAULT_EXPIRY_DAYS = 365  # Default expiration period for API keys in days
+
 # Initialize secure hashing context
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -97,9 +101,9 @@ class PaymentService:
             # Get or create Stripe customer
             stripe_customer_id = None
             if hasattr(user, 'subscriptions') and user.subscriptions:
-                for sub in user.subscriptions:
-                    if sub.stripe_customer_id:
-                        stripe_customer_id = sub.stripe_customer_id
+                for subscription in user.subscriptions:
+                    if subscription.stripe_customer_id:
+                        stripe_customer_id = subscription.stripe_customer_id
                         break
 
             if not stripe_customer_id:
@@ -232,9 +236,9 @@ class PaymentService:
             # Get or create Stripe customer
             stripe_customer_id = None
             if hasattr(user, 'subscriptions') and user.subscriptions:
-                for sub in user.subscriptions:
-                    if sub.stripe_customer_id:
-                        stripe_customer_id = sub.stripe_customer_id
+                for subscription in user.subscriptions:
+                    if subscription.stripe_customer_id:
+                        stripe_customer_id = subscription.stripe_customer_id
                         break
 
             if not stripe_customer_id:
@@ -313,13 +317,13 @@ class PaymentService:
             # Generate API key
             api_key = self.generate_api_key()
             key_hash = self.hash_api_key(api_key)
-            prefix = api_key[:12] # Store first 12 chars for display
+            prefix = api_key[:API_KEY_PREFIX_DISPLAY_LENGTH]
 
             # Set expiration (1 year from now)
-            expires_at = datetime.utcnow() + timedelta(days=365)
+            expires_at = datetime.utcnow() + timedelta(days=API_KEY_DEFAULT_EXPIRY_DAYS)
 
             # Create API key record
-            db_key = APIKey(
+            stored_api_key = APIKey(
                 user_id=user.id,
                 key_hash=key_hash,
                 name=name,
@@ -328,14 +332,14 @@ class PaymentService:
                 expires_at=expires_at
             )
 
-            db.add(db_key)
+            db.add(stored_api_key)
             db.commit()
-            db.refresh(db_key)
+            db.refresh(stored_api_key)
 
-            logger.info(f"Created API key {db_key.id} for user {user.id}")
+            logger.info(f"Created API key {stored_api_key.id} for user {user.id}")
 
             return {
-                "id": db_key.id,
+                "id": stored_api_key.id,
                 "key": api_key, # Return full key only once
                 "prefix": prefix,
                 "name": name,
@@ -357,25 +361,25 @@ class PaymentService:
         """
         try:
             # Extract prefix for faster lookup if possible, or search by prefix
-            prefix = api_key[:12]
-            
+            prefix = api_key[:API_KEY_PREFIX_DISPLAY_LENGTH]
+
             # Find candidate keys by prefix
-            candidates = db.query(APIKey).filter(
+            candidate_keys = db.query(APIKey).filter(
                 APIKey.prefix == prefix,
                 APIKey.is_active == True
             ).all()
 
-            for db_key in candidates:
+            for stored_api_key in candidate_keys:
                 # Verify using secure timing-safe comparison
-                if self.verify_hashed_key(api_key, db_key.key_hash):
+                if self.verify_hashed_key(api_key, stored_api_key.key_hash):
                     # Check expiration
-                    if db_key.expires_at and db_key.expires_at < datetime.utcnow():
+                    if stored_api_key.expires_at and stored_api_key.expires_at < datetime.utcnow():
                         continue
-                    
+
                     # Update last used timestamp
-                    db_key.last_used_at = datetime.utcnow()
+                    stored_api_key.last_used_at = datetime.utcnow()
                     db.commit()
-                    return db_key
+                    return stored_api_key
 
             return None
         except Exception as e:
@@ -436,25 +440,25 @@ fix(security): Use bcrypt for secure API key hashing instead of SHA256
 
     async def _handle_subscription_updated(self, db: Session, subscription: Any):
         """Handle subscription update."""
-        sub = db.query(Subscription).filter(
+        stored_subscription = db.query(Subscription).filter(
             Subscription.stripe_subscription_id == subscription.id
         ).first()
-        if sub:
-            sub.status = subscription.status
-            sub.current_period_start = datetime.fromtimestamp(subscription.current_period_start)
-            sub.current_period_end = datetime.fromtimestamp(subscription.current_period_end)
+        if stored_subscription:
+            stored_subscription.status = subscription.status
+            stored_subscription.current_period_start = datetime.fromtimestamp(subscription.current_period_start)
+            stored_subscription.current_period_end = datetime.fromtimestamp(subscription.current_period_end)
             db.commit()
-            logger.info(f"Subscription {sub.id} updated")
+            logger.info(f"Subscription {stored_subscription.id} updated")
 
     async def _handle_subscription_deleted(self, db: Session, subscription: Any):
         """Handle subscription deletion."""
-        sub = db.query(Subscription).filter(
+        stored_subscription = db.query(Subscription).filter(
             Subscription.stripe_subscription_id == subscription.id
         ).first()
-        if sub:
-            sub.status = "canceled"
+        if stored_subscription:
+            stored_subscription.status = "canceled"
             db.commit()
-            logger.info(f"Subscription {sub.id} canceled")
+            logger.info(f"Subscription {stored_subscription.id} canceled")
 
 # Global payment service instance
 payment_service = PaymentService()
