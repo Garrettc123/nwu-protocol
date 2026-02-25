@@ -245,6 +245,7 @@ See [BACKEND_VERIFICATION.md](BACKEND_VERIFICATION.md) for complete details on w
 ### Contributing
 
 - **[Contributing Guide](CONTRIBUTING.md)** - How to contribute effectively
+- **[PR Automation Guide](PR_AUTOMATION.md)** - Automated PR workflows and features
 - **[Security Policy](SECURITY.md)** - Security practices and reporting
 - **[Code of Conduct](CODE_OF_CONDUCT.md)** - Community guidelines
 
