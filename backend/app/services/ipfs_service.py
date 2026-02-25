@@ -33,18 +33,21 @@ class IPFSService:
     def add_file(self, file_data: BinaryIO, file_name: str) -> Optional[str]:
         """
         Add file to IPFS (synchronous).
-        
+
         Args:
             file_data: File binary data
             file_name: Original file name
-            
+
         Returns:
             IPFS hash (CID) or None if failed
         """
         try:
             if not self.client:
                 self._connect()
-            
+
+            if not self.client:
+                return None
+
             result = self.client.add(file_data)
             ipfs_hash = result['Hash']
             logger.info(f"File {file_name} added to IPFS: {ipfs_hash}")
@@ -75,17 +78,20 @@ class IPFSService:
     def get_file(self, ipfs_hash: str) -> Optional[bytes]:
         """
         Get file from IPFS (synchronous).
-        
+
         Args:
             ipfs_hash: IPFS hash (CID)
-            
+
         Returns:
             File content as bytes or None if failed
         """
         try:
             if not self.client:
                 self._connect()
-            
+
+            if not self.client:
+                return None
+
             content = self.client.cat(ipfs_hash)
             return content
         except Exception as e:
@@ -112,17 +118,20 @@ class IPFSService:
     def pin_file(self, ipfs_hash: str) -> bool:
         """
         Pin file to ensure persistence (synchronous).
-        
+
         Args:
             ipfs_hash: IPFS hash (CID)
-            
+
         Returns:
             True if successful, False otherwise
         """
         try:
             if not self.client:
                 self._connect()
-            
+
+            if not self.client:
+                return False
+
             self.client.pin.add(ipfs_hash)
             logger.info(f"File pinned: {ipfs_hash}")
             return True

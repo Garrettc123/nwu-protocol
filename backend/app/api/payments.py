@@ -10,6 +10,8 @@ from ..database import get_db
 from ..models import User, Subscription, Payment, APIKey, SubscriptionTier
 from ..schemas import UserResponse
 from ..services.payment_service import payment_service
+from ..utils.db_helpers import get_user_by_address_or_404
+from ..utils.validators import validate_subscription_tier
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/payments", tags=["payments"])
@@ -25,22 +27,16 @@ async def get_current_user(
 ) -> User:
     """
     Get current user from address.
-    
+
     ⚠️ SECURITY WARNING: This is a placeholder implementation.
     In production, this MUST verify:
     - JWT token validity
     - Wallet signature
     - Session authentication
-    
+
     DO NOT use this in production without implementing proper auth!
     """
-    user = db.query(User).filter(User.address == address.lower()).first()
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
-    return user
+    return get_user_by_address_or_404(db, address)
 
 
 @router.post("/subscriptions/create")
@@ -58,15 +54,9 @@ async def create_subscription(
     - **stripe_price_id**: Stripe price ID for the subscription
     """
     user = await get_current_user(address, db)
-    
+
     # Validate tier
-    try:
-        tier_enum = SubscriptionTier[tier.upper()]
-    except KeyError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid tier: {tier}. Must be one of: free, pro, enterprise"
-        )
+    tier_enum = validate_subscription_tier(tier)
     
     # Create subscription
     subscription = await payment_service.create_subscription(
@@ -221,15 +211,9 @@ async def create_api_key(
     - **tier**: Tier level (free, pro, enterprise)
     """
     user = await get_current_user(address, db)
-    
+
     # Validate tier
-    try:
-        tier_enum = SubscriptionTier[tier.upper()]
-    except KeyError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid tier: {tier}"
-        )
+    tier_enum = validate_subscription_tier(tier)
     
     # Check if user has active subscription for non-free tiers
     if tier_enum != SubscriptionTier.FREE:

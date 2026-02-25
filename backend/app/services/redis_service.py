@@ -5,6 +5,7 @@ import json
 import logging
 from typing import Optional, Any
 from ..config import settings
+from ..utils.service_decorators import ensure_connection_and_handle_errors
 
 logger = logging.getLogger(__name__)
 
@@ -35,60 +36,44 @@ class RedisService:
         if self.client:
             await self.client.close()
             logger.info("Disconnected from Redis")
-    
+
+    @ensure_connection_and_handle_errors("Failed to get from Redis: {e}")
     async def get(self, key: str) -> Optional[str]:
         """
         Get value from Redis.
-        
+
         Args:
             key: Cache key
-            
+
         Returns:
             Cached value or None
         """
-        try:
-            if not self.client:
-                await self.connect()
-            
-            value = await self.client.get(key)
-            return value
-        except Exception as e:
-            logger.error(f"Failed to get from Redis: {e}")
-            return None
-    
+        value = await self.client.get(key)
+        return value
+
+    @ensure_connection_and_handle_errors("Failed to set in Redis: {e}")
     async def set(self, key: str, value: str, expiry: int = 3600):
         """
         Set value in Redis with expiry.
-        
+
         Args:
             key: Cache key
             value: Value to cache
             expiry: Expiration time in seconds (default: 1 hour)
         """
-        try:
-            if not self.client:
-                await self.connect()
-            
-            await self.client.setex(key, expiry, value)
-            logger.debug(f"Set Redis key: {key}")
-        except Exception as e:
-            logger.error(f"Failed to set in Redis: {e}")
-    
+        await self.client.setex(key, expiry, value)
+        logger.debug(f"Set Redis key: {key}")
+
+    @ensure_connection_and_handle_errors("Failed to delete from Redis: {e}")
     async def delete(self, key: str):
         """
         Delete key from Redis.
-        
+
         Args:
             key: Cache key
         """
-        try:
-            if not self.client:
-                await self.connect()
-            
-            await self.client.delete(key)
-            logger.debug(f"Deleted Redis key: {key}")
-        except Exception as e:
-            logger.error(f"Failed to delete from Redis: {e}")
+        await self.client.delete(key)
+        logger.debug(f"Deleted Redis key: {key}")
     
     async def get_json(self, key: str) -> Optional[Any]:
         """
