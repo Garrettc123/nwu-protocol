@@ -193,14 +193,14 @@ async def get_payments(
     return {
         "payments": [
             {
-                "id": p.id,
-                "amount": p.amount,
-                "currency": p.currency,
-                "status": p.status.value,
-                "description": p.description,
-                "created_at": p.created_at.isoformat()
+                "id": payment.id,
+                "amount": payment.amount,
+                "currency": payment.currency,
+                "status": payment.status.value,
+                "description": payment.description,
+                "created_at": payment.created_at.isoformat()
             }
-            for p in payments
+            for payment in payments
         ],
         "total": db.query(func.count(Payment.id)).filter(Payment.user_id == user.id).scalar()
     }
@@ -271,16 +271,16 @@ async def list_api_keys(
     return {
         "keys": [
             {
-                "id": k.id,
-                "name": k.name,
-                "prefix": k.prefix,
-                "tier": k.tier.value,
-                "is_active": k.is_active,
-                "last_used_at": k.last_used_at.isoformat() if k.last_used_at else None,
-                "expires_at": k.expires_at.isoformat() if k.expires_at else None,
-                "created_at": k.created_at.isoformat()
+                "id": api_key.id,
+                "name": api_key.name,
+                "prefix": api_key.prefix,
+                "tier": api_key.tier.value,
+                "is_active": api_key.is_active,
+                "last_used_at": api_key.last_used_at.isoformat() if api_key.last_used_at else None,
+                "expires_at": api_key.expires_at.isoformat() if api_key.expires_at else None,
+                "created_at": api_key.created_at.isoformat()
             }
-            for k in keys
+            for api_key in keys
         ]
     }
 
