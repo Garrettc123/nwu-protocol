@@ -52,12 +52,12 @@ class VerificationEngine:
         )
 
         self._verifications[verification_id] = verification
-        
+
         # Add to contribution index for faster lookups
-        contrib_id = verification_data.contribution_id
-        if contrib_id not in self._verifications_by_contribution:
-            self._verifications_by_contribution[contrib_id] = []
-        self._verifications_by_contribution[contrib_id].append(verification)
+        contribution_id = verification_data.contribution_id
+        if contribution_id not in self._verifications_by_contribution:
+            self._verifications_by_contribution[contribution_id] = []
+        self._verifications_by_contribution[contribution_id].append(verification)
         
         # Increment verification count
         if self._contribution_manager:
@@ -108,10 +108,10 @@ class VerificationEngine:
             }
 
         total = len(verifications)
-        approvals = sum(1 for v in verifications if v.vote == VerificationVote.APPROVE)
+        approvals = sum(1 for verification in verifications if verification.vote == VerificationVote.APPROVE)
         approval_rate = approvals / total
 
-        scores = [v.score for v in verifications if v.vote != VerificationVote.ABSTAIN]
+        scores = [verification.score for verification in verifications if verification.vote != VerificationVote.ABSTAIN]
         average_score = sum(scores) / len(scores) if scores else 0.0
 
         consensus_reached = (

@@ -7,10 +7,10 @@ from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from .config import config
 
-logger = logging.getLogger(__name__)
-
-# Compile regex patterns at module level for better performance
+# Compiled once at module level to avoid recompilation on every call
 SCORE_PATTERN = re.compile(r'(\d+(?:\.\d+)?)')
+
+logger = logging.getLogger(__name__)
 
 
 class Verifier:
@@ -165,8 +165,8 @@ class Verifier:
                     scores['documentation_score'] = float(match.group(1))
 
         # Calculate overall vote score
-        vote_score = sum(s for s in scores.values() if s is not None) / len([s for s in scores.values() if s is not None])
-
+        vote_score = sum(score_value for score_value in scores.values() if score_value is not None) / len([score_value for score_value in scores.values() if score_value is not None])
+        
         return {
             'vote_score': round(vote_score, 2),
             'quality_score': scores['quality_score'],
@@ -182,8 +182,6 @@ class Verifier:
     
     def _mock_verification(self, file_type: str) -> Dict[str, Any]:
         """Provide mock verification results when OpenAI is not configured."""
-        import random
-        
         base_score = random.randint(65, 85)
         
         return {
