@@ -7,6 +7,7 @@ This document describes the performance optimizations made to improve the effici
 ## Table of Contents
 
 ### Completed Optimizations
+
 1. [Missing Database Indexes (Critical)](#1-missing-database-indexes-critical) - ✅ **Fixed**
 2. [In-Memory Computations → Database Aggregations (Critical)](#2-in-memory-computations--database-aggregations-critical) - ✅ **Fixed**
 3. [Verification Score Calculation (High Impact)](#3-verification-score-calculation-high-impact) - ✅ **Fixed**
@@ -15,6 +16,7 @@ This document describes the performance optimizations made to improve the effici
 6. [Fixed SQLAlchemy Conflict](#6-fixed-sqlalchemy-conflict) - ✅ **Fixed**
 
 ### Newly Identified Issues (Pending)
+
 7. [Additional Performance Issues Identified](#7-additional-performance-issues-identified)
    - 7.1 [Missing Payment Table Indexes (Critical)](#71-missing-payment-table-indexes-critical) - ✅ **Fixed**
    - 7.2 [N+1 Query Pattern in Payment APIs (High Priority)](#72-n1-query-pattern-in-payment-apis-high-priority) - ⏳ **Pending**
@@ -26,6 +28,7 @@ This document describes the performance optimizations made to improve the effici
    - 7.8 [Full File Loading into Memory (High Priority)](#78-full-file-loading-into-memory-high-priority) - ⏳ **Pending**
 
 ### Quick Reference
+
 - [Priority Matrix](#priority-matrix) - What to fix first
 - [Recommendations for Future Improvements](#recommendations-for-future-improvements) - Next steps
 - [Testing Recommendations](#testing-recommendations) - How to validate improvements
@@ -298,11 +301,13 @@ All changes have been validated:
 **Location:** `backend/app/models.py`
 
 **Missing Indexes:**
+
 - Line 143: `stripe_payment_id` - used for webhook lookups
 - Line 144: `stripe_invoice_id` - used for payment reconciliation
 - Line 165: Compound index on `(subscription_id, record_date)` for usage tracking queries
 
 **Recommendation:**
+
 ```python
 # In Payment model (line 143-144)
 stripe_payment_id = Column(String(100), unique=True, nullable=True, index=True)
@@ -325,11 +330,13 @@ __table_args__ = (
 **Location:** `backend/app/api/payments.py`
 
 **Issues Identified:**
+
 - Lines 98-103: `get_subscription()` queries user then subscription separately
 - Lines 187-191: `get_payments()` queries user then payments separately
 - Lines 234-240: `create_api_key()` multiple sequential subscription checks
 
 **Before (lines 98-103):**
+
 ```python
 user = await get_current_user(address, db)
 subscription = db.query(Subscription).filter(
@@ -339,6 +346,7 @@ subscription = db.query(Subscription).filter(
 ```
 
 **Recommendation:**
+
 ```python
 # Use JOIN to fetch in single query
 result = db.query(User, Subscription).join(
@@ -360,16 +368,19 @@ result = db.query(User, Subscription).join(
 **Location:** `backend/app/services/payment_service.py`
 
 **Issues:**
+
 - Synchronous Stripe SDK calls in async functions
 - No connection pooling for Stripe API
 - No timeout configuration
 
 **Affected Methods:**
+
 - `create_subscription()` - Line 112-119
 - `create_payment_intent()` - Line 244-253
 - `cancel_subscription()` - Line 184-191
 
 **Recommendation:**
+
 ```python
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
@@ -397,10 +408,12 @@ class PaymentService:
 **Location:** Multiple API endpoints
 
 **Affected Endpoints:**
+
 - `backend/app/api/verifications.py:85-99` - `get_contribution_verifications()`
 - `backend/app/api/payments.py:259-285` - `list_api_keys()`
 
 **Recommendation:**
+
 ```python
 # Add skip/limit parameters to all list endpoints
 @router.get("/verifications/{contribution_id}")
@@ -432,6 +445,7 @@ async def get_contribution_verifications(
 **Location:** `agent-alpha/app/verifier.py:146-163`
 
 **Issue:**
+
 ```python
 def _parse_response(self, response: str, file_type: str):
     for line in lines:
@@ -440,6 +454,7 @@ def _parse_response(self, response: str, file_type: str):
 ```
 
 **Recommendation:**
+
 ```python
 import re
 
@@ -464,11 +479,13 @@ class Verifier:
 **Location:** `backend/app/services/`
 
 **Issues:**
+
 - `ipfs_service.py:45-46` - Reconnects if client is None on every operation
 - `rabbitmq_service.py:44-46` - Reconnects on every publish
 - `redis_service.py:50-51` - No persistent connection management
 
 **Recommendation:**
+
 ```python
 # Add connection retry with exponential backoff
 import time
@@ -502,10 +519,12 @@ def with_retry(max_retries=3, backoff_factor=2):
 **Issues Identified:**
 
 **Missing Memoization:**
+
 - `frontend/app/dashboard/page.tsx:25-49` - `loadData()` recreated on every render
 - `frontend/app/contributions/page.tsx:26-37` - `getStatusColor()` recreated on every render
 
 **Recommendation:**
+
 ```tsx
 import { useCallback, useMemo } from 'react';
 
@@ -519,11 +538,13 @@ const statusColor = useMemo(() => getStatusColor(status), [status]);
 ```
 
 **Bundle Size Issues:**
+
 - `frontend/package.json:17` - Duplicate React versions (18.2.0 and 19.2.4)
 - `frontend/package.json:19` - Duplicate Next.js versions (14.0.4 and 16.1.6)
 - Full ethers.js bundle (~300KB) without tree-shaking
 
 **Recommendation:**
+
 ```bash
 # Clean up duplicate dependencies
 npm dedupe
@@ -542,10 +563,12 @@ import { Contract } from 'ethers/lib/contract';
 **Location:** `backend/app/api/contributions.py`
 
 **Issues:**
+
 - Line 57-58: `await file.read()` loads entire file into memory
 - Line 185-190: Retrieves entire file from IPFS into memory
 
 **Recommendation:**
+
 ```python
 # Implement streaming for large files
 from fastapi.responses import StreamingResponse
@@ -585,16 +608,19 @@ async def download_file(contribution_id: int, db: Session = Depends(get_db)):
 ## Priority Matrix
 
 ### Critical (Fix Immediately)
+
 1. Blocking Stripe API calls (7.3)
 2. Missing payment table indexes (7.1)
 3. Full file loading into memory (7.8)
 
 ### High Priority (Fix Soon)
+
 1. N+1 query patterns in payment APIs (7.2)
 2. No pagination on list endpoints (7.4)
 3. Connection pool inefficiencies (7.6)
 
 ### Medium Priority (Plan for Next Sprint)
+
 1. Regex compilation in hot path (7.5)
 2. Frontend performance issues (7.7)
 
