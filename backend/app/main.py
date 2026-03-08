@@ -10,6 +10,7 @@ from datetime import datetime
 from .config import settings
 from .database import init_db, engine
 from .api import contributions_router, users_router, verifications_router, auth_router, websocket_router, payments_router, referrals_router
+from .api.halt_process import router as halt_process_router
 from .services import rabbitmq_service, redis_service
 
 # Configure logging
@@ -85,6 +86,7 @@ app.include_router(auth_router)
 app.include_router(websocket_router)
 app.include_router(payments_router)
 app.include_router(referrals_router)
+app.include_router(halt_process_router)
 
 
 @app.get("/")

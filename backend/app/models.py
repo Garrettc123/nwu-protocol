@@ -38,7 +38,7 @@ class User(Base):
 class Contribution(Base):
     """Contribution model."""
     __tablename__ = "contributions"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     ipfs_hash = Column(String(100), unique=True, nullable=False)
@@ -48,15 +48,27 @@ class Contribution(Base):
     title = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
     meta_data = Column("metadata", Text, nullable=True)  # JSON string
-    status = Column(String(50), default="pending", index=True)  # pending, verifying, verified, rejected
+    status = Column(String(50), default="pending", index=True)  # pending, verifying, verified, rejected, halted, paused, resumed
     quality_score = Column(Float, nullable=True)
     verification_count = Column(Integer, default=0)
+    engagement_count = Column(Integer, default=0)  # Track user engagement interactions
+    engagement_score = Column(Float, default=0.0)  # Calculated engagement metric
+    iteration_count = Column(Integer, default=0)  # Number of revision iterations
+    halt_reason = Column(Text, nullable=True)  # Reason for halting the process
+    halt_status = Column(String(50), nullable=True, index=True)  # active, halted, paused, resumed
+    process_stage = Column(String(50), default="initial", index=True)  # Track progressive automation stage
+    automation_level = Column(Integer, default=0)  # Progressive automation capability level (0-5)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
+    halted_at = Column(DateTime, nullable=True)
+    resumed_at = Column(DateTime, nullable=True)
+
     user = relationship("User", back_populates="contributions")
     verifications = relationship("Verification", back_populates="contribution")
     rewards = relationship("Reward", back_populates="contribution")
+    engagement_history = relationship("EngagementHistory", back_populates="contribution")
+    process_iterations = relationship("ProcessIteration", back_populates="contribution")
+    workflow_executions = relationship("WorkflowExecution", back_populates="contribution")
 
 
 class Verification(Base):
@@ -219,3 +231,79 @@ class Referral(Base):
 
     referrer = relationship("User", foreign_keys=[referrer_id], back_populates="referrals_made")
     referee = relationship("User", foreign_keys=[referee_id], back_populates="referral_used")
+
+
+class EngagementHistory(Base):
+    """Engagement history tracking for contributions."""
+    __tablename__ = "engagement_history"
+
+    id = Column(Integer, primary_key=True, index=True)
+    contribution_id = Column(Integer, ForeignKey("contributions.id"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    engagement_type = Column(String(50), nullable=False, index=True)  # view, comment, share, iterate, halt, resume
+    engagement_data = Column(Text, nullable=True)  # JSON string with additional context
+    engagement_source = Column(String(50), nullable=True)  # web, api, automation
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+    contribution = relationship("Contribution", back_populates="engagement_history")
+    user = relationship("User")
+
+
+class ProcessIteration(Base):
+    """Process iteration tracking for contribution revisions."""
+    __tablename__ = "process_iterations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    contribution_id = Column(Integer, ForeignKey("contributions.id"), nullable=False, index=True)
+    iteration_number = Column(Integer, nullable=False)
+    previous_status = Column(String(50), nullable=False)
+    new_status = Column(String(50), nullable=False)
+    iteration_type = Column(String(50), nullable=False)  # automatic, manual, triggered
+    iteration_reason = Column(Text, nullable=True)
+    changes_summary = Column(Text, nullable=True)  # JSON string with change details
+    quality_delta = Column(Float, nullable=True)  # Change in quality score
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    contribution = relationship("Contribution", back_populates="process_iterations")
+
+
+class WorkflowExecution(Base):
+    """Workflow execution tracking for progressive automation."""
+    __tablename__ = "workflow_executions"
+    __table_args__ = (
+        Index('ix_workflow_contribution_status', 'contribution_id', 'status'),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    contribution_id = Column(Integer, ForeignKey("contributions.id"), nullable=False, index=True)
+    workflow_name = Column(String(100), nullable=False, index=True)
+    workflow_stage = Column(String(50), nullable=False)  # initial, processing, completed, failed, halted
+    automation_level = Column(Integer, default=0)  # Progressive automation level applied
+    execution_data = Column(Text, nullable=True)  # JSON string with execution details
+    status = Column(String(50), default="pending", index=True)  # pending, running, completed, failed, halted
+    started_at = Column(DateTime, nullable=True)
+    completed_at = Column(DateTime, nullable=True)
+    error_message = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    contribution = relationship("Contribution", back_populates="workflow_executions")
+
+
+class KnowledgeThread(Base):
+    """Knowledge thread management for perplexity integration."""
+    __tablename__ = "knowledge_threads"
+
+    id = Column(Integer, primary_key=True, index=True)
+    thread_id = Column(String(100), unique=True, nullable=False, index=True)
+    contribution_id = Column(Integer, ForeignKey("contributions.id"), nullable=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    thread_type = Column(String(50), nullable=False)  # verification, engagement, automation
+    context_data = Column(Text, nullable=True)  # JSON string with thread context
+    status = Column(String(50), default="active", index=True)  # active, closed, archived
+    message_count = Column(Integer, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    closed_at = Column(DateTime, nullable=True)
+
+    contribution = relationship("Contribution")
+    user = relationship("User")
