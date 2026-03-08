@@ -20,12 +20,12 @@ export default function PricingPage() {
 
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/payments/pricing`)
-      .then((res) => res.json())
-      .then((data) => {
+      .then(res => res.json())
+      .then(data => {
         setTiers(data.tiers ?? []);
         setLoading(false);
       })
-      .catch((err) => {
+      .catch(err => {
         console.error('Failed to fetch pricing:', err);
         setError(true);
         setLoading(false);
@@ -54,7 +54,7 @@ export default function PricingPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {tiers.map((tier) => {
+            {tiers.map(tier => {
               const isHighlighted = tier.name === highlightedTier;
               return (
                 <div
@@ -85,7 +85,7 @@ export default function PricingPage() {
                   </div>
 
                   <ul className="space-y-3 mb-8 flex-1">
-                    {tier.features.map((feature) => (
+                    {tier.features.map(feature => (
                       <li key={feature} className="flex items-start gap-2 text-gray-300">
                         <span className="text-green-400 mt-0.5">✓</span>
                         <span>{feature}</span>
