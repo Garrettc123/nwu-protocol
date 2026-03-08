@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+// import { Inter } from 'next/font/google';  // Disabled due to network restrictions
 import { Analytics } from '@vercel/analytics/next';
 import './globals.css';
 import Link from 'next/link';
 import WalletConnect from '@/components/WalletConnect';
 
-const inter = Inter({ subsets: ['latin'] });
+// const inter = Inter({ subsets: ['latin'] });  // Disabled
 
 export const metadata: Metadata = {
   title: 'NWU Protocol',
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className="font-sans">{/* Use system font instead */}
         <nav className="bg-gray-900 border-b border-gray-800">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
