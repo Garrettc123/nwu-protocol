@@ -7,12 +7,14 @@ This directory contains the comprehensive halt process management system with en
 ## Features
 
 ### 1. Halt Process Management
+
 - **Halt/Pause/Resume Operations**: Complete control over contribution processing lifecycles
 - **Engagement Tracking**: Track all user interactions and engagement patterns
 - **Approval Workflows**: Approve halt processes through engagement and iteration
 - **Status Monitoring**: Real-time halt status and history tracking
 
 ### 2. Progressive Automation (6 Levels)
+
 - **Level 0**: Manual processing only
 - **Level 1**: Basic automated validation
 - **Level 2**: Automated quality checks
@@ -21,12 +23,14 @@ This directory contains the comprehensive halt process management system with en
 - **Level 5**: Fully autonomous decision-making
 
 ### 3. Engagement Iteration System
+
 - **Engagement Analytics**: Track engagement patterns and trends
 - **Iteration History**: Complete history of process iterations
 - **Health Monitoring**: Assess contribution health based on engagement
 - **User Engagement**: Summary and analytics for user interactions
 
 ### 4. Turnkey Business Automation
+
 - **Workflow Registry**: Centralized workflow configuration
 - **Automated Monitoring**: Continuous workflow health checks
 - **Business Workflows**: Pre-configured business process automation
@@ -56,6 +60,7 @@ cd automation
 ```
 
 This will:
+
 1. Check system prerequisites
 2. Create necessary directories
 3. Deploy workflow configurations
@@ -157,20 +162,25 @@ GET /api/v1/halt-process/users/{id}/engagement-summary?days=30
 ### New Tables
 
 #### engagement_history
+
 Tracks all engagement events for contributions.
 
 #### process_iterations
+
 Records contribution iteration history and status changes.
 
 #### workflow_executions
+
 Tracks progressive automation workflow executions.
 
 #### knowledge_threads
+
 Manages knowledge threads for Perplexity integration (future).
 
 ### Extended Columns
 
 **Contribution Table**:
+
 - `engagement_count`: Total engagement interactions
 - `engagement_score`: Calculated engagement metric
 - `iteration_count`: Number of revision iterations
@@ -184,7 +194,9 @@ Manages knowledge threads for Perplexity integration (future).
 ## Workflows
 
 ### 1. Contribution Verification Workflow
+
 Progressive automated verification with 5 stages:
+
 1. Initial validation (Level 1)
 2. Quality analysis (Level 2)
 3. Intelligent routing (Level 3)
@@ -192,7 +204,9 @@ Progressive automated verification with 5 stages:
 5. Autonomous approval (Level 5)
 
 ### 2. Engagement Iteration Workflow
+
 Automated engagement tracking and iteration:
+
 1. Engagement tracking (Level 1)
 2. Pattern analysis (Level 2)
 3. Adaptive response (Level 3)
@@ -200,7 +214,9 @@ Automated engagement tracking and iteration:
 5. Autonomous iteration (Level 5)
 
 ### 3. Halt Process Automation Workflow
+
 Automated halt detection and recovery:
+
 1. Halt detection (Level 1)
 2. Automated analysis (Level 2)
 3. Intelligent recovery (Level 3)
@@ -208,7 +224,9 @@ Automated halt detection and recovery:
 5. Self-healing (Level 5)
 
 ### 4. Progressive Quality Improvement Workflow
+
 Continuous quality enhancement:
+
 1. Baseline assessment (Level 1)
 2. Improvement planning (Level 2)
 3. Automated refinement (Level 3)
@@ -218,7 +236,9 @@ Continuous quality enhancement:
 ## Integration
 
 ### Perplexity Knowledge Integration (Prepared)
+
 Infrastructure ready for Perplexity API integration:
+
 - Knowledge thread management
 - Context-aware analysis
 - Multi-turn conversation tracking
@@ -229,6 +249,7 @@ See `scripts/integrate_perplexity.sh` for configuration.
 ## Monitoring
 
 ### Health Status Levels
+
 - **healthy**: High engagement and active iteration
 - **moderate**: Moderate engagement activity
 - **low_activity**: Low engagement but active
@@ -236,6 +257,7 @@ See `scripts/integrate_perplexity.sh` for configuration.
 - **halted**: Process halted by user/system
 
 ### Metrics Tracked
+
 - Engagement velocity (engagements/day)
 - Iteration frequency
 - Automation level progression
@@ -331,6 +353,7 @@ MAX_CONTEXT_LENGTH=8192
 ## Troubleshooting
 
 ### Issue: Workflows not executing
+
 **Solution**: Check backend service status and logs
 
 ```bash
@@ -339,6 +362,7 @@ curl http://localhost:8000/health
 ```
 
 ### Issue: Halt operations failing
+
 **Solution**: Verify contribution exists and status
 
 ```bash
@@ -346,6 +370,7 @@ curl http://localhost:8000/api/v1/halt-process/contributions/{id}/halt-status
 ```
 
 ### Issue: Engagement not tracking
+
 **Solution**: Check database connectivity and service status
 
 ```bash
@@ -356,6 +381,7 @@ docker-compose logs postgres
 ## Development
 
 ### Running Tests
+
 ```bash
 # Test halt process service
 pytest backend/tests/test_halt_process_service.py
@@ -368,6 +394,7 @@ pytest backend/tests/test_engagement_service.py
 ```
 
 ### Adding New Workflows
+
 1. Define workflow in `configs/workflow_registry.json`
 2. Implement stages in workflow engine
 3. Register workflow in `ProgressiveAutomationEngine`
@@ -377,6 +404,7 @@ pytest backend/tests/test_engagement_service.py
 ## Support
 
 For questions or issues:
+
 1. Check logs in `logs/automation/`
 2. Review API documentation at http://localhost:8000/docs
 3. Consult main README.md for general setup

@@ -18,12 +18,14 @@ python scripts/migrate_halt_process.py
 ```
 
 **What this does:**
+
 - Adds new columns to contributions table
 - Creates 4 new tables: engagement_history, process_iterations, workflow_executions, knowledge_threads
 - Sets up all necessary indexes
 - Initializes default values
 
 **Expected output:**
+
 ```
 Starting database migration...
 ============================================================
@@ -42,12 +44,14 @@ cd automation
 ```
 
 **What this does:**
+
 - Creates automation directory structure
 - Deploys workflow configurations
 - Sets up monitoring scripts
 - Creates business automation workflows
 
 **Expected output:**
+
 ```
 🚀 NWU Protocol - Turnkey Business Automation
 ================================================
@@ -64,6 +68,7 @@ docker-compose restart backend
 ```
 
 **Verify installation:**
+
 ```bash
 curl http://localhost:8000/docs
 # Should show updated API documentation with halt-process endpoints
@@ -154,6 +159,7 @@ Each workflow supports 6 automation levels (0-5) with progressive capabilities.
 ## API Endpoints Reference
 
 ### Halt Process Management
+
 - `POST /api/v1/halt-process/contributions/{id}/halt` - Halt contribution
 - `POST /api/v1/halt-process/contributions/{id}/pause` - Pause temporarily
 - `POST /api/v1/halt-process/contributions/{id}/resume` - Resume processing
@@ -161,11 +167,13 @@ Each workflow supports 6 automation levels (0-5) with progressive capabilities.
 - `POST /api/v1/halt-process/contributions/{id}/approve-halt` - **Approve halt** ⭐
 
 ### Workflow Automation
+
 - `POST /api/v1/halt-process/contributions/{id}/execute-workflow` - Execute workflow
 - `GET /api/v1/halt-process/contributions/{id}/workflow-status` - Get status
 - `POST /api/v1/halt-process/contributions/{id}/advance-automation` - Advance level
 
 ### Engagement Tracking
+
 - `POST /api/v1/halt-process/contributions/{id}/engagement` - Record engagement
 - `GET /api/v1/halt-process/contributions/{id}/engagement-analytics` - Get analytics
 - `GET /api/v1/halt-process/contributions/{id}/iteration-history` - Get history
@@ -175,30 +183,33 @@ Each workflow supports 6 automation levels (0-5) with progressive capabilities.
 ## Monitoring
 
 ### Start Continuous Monitoring
+
 ```bash
 ./automation/scripts/monitor_workflows.sh
 ```
 
 ### Check Logs
+
 ```bash
 tail -f logs/automation/turnkey_automation_*.log
 ```
 
 ### Health Check
+
 ```bash
 curl http://localhost:8000/health
 ```
 
 ## Understanding Automation Levels
 
-| Level | Name | Description |
-|-------|------|-------------|
-| 0 | Manual | Manual processing only |
-| 1 | Basic | Basic automated validation |
-| 2 | Quality | Automated quality checks |
-| 3 | Intelligent | Intelligent routing and prioritization |
-| 4 | Predictive | Predictive analysis and recommendations |
-| 5 | Autonomous | Fully autonomous decision-making |
+| Level | Name        | Description                             |
+| ----- | ----------- | --------------------------------------- |
+| 0     | Manual      | Manual processing only                  |
+| 1     | Basic       | Basic automated validation              |
+| 2     | Quality     | Automated quality checks                |
+| 3     | Intelligent | Intelligent routing and prioritization  |
+| 4     | Predictive  | Predictive analysis and recommendations |
+| 5     | Autonomous  | Fully autonomous decision-making        |
 
 Contributions start at level 0 and can progressively advance through levels as they demonstrate quality and engagement.
 
@@ -219,6 +230,7 @@ The system tracks these engagement types (with scoring weights):
 ## Troubleshooting
 
 ### Backend not responding
+
 ```bash
 docker-compose ps
 docker-compose restart backend
@@ -226,6 +238,7 @@ docker-compose logs backend
 ```
 
 ### Migration issues
+
 ```bash
 # Check database connection
 docker-compose exec postgres psql -U nwu_user -d nwu_db -c "\dt"
@@ -235,6 +248,7 @@ python scripts/migrate_halt_process.py
 ```
 
 ### API endpoints missing
+
 ```bash
 # Verify router is registered
 grep "halt_process_router" backend/app/main.py
@@ -253,21 +267,25 @@ docker-compose restart backend
 ## Key Features Implemented
 
 ✅ **Halt Process by Engaging and Iteration** (Core Requirement)
+
 - Complete halt/pause/resume operations
 - Engagement tracking throughout halt lifecycle
 - Approval workflow with `approve_halt_engagement()` endpoint
 
 ✅ **Progressive Automation** (6 Levels)
+
 - Unprecedented harmoniously integrated automation
 - Smooth progression from manual to autonomous
 - 4 pre-configured business workflows
 
 ✅ **Engagement Iteration Tracking**
+
 - Comprehensive engagement analytics
 - Trend analysis and health monitoring
 - User engagement summaries
 
 ✅ **Turnkey Business Automation**
+
 - One-command deployment
 - Automated monitoring
 - Integration-ready architecture
