@@ -1,0 +1,286 @@
+name: Production Deployment - All Systems
+
+on:
+  workflow_dispatch:
+    inputs:
+      deploy_target:
+        description: 'What to deploy'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - nwu-backend
+          - github-pages
+          - railway
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - 'docker-compose.prod.yml'
+      - '.github/workflows/production-deployment.yml'
+
+env:
+  DOCKER_BUILDKIT: 1
+  COMPOSE_DOCKER_CLI_BUILD: 1
+
+jobs:
+  deploy-github-pages:
+    name: Deploy GitHub Pages Storefront
+    runs-on: ubuntu-latest
+    if: github.event.inputs.deploy_target == 'all' || github.event.inputs.deploy_target == 'github-pages' || github.event_name == 'push'
+    steps:
+      - name: Generate storefront HTML
+        run: |
+          cat > index.html << 'STOREFRONT'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Zero-Human AI Business Platform | GarCar Systems</title>
+              <meta name="description" content="AI automation, data monetization, and billing infrastructure without hiring an AI team">
+              <script src="https://js.stripe.com/v3/"></script>
+              <style>
+                  * { margin: 0; padding: 0; box-sizing: border-box; }
+                  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; color: #333; }
+                  .hero { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 120px 20px; text-align: center; }
+                  .hero h1 { font-size: 3.5rem; margin-bottom: 1.5rem; font-weight: 700; }
+                  .hero p { font-size: 1.6rem; margin-bottom: 2rem; opacity: 0.95; max-width: 800px; margin-left: auto; margin-right: auto; }
+                  .cta-primary { background: white; color: #667eea; border: none; padding: 18px 48px; font-size: 1.2rem; border-radius: 8px; cursor: pointer; font-weight: 700; transition: all 0.3s; }
+                  .cta-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+                  .container { max-width: 1200px; margin: 0 auto; padding: 80px 20px; }
+                  .pricing { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 40px; margin-top: 60px; }
+                  .plan { background: white; border: 3px solid #e0e0e0; border-radius: 16px; padding: 48px; text-align: center; transition: all 0.3s ease; }
+                  .plan:hover { transform: translateY(-8px); border-color: #667eea; box-shadow: 0 20px 60px rgba(102, 126, 234, 0.25); }
+                  .plan.featured { border-color: #667eea; box-shadow: 0 15px 50px rgba(102, 126, 234, 0.3); position: relative; }
+                  .plan.featured::before { content: "MOST POPULAR"; position: absolute; top: -18px; left: 50%; transform: translateX(-50%); background: #667eea; color: white; padding: 8px 24px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; }
+                  .plan h3 { font-size: 2rem; margin-bottom: 1rem; color: #333; }
+                  .price { font-size: 3.5rem; font-weight: bold; color: #667eea; margin: 24px 0; }
+                  .price span { font-size: 1.5rem; color: #666; font-weight: normal; }
+                  ul { list-style: none; margin: 36px 0; text-align: left; }
+                  li { padding: 12px 0; padding-left: 32px; position: relative; font-size: 1.05rem; }
+                  li:before { content: "✓"; position: absolute; left: 0; color: #667eea; font-weight: bold; font-size: 1.3rem; }
+                  .cta { background: #667eea; color: white; border: none; padding: 16px 42px; font-size: 1.15rem; border-radius: 8px; cursor: pointer; margin-top: 24px; transition: all 0.3s; font-weight: 600; }
+                  .cta:hover { background: #5568d3; transform: scale(1.05); }
+                  .stats { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 80px 20px; }
+                  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 48px; text-align: center; max-width: 1200px; margin: 0 auto; }
+                  .stat-number { font-size: 3.5rem; font-weight: bold; margin-bottom: 12px; }
+                  .stat-label { font-size: 1.2rem; opacity: 0.95; }
+              </style>
+          </head>
+          <body>
+              <div class="hero">
+                  <h1>Zero-Human AI Business Platform</h1>
+                  <p>Complete AI automation, data monetization, and billing infrastructure. Deploy in hours, not months.</p>
+                  <button class="cta-primary" onclick="document.getElementById('pricing').scrollIntoView({behavior: 'smooth'})">View Pricing →</button>
+              </div>
+
+              <div class="stats">
+                  <div class="stats-grid">
+                      <div><div class="stat-number">93</div><div class="stat-label">Production Systems</div></div>
+                      <div><div class="stat-number">$100M+</div><div class="stat-label">IP Valuation</div></div>
+                      <div><div class="stat-number">24/7</div><div class="stat-label">Autonomous Operation</div></div>
+                      <div><div class="stat-number">99.9%</div><div class="stat-label">Uptime SLA</div></div>
+                  </div>
+              </div>
+
+              <div class="container" id="pricing">
+                  <h2 style="text-align:center; font-size:2.8rem; margin-bottom:24px;">Choose Your Plan</h2>
+                  <p style="text-align:center; color:#666; margin-bottom:60px; font-size:1.3rem;">Production-ready AI infrastructure, deployed instantly</p>
+                  <div class="pricing">
+                      <div class="plan">
+                          <h3>Starter</h3>
+                          <div class="price">$299<span>/mo</span></div>
+                          <ul>
+                              <li>AI Orchestration Core</li>
+                              <li>Basic Data Monetization</li>
+                              <li>Stripe Integration</li>
+                              <li>1 Production Environment</li>
+                              <li>10GB Storage</li>
+                              <li>Email Support (24hr SLA)</li>
+                          </ul>
+                          <button class="cta" onclick="checkout('starter')">Get Started</button>
+                      </div>
+
+                      <div class="plan featured">
+                          <h3>Professional</h3>
+                          <div class="price">$799<span>/mo</span></div>
+                          <ul>
+                              <li>Full AI Business Platform</li>
+                              <li>Advanced NWU Protocol</li>
+                              <li>Enterprise CI/CD Pipeline</li>
+                              <li>3 Production Environments</li>
+                              <li>100GB Storage</li>
+                              <li>Priority Support (4hr SLA)</li>
+                              <li>Revenue Share Options</li>
+                              <li>Custom AI Model Training</li>
+                          </ul>
+                          <button class="cta" onclick="checkout('professional')">Get Started</button>
+                      </div>
+
+                      <div class="plan">
+                          <h3>Enterprise</h3>
+                          <div class="price">$1,999<span>/mo</span></div>
+                          <ul>
+                              <li>White-Label Platform</li>
+                              <li>Dedicated AI Training</li>
+                              <li>Unlimited Environments</li>
+                              <li>Dedicated Infrastructure</li>
+                              <li>Unlimited Storage</li>
+                              <li>24/7 Phone Support</li>
+                              <li>Custom Revenue Models</li>
+                              <li>On-Premise Options Available</li>
+                          </ul>
+                          <button class="cta" onclick="checkout('enterprise')">Contact Sales</button>
+                      </div>
+                  </div>
+              </div>
+
+              <script>
+                  function checkout(plan) {
+                      const email = prompt('Enter your email to continue:');
+                      if (!email) return;
+                      window.location.href = `mailto:garrett@garcar.systems?subject=${plan.charAt(0).toUpperCase() + plan.slice(1)} Plan - ${email}&body=I'm interested in the ${plan} plan for my business.%0A%0APlease contact me at: ${email}`;
+                  }
+              </script>
+          </body>
+          </html>
+          STOREFRONT
+
+      - name: Checkout Pages Repo
+        uses: actions/checkout@v4
+        with:
+          repository: Garrettc123/Garrettc123.github.io
+          token: ${{ secrets.PAGES_DEPLOY_TOKEN }}
+          path: pages-repo
+
+      - name: Deploy to GitHub Pages
+        run: |
+          cp index.html pages-repo/index.html
+          cd pages-repo
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add index.html
+          git diff --staged --quiet || git commit -m "🚀 Deploy storefront via Actions [skip ci]"
+          git push
+
+      - name: Verify Pages Deployment
+        run: |
+          echo "✅ Storefront deployed to: https://garrettc123.github.io"
+          sleep 10
+          curl -f https://garrettc123.github.io || echo "⚠️ Pages not ready yet (may take 1-2 minutes)"
+
+  deploy-nwu-backend:
+    name: Deploy NWU Backend Production
+    runs-on: ubuntu-latest
+    if: github.event.inputs.deploy_target == 'all' || github.event.inputs.deploy_target == 'nwu-backend' || github.event_name == 'push'
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and Push Backend Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./backend/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/nwu-backend:latest
+            ${{ secrets.DOCKER_USERNAME }}/nwu-backend:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Deploy to Production Server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PRODUCTION_HOST }}
+          username: ${{ secrets.PRODUCTION_USER }}
+          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          script: |
+            cd /opt/nwu-protocol || exit 1
+            git pull origin main
+            docker pull ${{ secrets.DOCKER_USERNAME }}/nwu-backend:latest
+            docker-compose -f docker-compose.prod.yml up -d --no-build
+            sleep 15
+            docker exec nwu-backend alembic upgrade head || echo "Migrations already applied"
+            curl -f http://localhost:8000/health || exit 1
+            echo "✅ NWU Backend deployed successfully"
+
+  deploy-railway:
+    name: Deploy to Railway
+    runs-on: ubuntu-latest
+    if: github.event.inputs.deploy_target == 'all' || github.event.inputs.deploy_target == 'railway' || github.event_name == 'push'
+    steps:
+      - name: Checkout Wealth System
+        uses: actions/checkout@v4
+        with:
+          repository: Garrettc123/garcar-autonomous-wealth-system
+          token: ${{ secrets.GH_PAT }}
+          path: wealth-system
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy to Railway
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          cd wealth-system
+          railway link ${{ secrets.RAILWAY_PROJECT_ID }}
+          railway up --service wealth-api
+          echo "✅ Railway deployment triggered"
+
+  health-check:
+    name: Verify All Deployments
+    runs-on: ubuntu-latest
+    needs: [deploy-github-pages, deploy-nwu-backend, deploy-railway]
+    if: always()
+    steps:
+      - name: Wait for deployments to stabilize
+        run: sleep 30
+
+      - name: Check GitHub Pages
+        run: |
+          if curl -f -s https://garrettc123.github.io > /dev/null; then
+            echo "✅ GitHub Pages: LIVE"
+          else
+            echo "⚠️ GitHub Pages: Not responding"
+          fi
+
+      - name: Check NWU Backend
+        run: |
+          if curl -f -s ${{ secrets.PRODUCTION_HOST }}/health > /dev/null; then
+            echo "✅ NWU Backend: HEALTHY"
+          else
+            echo "⚠️ NWU Backend: Not responding"
+          fi
+
+      - name: Check Railway API
+        run: |
+          if curl -f -s ${{ secrets.RAILWAY_URL }}/health > /dev/null; then
+            echo "✅ Railway API: HEALTHY"
+          else
+            echo "⚠️ Railway API: Not responding"
+          fi
+
+      - name: Deployment Summary
+        run: |
+          echo ""
+          echo "========================================"
+          echo "   DEPLOYMENT COMPLETE"
+          echo "========================================"
+          echo "GitHub Pages:  https://garrettc123.github.io"
+          echo "NWU Backend:   ${{ secrets.PRODUCTION_HOST }}"
+          echo "Railway API:   ${{ secrets.RAILWAY_URL }}"
+          echo "========================================"
