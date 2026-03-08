@@ -11,6 +11,7 @@ This repository is now fully configured with comprehensive automation to prevent
 ```
 
 This single command will:
+
 1. ✅ Auto-configure all environment files
 2. ✅ Run pre-flight system checks
 3. ✅ Clean up old containers
@@ -23,24 +24,24 @@ This single command will:
 
 ### Core Automation
 
-| Script | Purpose | Usage |
-|--------|---------|-------|
-| `auto-configure.sh` | Automatically configures all environment files and creates monitoring scripts | `./auto-configure.sh` |
-| `auto-start.sh` | Complete automated startup (recommended) | `./auto-start.sh` |
-| `auto-recovery.sh` | Automatically recovers failed services | `./auto-recovery.sh` |
-| `preflight-check.sh` | Verify system readiness before starting | `./preflight-check.sh` |
-| `health-monitor.sh` | Continuous health monitoring (live dashboard) | `./health-monitor.sh` |
+| Script               | Purpose                                                                       | Usage                  |
+| -------------------- | ----------------------------------------------------------------------------- | ---------------------- |
+| `auto-configure.sh`  | Automatically configures all environment files and creates monitoring scripts | `./auto-configure.sh`  |
+| `auto-start.sh`      | Complete automated startup (recommended)                                      | `./auto-start.sh`      |
+| `auto-recovery.sh`   | Automatically recovers failed services                                        | `./auto-recovery.sh`   |
+| `preflight-check.sh` | Verify system readiness before starting                                       | `./preflight-check.sh` |
+| `health-monitor.sh`  | Continuous health monitoring (live dashboard)                                 | `./health-monitor.sh`  |
 
 ### Management Scripts
 
-| Script | Purpose |
-|--------|---------|
-| `setup.sh` | Interactive setup wizard |
-| `deploy.sh` | Production deployment |
-| `status.sh` | Show service status |
-| `logs.sh` | View all service logs |
-| `restart.sh` | Restart all services |
-| `stop.sh` | Stop all services |
+| Script       | Purpose                  |
+| ------------ | ------------------------ |
+| `setup.sh`   | Interactive setup wizard |
+| `deploy.sh`  | Production deployment    |
+| `status.sh`  | Show service status      |
+| `logs.sh`    | View all service logs    |
+| `restart.sh` | Restart all services     |
+| `stop.sh`    | Stop all services        |
 
 ## 🔧 Configuration Files (Auto-Generated)
 
@@ -55,17 +56,22 @@ All configuration files are automatically created by `auto-configure.sh`:
 ## 🏥 Health & Monitoring
 
 ### Continuous Monitoring
+
 ```bash
 ./health-monitor.sh
 ```
+
 Provides real-time dashboard showing:
+
 - Docker service status
 - HTTP endpoint health
 - Database connectivity
 - Auto-refreshes every 5 seconds
 
 ### Health Checks
+
 All services include health checks:
+
 - PostgreSQL: `pg_isready` check
 - Redis: `redis-cli ping`
 - MongoDB: `mongosh ping`
@@ -73,14 +79,17 @@ All services include health checks:
 - Backend API: `/health` endpoint
 
 ### Auto-Recovery
+
 ```bash
 ./auto-recovery.sh
 ```
+
 Automatically detects and restarts unhealthy services.
 
 ## 🚦 Pre-Flight Checks
 
 Before starting, `preflight-check.sh` verifies:
+
 1. ✅ Environment files exist
 2. ✅ Docker daemon is running
 3. ✅ Required ports are available (3000, 5432, 6379, 8000, etc.)
@@ -90,21 +99,22 @@ Before starting, `preflight-check.sh` verifies:
 
 Once started, access services at:
 
-| Service | URL | Credentials |
-|---------|-----|-------------|
-| Frontend | http://localhost:3000 | - |
-| Backend API | http://localhost:8000 | - |
-| API Documentation | http://localhost:8000/docs | - |
-| API Health | http://localhost:8000/health | - |
-| RabbitMQ Admin | http://localhost:15672 | guest/guest |
-| PostgreSQL | localhost:5432 | nwu_user/rocket69! |
-| MongoDB | localhost:27017 | admin/rocket69! |
-| Redis | localhost:6379 | - |
-| IPFS | http://localhost:5001 | - |
+| Service           | URL                          | Credentials        |
+| ----------------- | ---------------------------- | ------------------ |
+| Frontend          | http://localhost:3000        | -                  |
+| Backend API       | http://localhost:8000        | -                  |
+| API Documentation | http://localhost:8000/docs   | -                  |
+| API Health        | http://localhost:8000/health | -                  |
+| RabbitMQ Admin    | http://localhost:15672       | guest/guest        |
+| PostgreSQL        | localhost:5432               | nwu_user/rocket69! |
+| MongoDB           | localhost:27017              | admin/rocket69!    |
+| Redis             | localhost:6379               | -                  |
+| IPFS              | http://localhost:5001        | -                  |
 
 ## 🔄 Common Operations
 
 ### Complete Reset
+
 ```bash
 ./stop.sh
 ./clean.sh  # Will prompt for confirmation
@@ -112,6 +122,7 @@ Once started, access services at:
 ```
 
 ### View Logs
+
 ```bash
 # All services
 ./logs.sh
@@ -122,6 +133,7 @@ make logs-agent
 ```
 
 ### Run Migrations
+
 ```bash
 make migrate
 # Or manually:
@@ -129,6 +141,7 @@ docker exec nwu-backend alembic upgrade head
 ```
 
 ### Run Tests
+
 ```bash
 make test           # Run all tests
 make test-api       # Test API endpoints
@@ -168,17 +181,20 @@ docker-compose build
 ### Services Won't Start
 
 1. Run pre-flight checks:
+
    ```bash
    ./preflight-check.sh
    ```
 
 2. Check if ports are in use:
+
    ```bash
    lsof -i :8000  # Backend port
    lsof -i :3000  # Frontend port
    ```
 
 3. Check Docker daemon:
+
    ```bash
    docker info
    ```
@@ -236,11 +252,13 @@ make migrate        # Run database migrations
 ## 🎯 Development Workflow
 
 1. **First Time Setup:**
+
    ```bash
    ./auto-start.sh
    ```
 
 2. **Daily Development:**
+
    ```bash
    ./status.sh        # Check if services are running
    ./logs.sh          # Monitor logs if needed
@@ -248,6 +266,7 @@ make migrate        # Run database migrations
    ```
 
 3. **After Changes:**
+
    ```bash
    docker-compose build [service]
    ./restart.sh
