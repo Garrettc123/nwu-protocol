@@ -5,6 +5,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import enum
+import secrets
+import string
 
 Base = declarative_base()
 
@@ -29,6 +31,8 @@ class User(Base):
     subscriptions = relationship("Subscription", back_populates="user")
     payments = relationship("Payment", back_populates="user")
     api_keys = relationship("APIKey", back_populates="user")
+    referrals_made = relationship("Referral", foreign_keys="Referral.referrer_id", back_populates="referrer")
+    referral_used = relationship("Referral", foreign_keys="Referral.referee_id", back_populates="referee", uselist=False)
 
 
 class Contribution(Base):
@@ -146,7 +150,7 @@ class Payment(Base):
     currency = Column(String(10), default="usd")
     status = Column(SQLEnum(PaymentStatus), nullable=False, default=PaymentStatus.PENDING)
     description = Column(Text, nullable=True)
-    metadata = Column(Text, nullable=True)  # JSON string
+    payment_metadata = Column("metadata", Text, nullable=True)  # JSON string
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -187,3 +191,31 @@ class APIKey(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     
     user = relationship("User", back_populates="api_keys")
+
+
+REFERRAL_CODE_LENGTH = 10
+REFERRAL_CODE_ALPHABET = string.ascii_uppercase + string.digits
+REFERRAL_REPUTATION_BONUS_REFERRER = 10.0
+REFERRAL_REPUTATION_BONUS_REFEREE = 5.0
+
+
+def generate_referral_code() -> str:
+    """Generate a unique, URL-safe referral code."""
+    return "".join(secrets.choice(REFERRAL_CODE_ALPHABET) for _ in range(REFERRAL_CODE_LENGTH))
+
+
+class Referral(Base):
+    """Referral model for customer acquisition tracking."""
+    __tablename__ = "referrals"
+
+    id = Column(Integer, primary_key=True, index=True)
+    referral_code = Column(String(20), unique=True, nullable=False, index=True, default=generate_referral_code)
+    referrer_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    referee_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    status = Column(String(20), default="pending", index=True)  # pending, completed
+    reward_granted = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    completed_at = Column(DateTime, nullable=True)
+
+    referrer = relationship("User", foreign_keys=[referrer_id], back_populates="referrals_made")
+    referee = relationship("User", foreign_keys=[referee_id], back_populates="referral_used")

@@ -2,7 +2,7 @@
 from typing import Optional
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
-from backend.app.models import User, Contribution
+from ..models import User, Contribution
 
 
 def get_user_by_address_or_404(db: Session, address: str) -> User:

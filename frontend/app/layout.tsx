@@ -30,6 +30,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   <Link href="/contributions" className="text-gray-300 hover:text-white transition">
                     Contributions
                   </Link>
+                  <Link href="/pricing" className="text-gray-300 hover:text-white transition">
+                    Pricing
+                  </Link>
                   <Link href="/dashboard" className="text-gray-300 hover:text-white transition">
                     Dashboard
                   </Link>

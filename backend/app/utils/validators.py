@@ -2,7 +2,7 @@
 import re
 from typing import Optional
 from fastapi import HTTPException, status
-from backend.app.models import SubscriptionTier
+from ..models import SubscriptionTier
 
 
 # Pre-compiled regex patterns for performance
