@@ -4,7 +4,7 @@ import logging
 import re
 from typing import Dict, Any, Optional
 from langchain_openai import ChatOpenAI
-from langchain.prompts import ChatPromptTemplate
+from langchain_core.prompts import ChatPromptTemplate
 from .config import config
 
 # Compiled once at module level to avoid recompilation on every call
