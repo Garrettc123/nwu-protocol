@@ -162,8 +162,8 @@ class IPFSService:
             if self.client:
                 self.client.id()
                 return True
-        except:
-            pass
+        except Exception as e:
+            logger.debug(f"IPFS connection check failed: {e}")
         return False
 
 
