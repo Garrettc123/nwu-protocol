@@ -1,0 +1,233 @@
+name: 🧹 Stale PR Management
+
+on:
+  schedule:
+    # Run daily at 00:00 UTC
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  manage-stale-prs:
+    name: Manage Stale PRs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for Stale PRs
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const MS_PER_DAY = 24 * 60 * 60 * 1000;
+            const STALE_DAYS = 14;
+            const CLOSE_DAYS = 30;
+            
+            // Get all open PRs
+            const { data: prs } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              per_page: 100
+            });
+            
+            core.info(`Found ${prs.length} open PRs`);
+            
+            const now = new Date();
+            
+            for (const pr of prs) {
+              // Skip draft PRs
+              if (pr.draft) {
+                core.info(`Skipping draft PR #${pr.number}`);
+                continue;
+              }
+              
+              // Skip PRs with 'no-stale' label
+              if (pr.labels.some(label => label.name === 'no-stale')) {
+                core.info(`Skipping PR #${pr.number} (has no-stale label)`);
+                continue;
+              }
+              
+              // Calculate days since last update
+              const lastUpdate = new Date(pr.updated_at);
+              const daysSinceUpdate = Math.floor((now - lastUpdate) / MS_PER_DAY);
+              
+              core.info(`PR #${pr.number}: ${daysSinceUpdate} days since last update`);
+              
+              const hasStaleLabel = pr.labels.some(label => label.name === 'status: stale');
+              
+              // Mark as stale if inactive for STALE_DAYS
+              if (daysSinceUpdate >= STALE_DAYS && !hasStaleLabel) {
+                core.info(`Marking PR #${pr.number} as stale`);
+                
+                // Add stale label
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pr.number,
+                  labels: ['status: stale']
+                });
+                
+                // Post comment
+                const staleMessage = `## ⏰ Stale PR Notice\n\n` +
+                  `This PR has been inactive for ${daysSinceUpdate} days.\n\n` +
+                  `**What happens next:**\n` +
+                  `- If no activity within ${CLOSE_DAYS - STALE_DAYS} days, this PR will be automatically closed\n` +
+                  `- To keep this PR active, add a comment or push new commits\n` +
+                  `- To prevent automatic closure, add the \`no-stale\` label\n\n` +
+                  `If you need more time or help, please leave a comment!`;
+                
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pr.number,
+                  body: staleMessage
+                });
+              }
+              // Close if stale and inactive for CLOSE_DAYS total
+              else if (daysSinceUpdate >= CLOSE_DAYS && hasStaleLabel) {
+                core.info(`Closing stale PR #${pr.number}`);
+                
+                // Post closing comment
+                const closeMessage = `## 🔒 Auto-Closing Stale PR\n\n` +
+                  `This PR has been inactive for ${daysSinceUpdate} days and is being automatically closed.\n\n` +
+                  `**To reopen:**\n` +
+                  `- Resolve any conflicts\n` +
+                  `- Ensure all checks pass\n` +
+                  `- Comment on this PR to request reopening\n\n` +
+                  `Thank you for your contribution!`;
+                
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pr.number,
+                  body: closeMessage
+                });
+                
+                // Close PR
+                await github.rest.pulls.update({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: pr.number,
+                  state: 'closed'
+                });
+                
+                core.info(`✅ Closed PR #${pr.number}`);
+              }
+              // Remove stale label if PR has recent activity
+              else if (daysSinceUpdate < STALE_DAYS && hasStaleLabel) {
+                core.info(`Removing stale label from PR #${pr.number} (has recent activity)`);
+                
+                try {
+                  await github.rest.issues.removeLabel({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: pr.number,
+                    name: 'status: stale'
+                  });
+                  
+                  // Post reactivation comment
+                  await github.rest.issues.createComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: pr.number,
+                    body: `✅ This PR is no longer stale. Thank you for the update!`
+                  });
+                } catch (error) {
+                  core.warning(`Failed to remove stale label: ${error.message}`);
+                }
+              }
+            }
+            
+            core.info('✅ Stale PR check complete');
+
+  # Check for PRs waiting on author
+  check-waiting-on-author:
+    name: Check PRs Waiting on Author
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PRs with Changes Requested
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const MS_PER_DAY = 24 * 60 * 60 * 1000;
+            const REMINDER_DAYS = 7;
+            
+            // Get all open PRs
+            const { data: prs } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              per_page: 100
+            });
+            
+            const now = new Date();
+            
+            for (const pr of prs) {
+              // Get reviews
+              const { data: reviews } = await github.rest.pulls.listReviews({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number
+              });
+              
+              // Check if latest review requests changes
+              if (reviews.length === 0) continue;
+              
+              const latestReview = reviews[reviews.length - 1];
+              if (latestReview.state !== 'CHANGES_REQUESTED') continue;
+              
+              // Check if there's been activity since changes were requested
+              const reviewDate = new Date(latestReview.submitted_at);
+              const daysSinceReview = Math.floor((now - reviewDate) / MS_PER_DAY);
+              
+              const hasWaitingLabel = pr.labels.some(label => label.name === 'status: waiting-on-author');
+              
+              // Add waiting-on-author label if not present
+              if (!hasWaitingLabel) {
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pr.number,
+                  labels: ['status: waiting-on-author']
+                });
+                core.info(`Added waiting-on-author label to PR #${pr.number}`);
+              }
+              
+              // Send reminder if waiting for a week
+              if (daysSinceReview >= REMINDER_DAYS) {
+                // Check if reminder was already sent
+                const { data: comments } = await github.rest.issues.listComments({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pr.number,
+                  since: reviewDate.toISOString()
+                });
+                
+                const hasReminder = comments.some(comment => 
+                  comment.body.includes('Reminder: Changes Requested')
+                );
+                
+                if (!hasReminder) {
+                  const reminderMessage = `## ⏰ Reminder: Changes Requested\n\n` +
+                    `@${pr.user.login}, this PR has had changes requested ${daysSinceReview} days ago.\n\n` +
+                    `**Next steps:**\n` +
+                    `- Review the feedback from @${latestReview.user.login}\n` +
+                    `- Make the requested changes\n` +
+                    `- Push updates to continue the review process\n\n` +
+                    `If you need help or clarification, please comment here!`;
+                  
+                  await github.rest.issues.createComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: pr.number,
+                    body: reminderMessage
+                  });
+                  
+                  core.info(`Sent reminder for PR #${pr.number}`);
+                }
+              }
+            }
+            
+            core.info('✅ Waiting-on-author check complete');
