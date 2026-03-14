@@ -34,14 +34,19 @@ jobs:
     name: Prepare Release
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
     outputs:
       version: ${{ steps.version.outputs.version }}
       changelog: ${{ steps.changelog.outputs.changelog }}
+      full_notes: ${{ steps.full_notes.outputs.notes }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
       - name: Generate version
         id: version
         run: |
@@ -51,10 +56,28 @@ jobs:
             VERSION=$(date +%Y.%m.%d)
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-      - name: Generate changelog
+      - name: Generate compact changelog
         id: changelog
         run: |
-          echo "changelog=$(git log $(git describe --tags --abbrev=0)..HEAD --pretty=format:'%h %s' | head -20)" >> $GITHUB_OUTPUT
+          CHANGELOG=$(node scripts/generate-release-notes.js compact)
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      - name: Generate full release notes
+        id: full_notes
+        run: |
+          NOTES=$(node scripts/generate-release-notes.js generate ${{ steps.version.outputs.version }})
+          echo "notes<<EOF" >> $GITHUB_OUTPUT
+          echo "$NOTES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      - name: Update CHANGELOG.md
+        run: |
+          node scripts/generate-release-notes.js update ${{ steps.version.outputs.version }}
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add CHANGELOG.md
+          git diff --staged --quiet || git commit -m "docs: Update CHANGELOG.md for v${{ steps.version.outputs.version }}"
+          git push || echo "No changes to push"
 
   backend-release:
     name: Release Backend
@@ -184,26 +207,19 @@ jobs:
     if: always()
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Create release
-        uses: actions/create-release@v1
+        uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: v${{ needs.prepare-release.outputs.version }}
-          release_name: Release ${{ needs.prepare-release.outputs.version }}
-          body: |
-            # Release ${{ needs.prepare-release.outputs.version }}
-
-            ## Changes
-            ${{ needs.prepare-release.outputs.changelog }}
-
-            ## Components Released
-            - Backend
-            - Frontend
-            - Smart Contracts
+          name: Release ${{ needs.prepare-release.outputs.version }}
+          body: ${{ needs.prepare-release.outputs.full_notes }}
           draft: false
           prerelease: false
-        continue-on-error: true
+          generate_release_notes: false
 
   notify-release:
     name: Notify Release
