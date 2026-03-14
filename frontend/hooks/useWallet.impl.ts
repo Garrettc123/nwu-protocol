@@ -1,4 +1,0 @@
-// Implementation file - placeholder for wallet hooks
-// This file is auto-generated and should not be edited directly
-export class WalletState implements WalletState {}
-export class Window implements Window {}
