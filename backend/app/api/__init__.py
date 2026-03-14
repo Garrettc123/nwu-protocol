@@ -7,6 +7,7 @@ from .auth import router as auth_router
 from .websocket import router as websocket_router
 from .payments import router as payments_router
 from .referrals import router as referrals_router
+from .subscriptions import router as subscriptions_router
 from .business_agents import business_agents_router, business_tasks_router
 
 __all__ = [
@@ -17,6 +18,7 @@ __all__ = [
     'websocket_router',
     'payments_router',
     'referrals_router',
+    'subscriptions_router',
     'business_agents_router',
     'business_tasks_router',
 ]
