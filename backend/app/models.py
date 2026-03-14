@@ -8,12 +8,15 @@ import enum
 import secrets
 import string
 
-# API Key tier rate limits (requests per day; -1 = unlimited)
+# API Key tier rate limits (requests per day).
+# The sentinel value -1 means "unlimited" — it is an integer so it can be
+# stored in the Integer column on APIKey without a NULL / None ambiguity.
+# Callers that need to skip quota enforcement check ``limit == -1``.
 FREE_TIER_DAILY_LIMIT = 100
 PRO_TIER_DAILY_LIMIT = 10_000
 ENTERPRISE_TIER_DAILY_LIMIT = -1  # Unlimited
 
-# Monthly quotas (derived from daily limits × 30 days)
+# Monthly quotas (derived from daily limits × 30 days; -1 = unlimited)
 FREE_TIER_MONTHLY_QUOTA = FREE_TIER_DAILY_LIMIT * 30
 PRO_TIER_MONTHLY_QUOTA = PRO_TIER_DAILY_LIMIT * 30
 ENTERPRISE_TIER_MONTHLY_QUOTA = -1  # Unlimited

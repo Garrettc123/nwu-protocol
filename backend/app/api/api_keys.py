@@ -103,6 +103,17 @@ def _resolve_limits(tier: SubscriptionTier) -> tuple[int, int]:
     return daily, monthly
 
 
+def _remaining_quota(limit: int, used: int) -> int:
+    """
+    Return remaining quota given a limit and current usage.
+
+    Returns -1 for unlimited tiers (limit == -1), otherwise max(0, limit - used).
+    """
+    if limit == ENTERPRISE_TIER_DAILY_LIMIT:  # sentinel for unlimited (-1)
+        return -1
+    return max(0, limit - used)
+
+
 def _build_key_response(api_key: APIKey) -> dict:
     return {
         "id": api_key.id,
@@ -277,12 +288,8 @@ async def get_api_key_usage(
     daily_limit = api_key.rate_limit_per_day
     monthly_quota = api_key.monthly_quota
 
-    quota_remaining_today = (
-        -1 if daily_limit == ENTERPRISE_TIER_DAILY_LIMIT else max(0, daily_limit - requests_today)
-    )
-    quota_remaining_month = (
-        -1 if monthly_quota == ENTERPRISE_TIER_MONTHLY_QUOTA else max(0, monthly_quota - requests_this_month)
-    )
+    quota_remaining_today = _remaining_quota(daily_limit, requests_today)
+    quota_remaining_month = _remaining_quota(monthly_quota, requests_this_month)
 
     return APIKeyUsageResponse(
         key_id=key_id,

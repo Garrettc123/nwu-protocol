@@ -1,9 +1,8 @@
 """Tests for API key management and usage metering system."""
 
-import hashlib
 import pytest
 from datetime import date, datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -78,6 +77,18 @@ def _make_user(db, suffix="a") -> User:
     db.commit()
     db.refresh(user)
     return user
+
+
+def _middleware_client(db_session) -> TestClient:
+    """
+    Build a TestClient with the middleware's SessionLocal patched to the
+    shared test session so middleware DB calls use SQLite instead of PostgreSQL.
+
+    The session's ``close`` method is stubbed out to prevent the middleware
+    from closing the shared test session prematurely.
+    """
+    db_session.close = lambda: None  # type: ignore[method-assign]
+    return TestClient(app, raise_server_exceptions=False)
 
 
 def _make_api_key(db, user: User, tier: SubscriptionTier = SubscriptionTier.FREE) -> tuple[APIKey, str]:
@@ -298,14 +309,8 @@ def test_middleware_allows_valid_api_key(db_session):
 
     app.dependency_overrides[get_db] = override_get_db
 
-    with patch(
-        "app.middleware.api_key_auth.SessionLocal",
-        return_value=db_session,
-    ):
-        # Prevent the middleware from closing the shared test session
-        db_session.close = lambda: None  # type: ignore[method-assign]
-        test_client = TestClient(app, raise_server_exceptions=False)
-        response = test_client.get("/", headers={"X-API-Key": raw_key})
+    with patch("app.middleware.api_key_auth.SessionLocal", return_value=db_session):
+        response = _middleware_client(db_session).get("/", headers={"X-API-Key": raw_key})
 
     app.dependency_overrides.clear()
     assert response.status_code == 200
@@ -323,13 +328,8 @@ def test_middleware_rejects_invalid_api_key(db_session):
 
     app.dependency_overrides[get_db] = override_get_db
 
-    with patch(
-        "app.middleware.api_key_auth.SessionLocal",
-        return_value=db_session,
-    ):
-        db_session.close = lambda: None  # type: ignore[method-assign]
-        test_client = TestClient(app, raise_server_exceptions=False)
-        response = test_client.get("/", headers={"X-API-Key": "nwu_invalid_key_xyz"})
+    with patch("app.middleware.api_key_auth.SessionLocal", return_value=db_session):
+        response = _middleware_client(db_session).get("/", headers={"X-API-Key": "nwu_invalid_key_xyz"})
 
     app.dependency_overrides.clear()
     assert response.status_code == 401
@@ -358,13 +358,8 @@ def test_middleware_enforces_daily_quota(db_session):
 
     app.dependency_overrides[get_db] = override_get_db
 
-    with patch(
-        "app.middleware.api_key_auth.SessionLocal",
-        return_value=db_session,
-    ):
-        db_session.close = lambda: None  # type: ignore[method-assign]
-        test_client = TestClient(app, raise_server_exceptions=False)
-        response = test_client.get("/", headers={"X-API-Key": raw_key})
+    with patch("app.middleware.api_key_auth.SessionLocal", return_value=db_session):
+        response = _middleware_client(db_session).get("/", headers={"X-API-Key": raw_key})
 
     app.dependency_overrides.clear()
     assert response.status_code == 429
@@ -393,13 +388,8 @@ def test_middleware_enterprise_unlimited(db_session):
 
     app.dependency_overrides[get_db] = override_get_db
 
-    with patch(
-        "app.middleware.api_key_auth.SessionLocal",
-        return_value=db_session,
-    ):
-        db_session.close = lambda: None  # type: ignore[method-assign]
-        test_client = TestClient(app, raise_server_exceptions=False)
-        response = test_client.get("/", headers={"X-API-Key": raw_key})
+    with patch("app.middleware.api_key_auth.SessionLocal", return_value=db_session):
+        response = _middleware_client(db_session).get("/", headers={"X-API-Key": raw_key})
 
     app.dependency_overrides.clear()
     # Should NOT be rate-limited
