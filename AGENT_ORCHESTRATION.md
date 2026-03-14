@@ -33,6 +33,7 @@ The NWU Protocol now includes a full-scale multi-agent orchestration system that
 ## Agent Types
 
 ### 1. Master Agent (God Bot)
+
 - **Role**: Top-level orchestrator
 - **Capabilities**:
   - Spawns and manages all other agents
@@ -43,6 +44,7 @@ The NWU Protocol now includes a full-scale multi-agent orchestration system that
 - **Spawned By**: Orchestrator on initialization
 
 ### 2. Verifier Agent
+
 - **Role**: Verifies contributions (code, datasets, documents)
 - **Capabilities**:
   - AI-powered verification using GPT-4
@@ -52,6 +54,7 @@ The NWU Protocol now includes a full-scale multi-agent orchestration system that
 - **Spawned By**: Master Agent or Orchestrator
 
 ### 3. Analyzer Agent
+
 - **Role**: Analyzes patterns and generates insights
 - **Capabilities**:
   - Trend analysis
@@ -61,6 +64,7 @@ The NWU Protocol now includes a full-scale multi-agent orchestration system that
 - **Spawned By**: Master Agent or Orchestrator
 
 ### 4. Coordinator Agent
+
 - **Role**: Coordinates multiple agents and aggregates results
 - **Capabilities**:
   - Multi-agent coordination
@@ -70,6 +74,7 @@ The NWU Protocol now includes a full-scale multi-agent orchestration system that
 - **Spawned By**: Master Agent or Orchestrator
 
 ### 5. Specialist Agent
+
 - **Role**: Handles domain-specific tasks
 - **Capabilities**: Configurable based on specific needs
 - **Can Spawn**: No
@@ -78,6 +83,7 @@ The NWU Protocol now includes a full-scale multi-agent orchestration system that
 ## API Endpoints
 
 ### Initialize Orchestrator
+
 ```http
 POST /api/v1/agents/initialize
 ```
@@ -85,6 +91,7 @@ POST /api/v1/agents/initialize
 Initializes the orchestrator and spawns the master agent.
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -94,6 +101,7 @@ Initializes the orchestrator and spawns the master agent.
 ```
 
 ### Spawn an Agent
+
 ```http
 POST /api/v1/agents/spawn
 Content-Type: application/json
@@ -109,6 +117,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -118,6 +127,7 @@ Content-Type: application/json
 ```
 
 ### Submit a Task
+
 ```http
 POST /api/v1/agents/tasks
 Content-Type: application/json
@@ -134,6 +144,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -142,11 +153,13 @@ Content-Type: application/json
 ```
 
 ### Get Agent Status
+
 ```http
 GET /api/v1/agents/agents/{agent_id}
 ```
 
 **Response:**
+
 ```json
 {
   "agent_id": "verifier-def67890",
@@ -165,6 +178,7 @@ GET /api/v1/agents/agents/{agent_id}
 ```
 
 ### Get All Agents
+
 ```http
 GET /api/v1/agents/agents
 ```
@@ -172,11 +186,13 @@ GET /api/v1/agents/agents
 Returns status for all active agents.
 
 ### Get Orchestrator Status
+
 ```http
 GET /api/v1/agents/status
 ```
 
 **Response:**
+
 ```json
 {
   "running": true,
@@ -194,11 +210,13 @@ GET /api/v1/agents/status
 ```
 
 ### Stop an Agent
+
 ```http
 DELETE /api/v1/agents/agents/{agent_id}?graceful=true
 ```
 
 ### Shutdown Orchestrator
+
 ```http
 POST /api/v1/agents/shutdown
 ```
@@ -206,11 +224,13 @@ POST /api/v1/agents/shutdown
 Gracefully shuts down all agents and the orchestrator.
 
 ### Configure Auto-scaling
+
 ```http
 PUT /api/v1/agents/config/auto-scaling?enabled=true
 ```
 
 ### Configure Max Agents
+
 ```http
 PUT /api/v1/agents/config/max-agents?max_agents_per_type=10
 ```
@@ -218,26 +238,34 @@ PUT /api/v1/agents/config/max-agents?max_agents_per_type=10
 ## Features
 
 ### 1. Auto-scaling
+
 The orchestrator automatically scales agents based on utilization:
+
 - **Scale Up**: When utilization > 80%, spawn new agents
 - **Scale Down**: When utilization < 20% and > 1 agent, stop idle agents
 - **Checks**: Every 30 seconds
 
 ### 2. Health Monitoring
+
 Continuous health monitoring with automatic recovery:
+
 - **Heartbeat**: Every 10 seconds
 - **Timeout**: 60 seconds
 - **Recovery**: Failed agents are automatically replaced
 
 ### 3. Load Balancing
+
 Tasks are distributed to agents based on:
+
 - Agent capabilities
 - Current load
 - Task requirements
 - Agent health
 
 ### 4. Hierarchical Structure
+
 Agents can form hierarchical relationships:
+
 - Master agents spawn and manage child agents
 - Coordinators can spawn specialist agents
 - Parent-child relationships tracked
@@ -245,11 +273,13 @@ Agents can form hierarchical relationships:
 ## Usage Examples
 
 ### Example 1: Initialize the System
+
 ```bash
 curl -X POST http://localhost:8000/api/v1/agents/initialize
 ```
 
 ### Example 2: Spawn Additional Verifier
+
 ```bash
 curl -X POST http://localhost:8000/api/v1/agents/spawn \
   -H "Content-Type: application/json" \
@@ -260,6 +290,7 @@ curl -X POST http://localhost:8000/api/v1/agents/spawn \
 ```
 
 ### Example 3: Submit Verification Task
+
 ```bash
 curl -X POST http://localhost:8000/api/v1/agents/tasks \
   -H "Content-Type: application/json" \
@@ -275,11 +306,13 @@ curl -X POST http://localhost:8000/api/v1/agents/tasks \
 ```
 
 ### Example 4: Check System Status
+
 ```bash
 curl http://localhost:8000/api/v1/agents/status
 ```
 
 ### Example 5: Monitor Specific Agent
+
 ```bash
 curl http://localhost:8000/api/v1/agents/agents/verifier-abc123
 ```
@@ -296,6 +329,7 @@ The orchestrator integrates seamlessly with the existing NWU Protocol infrastruc
 ## Configuration
 
 ### Environment Variables
+
 ```env
 # Agent Orchestrator Configuration
 AGENT_AUTO_SCALING=true
@@ -305,6 +339,7 @@ AGENT_TASK_TIMEOUT=300
 ```
 
 ### Orchestrator Settings
+
 ```python
 orchestrator.auto_scale_enabled = True
 orchestrator.max_agents_per_type = 10
@@ -315,6 +350,7 @@ orchestrator.task_timeout = 300  # seconds
 ## Monitoring and Metrics
 
 Each agent tracks:
+
 - **Tasks Completed**: Total successful tasks
 - **Tasks Failed**: Total failed tasks
 - **Average Duration**: Mean task execution time
@@ -334,21 +370,25 @@ Each agent tracks:
 ## Troubleshooting
 
 ### Orchestrator Not Starting
+
 - Check that RabbitMQ and Redis are running
 - Verify database connection
 - Check logs for initialization errors
 
 ### Agents Not Spawning
+
 - Check max_agents_per_type limit
 - Verify sufficient system resources
 - Check for initialization failures in logs
 
 ### Tasks Not Being Processed
+
 - Verify orchestrator is running
 - Check that appropriate agent types are available
 - Monitor agent health and status
 
 ### High Error Rate
+
 - Check agent logs for specific errors
 - Verify external service connectivity (IPFS, OpenAI)
 - Monitor system resources

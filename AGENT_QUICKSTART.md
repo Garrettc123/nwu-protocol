@@ -45,13 +45,13 @@ python examples/agent_orchestration_demo.py
 
 ## Agent Types
 
-| Type | Role | Can Spawn | Description |
-|------|------|-----------|-------------|
-| **Master** | God Bot | ✅ Yes | Top-level orchestrator, manages everything |
-| **Verifier** | Verification | ❌ No | AI-powered contribution verification |
-| **Analyzer** | Analysis | ❌ No | Pattern detection and insights |
-| **Coordinator** | Coordination | ✅ Yes | Multi-agent task coordination |
-| **Specialist** | Custom | ❌ No | Domain-specific tasks |
+| Type            | Role         | Can Spawn | Description                                |
+| --------------- | ------------ | --------- | ------------------------------------------ |
+| **Master**      | God Bot      | ✅ Yes    | Top-level orchestrator, manages everything |
+| **Verifier**    | Verification | ❌ No     | AI-powered contribution verification       |
+| **Analyzer**    | Analysis     | ❌ No     | Pattern detection and insights             |
+| **Coordinator** | Coordination | ✅ Yes    | Multi-agent task coordination              |
+| **Specialist**  | Custom       | ❌ No     | Domain-specific tasks                      |
 
 ## API Examples
 
@@ -143,6 +143,7 @@ curl -X PUT "http://localhost:8000/api/v1/agents/config/max-agents?max_agents_pe
 ### View Dashboard
 
 Open the API docs to see all endpoints:
+
 ```
 http://localhost:8000/docs
 ```
@@ -150,6 +151,7 @@ http://localhost:8000/docs
 ### Real-time Metrics
 
 Each agent tracks:
+
 - Tasks completed/failed
 - Average execution time
 - Error count
@@ -259,6 +261,7 @@ docker ps
 ## Support
 
 For issues or questions:
+
 - Check the logs: `backend/logs/`
 - Review documentation: `AGENT_ORCHESTRATION.md`
 - Open an issue on GitHub

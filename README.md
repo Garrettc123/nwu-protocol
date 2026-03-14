@@ -79,6 +79,7 @@ A complete, production-ready platform for submitting code, datasets, and documen
 - ✅ **Metrics Tracking** - Task completion, failures, duration, uptime per agent
 
 **Quick Start:**
+
 ```bash
 # The orchestrator auto-initializes with the backend
 python -m backend.app.main
