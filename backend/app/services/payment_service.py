@@ -553,7 +553,15 @@ class PaymentService:
             if existing.status != "paid":
                 existing.status = "paid"
                 existing.amount_paid = invoice.amount_paid / 100.0
-                existing.paid_at = datetime.fromtimestamp(invoice.status_transitions.paid_at) if invoice.status_transitions and invoice.status_transitions.paid_at else datetime.utcnow()
+                has_paid_at = (
+                    invoice.status_transitions
+                    and invoice.status_transitions.paid_at
+                )
+                existing.paid_at = (
+                    datetime.fromtimestamp(invoice.status_transitions.paid_at)
+                    if has_paid_at
+                    else datetime.utcnow()
+                )
                 db.commit()
             logger.info(f"Invoice {existing.id} already recorded, updated status")
             return

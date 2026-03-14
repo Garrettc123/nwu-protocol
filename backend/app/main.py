@@ -8,20 +8,25 @@ import logging
 from datetime import datetime
 
 from .config import settings
-from .database import get_db, init_db, engine
-from .api import contributions_router, users_router, verifications_router, auth_router, websocket_router, payments_router, referrals_router, business_agents_router, business_tasks_router
+from .database import get_db, init_db, engine, SessionLocal
+from .api import (
+    contributions_router,
+    users_router,
+    verifications_router,
+    auth_router,
+    websocket_router,
+    payments_router,
+    referrals_router,
+    subscriptions_router,
+    business_agents_router,
+    business_tasks_router,
+)
 from .api.halt_process import router as halt_process_router
 from .api.agents import router as agents_router
+from .models import APIKey, Subscription, SubscriptionTier
 from .services import rabbitmq_service, redis_service
 from .services.agent_orchestrator import orchestrator
-
-# Subscription billing router (backend/routers/subscriptions.py)
-import sys
-import os
-_backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if _backend_dir not in sys.path:
-    sys.path.insert(0, _backend_dir)
-from routers.subscriptions import router as subscriptions_router
+from .services.payment_service import payment_service, API_KEY_PREFIX_DISPLAY_LENGTH
 
 # Configure logging
 logging.basicConfig(
@@ -119,13 +124,9 @@ async def api_key_subscription_check(request: Request, call_next):
     """
     api_key_header = request.headers.get("x-api-key")
     if api_key_header:
-        from .database import SessionLocal
-        from .models import APIKey, Subscription, SubscriptionTier
-        from datetime import datetime as _dt
-
         db = SessionLocal()
         try:
-            prefix = api_key_header[:12]
+            prefix = api_key_header[:API_KEY_PREFIX_DISPLAY_LENGTH]
             candidates = (
                 db.query(APIKey)
                 .filter(APIKey.prefix == prefix, APIKey.is_active == True)
@@ -133,16 +134,14 @@ async def api_key_subscription_check(request: Request, call_next):
             )
             matched_key = None
             for candidate in candidates:
-                from .services.payment_service import payment_service as _ps
-                if _ps.verify_hashed_key(api_key_header, candidate.key_hash):
-                    if candidate.expires_at and candidate.expires_at < _dt.utcnow():
+                if payment_service.verify_hashed_key(api_key_header, candidate.key_hash):
+                    if candidate.expires_at and candidate.expires_at < datetime.utcnow():
                         continue
                     matched_key = candidate
                     break
 
             if matched_key is None:
-                from fastapi.responses import JSONResponse as _JR
-                return _JR(
+                return JSONResponse(
                     status_code=401,
                     content={"error": "Invalid or expired API key", "status_code": 401},
                 )
@@ -158,8 +157,7 @@ async def api_key_subscription_check(request: Request, call_next):
                     .first()
                 )
                 if not active_sub:
-                    from fastapi.responses import JSONResponse as _JR
-                    return _JR(
+                    return JSONResponse(
                         status_code=403,
                         content={
                             "error": "Subscription is not active. Please renew your subscription.",

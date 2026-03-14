@@ -72,14 +72,15 @@ def user(db):
 
 
 def _make_subscription(db, user, tier=SubscriptionTier.BASIC, stripe_sub_id="sub_test123"):
+    now = datetime.utcnow()
     subscription = Subscription(
         user_id=user.id,
         tier=tier,
         stripe_subscription_id=stripe_sub_id,
         stripe_customer_id="cus_test123",
         status="active",
-        current_period_start=datetime.utcnow(),
-        current_period_end=datetime.utcnow() + timedelta(days=30),
+        current_period_start=now,
+        current_period_end=now + timedelta(days=30),
         api_key="nwu_testkey123",
         rate_limit=1_000,
         staking_multiplier=1.5,
@@ -135,6 +136,7 @@ def test_invoice_model_creation(db, user):
     """Invoice model stores paid invoice data correctly."""
     subscription = _make_subscription(db, user)
 
+    now = datetime.utcnow()
     invoice = Invoice(
         user_id=user.id,
         subscription_id=subscription.id,
@@ -143,9 +145,9 @@ def test_invoice_model_creation(db, user):
         amount_paid=29.0,
         currency="usd",
         status="paid",
-        period_start=datetime.utcnow() - timedelta(days=30),
-        period_end=datetime.utcnow(),
-        paid_at=datetime.utcnow(),
+        period_start=now - timedelta(days=30),
+        period_end=now,
+        paid_at=now,
     )
     db.add(invoice)
     db.commit()
@@ -164,7 +166,7 @@ def test_invoice_model_creation(db, user):
 
 def test_plan_rate_limits():
     """Verify plan rate limit constants in subscriptions router."""
-    from routers.subscriptions import PLAN_RATE_LIMITS, PLAN_STAKING_MULTIPLIERS
+    from app.subscription_plans import PLAN_RATE_LIMITS, PLAN_STAKING_MULTIPLIERS
 
     assert PLAN_RATE_LIMITS[SubscriptionTier.BASIC] == 1_000
     assert PLAN_RATE_LIMITS[SubscriptionTier.PRO] == 10_000
@@ -173,7 +175,7 @@ def test_plan_rate_limits():
 
 def test_plan_staking_multipliers():
     """Verify staking multiplier constants in subscriptions router."""
-    from routers.subscriptions import PLAN_STAKING_MULTIPLIERS
+    from app.subscription_plans import PLAN_STAKING_MULTIPLIERS
 
     assert PLAN_STAKING_MULTIPLIERS[SubscriptionTier.BASIC] == pytest.approx(1.5)
     assert PLAN_STAKING_MULTIPLIERS[SubscriptionTier.PRO] == pytest.approx(2.0)
@@ -182,7 +184,7 @@ def test_plan_staking_multipliers():
 
 def test_plan_prices():
     """Verify subscription plan prices: Basic $29, Pro $99, Enterprise $499."""
-    from routers.subscriptions import PLAN_PRICES
+    from app.subscription_plans import PLAN_PRICES
 
     assert PLAN_PRICES[SubscriptionTier.BASIC] == 29
     assert PLAN_PRICES[SubscriptionTier.PRO] == 99
@@ -226,8 +228,9 @@ async def test_upgrade_subscription_basic_to_pro(db, user):
     subscription = _make_subscription(db, user, tier=SubscriptionTier.BASIC)
     service = PaymentService()
 
-    now_ts = int(datetime.utcnow().timestamp())
-    end_ts = int((datetime.utcnow() + timedelta(days=30)).timestamp())
+    now = datetime.utcnow()
+    now_ts = int(now.timestamp())
+    end_ts = int((now + timedelta(days=30)).timestamp())
 
     # Stripe SDK objects support attribute access; use SimpleNamespace for the mock
     from types import SimpleNamespace
@@ -272,7 +275,8 @@ async def test_webhook_invoice_paid_creates_invoice_record(db, user):
     subscription = _make_subscription(db, user)
     service = PaymentService()
 
-    now_ts = int(datetime.utcnow().timestamp())
+    now = datetime.utcnow()
+    now_ts = int(now.timestamp())
 
     # Build a fake Stripe invoice object
     fake_invoice = MagicMock()
@@ -291,20 +295,15 @@ async def test_webhook_invoice_paid_creates_invoice_record(db, user):
     fake_event.type = "invoice.paid"
     fake_event.data.object = fake_invoice
 
+    from app.config import settings
+
     with patch("stripe.Webhook.construct_event", return_value=fake_event):
         with patch.object(service, "stripe_configured", True):
-            with patch.object(
-                service, "_get_webhook_secret", return_value="whsec_test", create=True
-            ):
-                from unittest.mock import PropertyMock
-                type(service).stripe_configured = PropertyMock(return_value=True)
-                # Temporarily set the webhook secret
-                from app.config import settings
-                original_secret = settings.stripe_webhook_secret
+            original_secret = settings.stripe_webhook_secret
+            try:
                 settings.stripe_webhook_secret = "whsec_test"
-
                 result = await service.handle_webhook(db, b"payload", "stripe-sig")
-
+            finally:
                 settings.stripe_webhook_secret = original_secret
 
     assert result is True
@@ -322,9 +321,9 @@ async def test_webhook_invoice_paid_creates_invoice_record(db, user):
 
 def test_subscription_status_payload_no_subscription():
     """Status helper returns free tier defaults when no subscription exists."""
-    from routers.subscriptions import _subscription_status_payload
+    from app.subscription_plans import subscription_status_payload
 
-    result = _subscription_status_payload(None)
+    result = subscription_status_payload(None)
 
     assert result["plan"] == "free"
     assert result["status"] == "none"
@@ -336,7 +335,7 @@ def test_subscription_status_payload_no_subscription():
 
 def test_subscription_status_payload_pro_subscription(db, user):
     """Status helper returns PRO tier features for an active PRO subscription."""
-    from routers.subscriptions import _subscription_status_payload
+    from app.subscription_plans import subscription_status_payload
 
     subscription = _make_subscription(
         db, user, tier=SubscriptionTier.PRO, stripe_sub_id="sub_pro_status"
@@ -345,7 +344,7 @@ def test_subscription_status_payload_pro_subscription(db, user):
     subscription.staking_multiplier = 2.0
     db.commit()
 
-    result = _subscription_status_payload(subscription)
+    result = subscription_status_payload(subscription)
 
     assert result["plan"] == "pro"
     assert result["status"] == "active"
