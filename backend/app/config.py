@@ -65,6 +65,9 @@ class Settings(BaseSettings):
     subscription_tier_pro_rate_limit: int = 10000  # requests per day
     subscription_tier_enterprise_rate_limit: int = 100000  # requests per day
 
+    # Admin
+    admin_addresses: str = ""  # Comma-separated list of admin Ethereum addresses (lowercase)
+
     @field_validator('jwt_secret_key', mode='after')
     @classmethod
     def generate_jwt_secret_if_missing(cls, v: Optional[str]) -> str:
