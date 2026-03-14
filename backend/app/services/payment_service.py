@@ -7,7 +7,7 @@ import hashlib
 from typing import Optional, Dict, Any
 from datetime import datetime, timedelta
 from ..config import settings
-from ..models import Subscription, Payment, APIKey, SubscriptionTier, PaymentStatus, User
+from ..models import Subscription, Payment, APIKey, SubscriptionTier, PaymentStatus, User, Invoice
 from sqlalchemy.orm import Session
 # Import passlib for secure hashing
 from passlib.context import CryptContext
@@ -214,6 +214,81 @@ class PaymentService:
             logger.error(f"Failed to cancel subscription: {e}")
             return False
 
+    async def upgrade_subscription(
+        self,
+        db: Session,
+        subscription: Subscription,
+        new_tier: SubscriptionTier,
+        stripe_price_id: str,
+    ) -> Optional[Subscription]:
+        """Prorate and immediately upgrade a subscription to a higher tier.
+
+        Args:
+            db: Database session
+            subscription: Current active Subscription object
+            new_tier: Target SubscriptionTier to upgrade to
+            stripe_price_id: Stripe Price ID for the new plan
+
+        Returns:
+            Updated Subscription or None if the upgrade failed
+        """
+        if not self.stripe_configured:
+            logger.error("Stripe not configured")
+            return None
+
+        try:
+            if not subscription.stripe_subscription_id:
+                logger.error("Subscription has no Stripe subscription ID")
+                return None
+
+            # Retrieve the current Stripe subscription to get the item ID
+            stripe_sub = stripe.Subscription.retrieve(subscription.stripe_subscription_id)
+            item_id = stripe_sub["items"]["data"][0]["id"]
+
+            # Modify in Stripe with proration billed immediately
+            updated_stripe_sub = stripe.Subscription.modify(
+                subscription.stripe_subscription_id,
+                items=[{"id": item_id, "price": stripe_price_id}],
+                proration_behavior="always_invoice",
+                metadata={"tier": new_tier.value},
+            )
+
+            # Determine new plan parameters
+            rate_limits = {
+                SubscriptionTier.FREE: settings.subscription_tier_free_rate_limit,
+                SubscriptionTier.BASIC: 1_000,
+                SubscriptionTier.PRO: settings.subscription_tier_pro_rate_limit,
+                SubscriptionTier.ENTERPRISE: settings.subscription_tier_enterprise_rate_limit,
+            }
+            staking_multipliers = {
+                SubscriptionTier.FREE: 1.0,
+                SubscriptionTier.BASIC: 1.5,
+                SubscriptionTier.PRO: 2.0,
+                SubscriptionTier.ENTERPRISE: 5.0,
+            }
+
+            subscription.tier = new_tier
+            subscription.status = updated_stripe_sub.status
+            subscription.rate_limit = rate_limits.get(new_tier, 100)
+            subscription.staking_multiplier = staking_multipliers.get(new_tier, 1.0)
+            subscription.current_period_start = datetime.fromtimestamp(
+                updated_stripe_sub.current_period_start
+            )
+            subscription.current_period_end = datetime.fromtimestamp(
+                updated_stripe_sub.current_period_end
+            )
+            subscription.cancel_at_period_end = False
+
+            db.commit()
+            db.refresh(subscription)
+            logger.info(f"Upgraded subscription {subscription.id} to {new_tier.value}")
+            return subscription
+
+        except Exception as e:
+            db.rollback()
+            logger.error(f"Failed to upgrade subscription: {e}")
+            return None
+
     async def create_payment_intent(
         self,
         db: Session,
@@ -409,6 +484,8 @@ class PaymentService:
                 await self._handle_payment_succeeded(db, event.data.object)
             elif event.type == "payment_intent.payment_failed":
                 await self._handle_payment_failed(db, event.data.object)
+            elif event.type == "invoice.paid":
+                await self._handle_invoice_paid(db, event.data.object)
             elif event.type == "customer.subscription.updated":
                 await self._handle_subscription_updated(db, event.data.object)
             elif event.type == "customer.subscription.deleted":
@@ -460,6 +537,64 @@ class PaymentService:
             stored_subscription.status = "canceled"
             db.commit()
             logger.info(f"Subscription {stored_subscription.id} canceled")
+
+    async def _handle_invoice_paid(self, db: Session, invoice: Any):
+        """Handle a paid Stripe invoice.
+
+        Records the invoice in the invoices table and ensures the related
+        subscription is marked active.
+        """
+        stripe_invoice_id = invoice.id
+        # Avoid duplicate processing
+        existing = db.query(Invoice).filter(
+            Invoice.stripe_invoice_id == stripe_invoice_id
+        ).first()
+        if existing:
+            if existing.status != "paid":
+                existing.status = "paid"
+                existing.amount_paid = invoice.amount_paid / 100.0
+                existing.paid_at = datetime.fromtimestamp(invoice.status_transitions.paid_at) if invoice.status_transitions and invoice.status_transitions.paid_at else datetime.utcnow()
+                db.commit()
+            logger.info(f"Invoice {existing.id} already recorded, updated status")
+            return
+
+        # Resolve subscription and user from Stripe data
+        stored_subscription = None
+        if invoice.subscription:
+            stored_subscription = db.query(Subscription).filter(
+                Subscription.stripe_subscription_id == invoice.subscription
+            ).first()
+
+        if not stored_subscription:
+            logger.warning(f"Invoice {stripe_invoice_id}: no matching subscription found")
+            return
+
+        paid_at = None
+        if hasattr(invoice, "status_transitions") and invoice.status_transitions and invoice.status_transitions.paid_at:
+            paid_at = datetime.fromtimestamp(invoice.status_transitions.paid_at)
+
+        new_invoice = Invoice(
+            user_id=stored_subscription.user_id,
+            subscription_id=stored_subscription.id,
+            stripe_invoice_id=stripe_invoice_id,
+            amount_due=invoice.amount_due / 100.0,
+            amount_paid=invoice.amount_paid / 100.0,
+            currency=invoice.currency,
+            status="paid",
+            period_start=datetime.fromtimestamp(invoice.period_start) if invoice.period_start else None,
+            period_end=datetime.fromtimestamp(invoice.period_end) if invoice.period_end else None,
+            paid_at=paid_at or datetime.utcnow(),
+        )
+        db.add(new_invoice)
+
+        # Ensure subscription is active
+        if stored_subscription.status != "active":
+            stored_subscription.status = "active"
+
+        db.commit()
+        logger.info(f"Recorded paid invoice {stripe_invoice_id} for subscription {stored_subscription.id}")
+
+
 
 # Global payment service instance
 payment_service = PaymentService()

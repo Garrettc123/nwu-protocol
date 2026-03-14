@@ -74,7 +74,7 @@ def validate_subscription_tier(tier: str) -> SubscriptionTier:
     except KeyError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid tier: {tier}. Must be one of: free, pro, enterprise"
+            detail=f"Invalid tier: {tier}. Must be one of: free, basic, pro, enterprise"
         )
 
 

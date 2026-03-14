@@ -113,6 +113,7 @@ class Reward(Base):
 class SubscriptionTier(enum.Enum):
     """Subscription tier enum."""
     FREE = "free"
+    BASIC = "basic"
     PRO = "pro"
     ENTERPRISE = "enterprise"
 
@@ -141,12 +142,14 @@ class Subscription(Base):
     cancel_at_period_end = Column(Boolean, default=False)
     api_key = Column(String(100), unique=True, nullable=True, index=True)
     rate_limit = Column(Integer, default=100)  # requests per day
+    staking_multiplier = Column(Float, default=1.0)  # staking reward multiplier for tier
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     user = relationship("User", back_populates="subscriptions")
     payments = relationship("Payment", back_populates="subscription")
     usage_records = relationship("UsageRecord", back_populates="subscription")
+    invoices = relationship("Invoice", back_populates="subscription")
 
 
 class Payment(Base):
@@ -185,6 +188,28 @@ class UsageRecord(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     subscription = relationship("Subscription", back_populates="usage_records")
+
+
+class Invoice(Base):
+    """Invoice model for tracking Stripe billing invoices."""
+    __tablename__ = "invoices"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    subscription_id = Column(Integer, ForeignKey("subscriptions.id"), nullable=True, index=True)
+    stripe_invoice_id = Column(String(100), unique=True, nullable=False, index=True)
+    amount_due = Column(Float, nullable=False)
+    amount_paid = Column(Float, default=0.0)
+    currency = Column(String(10), default="usd")
+    status = Column(String(50), default="open")  # open, paid, void, uncollectible
+    period_start = Column(DateTime, nullable=True)
+    period_end = Column(DateTime, nullable=True)
+    paid_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    user = relationship("User")
+    subscription = relationship("Subscription", back_populates="invoices")
 
 
 class APIKey(Base):

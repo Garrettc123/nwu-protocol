@@ -1,6 +1,6 @@
 """Main FastAPI application for NWU Protocol Backend."""
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
@@ -8,12 +8,20 @@ import logging
 from datetime import datetime
 
 from .config import settings
-from .database import init_db, engine
+from .database import get_db, init_db, engine
 from .api import contributions_router, users_router, verifications_router, auth_router, websocket_router, payments_router, referrals_router, business_agents_router, business_tasks_router
 from .api.halt_process import router as halt_process_router
 from .api.agents import router as agents_router
 from .services import rabbitmq_service, redis_service
 from .services.agent_orchestrator import orchestrator
+
+# Subscription billing router (backend/routers/subscriptions.py)
+import sys
+import os
+_backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _backend_dir not in sys.path:
+    sys.path.insert(0, _backend_dir)
+from routers.subscriptions import router as subscriptions_router
 
 # Configure logging
 logging.basicConfig(
@@ -94,6 +102,78 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+@app.middleware("http")
+async def api_key_subscription_check(request: Request, call_next):
+    """Middleware that validates API-key subscription status on protected routes.
+
+    When a request arrives with an ``x-api-key`` header the middleware:
+    1. Looks up the API key in the database.
+    2. Verifies the key is active and not expired.
+    3. Ensures the owning user has a non-canceled subscription (or the key
+       itself belongs to the free tier which is always allowed).
+    4. Rejects the request with **403** if the subscription is not active.
+
+    Routes that do not send an ``x-api-key`` header pass through unchanged so
+    that JWT-authenticated and public endpoints remain unaffected.
+    """
+    api_key_header = request.headers.get("x-api-key")
+    if api_key_header:
+        from .database import SessionLocal
+        from .models import APIKey, Subscription, SubscriptionTier
+        from datetime import datetime as _dt
+
+        db = SessionLocal()
+        try:
+            prefix = api_key_header[:12]
+            candidates = (
+                db.query(APIKey)
+                .filter(APIKey.prefix == prefix, APIKey.is_active == True)
+                .all()
+            )
+            matched_key = None
+            for candidate in candidates:
+                from .services.payment_service import payment_service as _ps
+                if _ps.verify_hashed_key(api_key_header, candidate.key_hash):
+                    if candidate.expires_at and candidate.expires_at < _dt.utcnow():
+                        continue
+                    matched_key = candidate
+                    break
+
+            if matched_key is None:
+                from fastapi.responses import JSONResponse as _JR
+                return _JR(
+                    status_code=401,
+                    content={"error": "Invalid or expired API key", "status_code": 401},
+                )
+
+            # Free-tier keys are always allowed
+            if matched_key.tier != SubscriptionTier.FREE:
+                active_sub = (
+                    db.query(Subscription)
+                    .filter(
+                        Subscription.user_id == matched_key.user_id,
+                        Subscription.status == "active",
+                    )
+                    .first()
+                )
+                if not active_sub:
+                    from fastapi.responses import JSONResponse as _JR
+                    return _JR(
+                        status_code=403,
+                        content={
+                            "error": "Subscription is not active. Please renew your subscription.",
+                            "status_code": 403,
+                        },
+                    )
+        except Exception as e:
+            logger.error(f"API key subscription check failed: {e}")
+        finally:
+            db.close()
+
+    return await call_next(request)
+
+
 # Include routers
 app.include_router(contributions_router)
 app.include_router(users_router)
@@ -106,6 +186,7 @@ app.include_router(halt_process_router)
 app.include_router(agents_router)
 app.include_router(business_agents_router)
 app.include_router(business_tasks_router)
+app.include_router(subscriptions_router)
 
 
 @app.get("/")
