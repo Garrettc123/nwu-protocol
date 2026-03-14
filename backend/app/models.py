@@ -378,6 +378,37 @@ class BusinessTask(Base):
                                   foreign_keys=[agent_id])
 
 
+STAKING_APY = 0.12  # 12% annual percentage yield
+STAKING_LOCK_DAYS = 7  # 7-day lock period after staking
+
+
+class StakingPosition(Base):
+    """Staking position tracking NWU token stakes and accrued yield."""
+    __tablename__ = "staking_positions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    wallet = Column(String(42), unique=True, nullable=False, index=True)
+    staked_amount = Column(Float, nullable=False, default=0.0)
+    staked_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    lock_expires_at = Column(DateTime, nullable=False)
+    accumulated_yield = Column(Float, nullable=False, default=0.0)
+    last_yield_update = Column(DateTime, nullable=False, default=datetime.utcnow)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class YieldEvent(Base):
+    """Record of yield-related events (stake, unstake, claim)."""
+    __tablename__ = "yield_events"
+
+    id = Column(Integer, primary_key=True, index=True)
+    wallet = Column(String(42), nullable=False, index=True)
+    event_type = Column(String(20), nullable=False, index=True)  # stake, unstake, claim
+    amount = Column(Float, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+
 class KnowledgeThread(Base):
     """Knowledge thread management for perplexity integration."""
     __tablename__ = "knowledge_threads"
