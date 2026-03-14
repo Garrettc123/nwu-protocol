@@ -49,6 +49,7 @@ export default function WalletPage() {
   const [loading, setLoading] = useState(true);
   const [claiming, setClaiming] = useState(false);
   const [generatingCode, setGeneratingCode] = useState(false);
+  const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -124,7 +125,16 @@ export default function WalletPage() {
   };
 
   const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text).catch(() => undefined);
+    navigator.clipboard.writeText(text).then(
+      () => {
+        setCopyFeedback('Copied!');
+        setTimeout(() => setCopyFeedback(null), 2000);
+      },
+      () => {
+        setCopyFeedback('Copy failed — please copy manually.');
+        setTimeout(() => setCopyFeedback(null), 3000);
+      },
+    );
   };
 
   if (loading) {
@@ -245,6 +255,9 @@ export default function WalletPage() {
                     Copy Link
                   </button>
                 </div>
+              )}
+              {copyFeedback && (
+                <p className="text-sm mt-2 text-gray-400">{copyFeedback}</p>
               )}
             </div>
 

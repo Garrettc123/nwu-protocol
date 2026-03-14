@@ -25,10 +25,11 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    is_affiliate = Column(Boolean, default=False)
-    nwu_pending_rewards = Column(Float, default=0.0)
-    nwu_claimed_rewards = Column(Float, default=0.0)
+
+    # Affiliate programme fields
+    is_affiliate = Column(Boolean, default=False)          # True when user has 10+ conversions
+    nwu_pending_rewards = Column(Float, default=0.0)       # Unclaimed NWU referral rewards
+    nwu_claimed_rewards = Column(Float, default=0.0)       # Historically claimed NWU rewards
 
     contributions = relationship("Contribution", back_populates="user")
     rewards = relationship("Reward", back_populates="user")

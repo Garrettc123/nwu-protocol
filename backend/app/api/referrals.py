@@ -368,11 +368,6 @@ async def apply_referral_code(
         .first()
     )
     if affiliate_code and referrer:
-        reward_percent = (
-            AFFILIATE_REVENUE_SHARE_PERCENT
-            if referrer.is_affiliate
-            else SUBSCRIPTION_REWARD_PERCENT
-        )
         signup_event = ReferralEvent(
             referral_code_id=affiliate_code.id,
             referee_id=referee.id,
@@ -383,7 +378,7 @@ async def apply_referral_code(
         db.add(signup_event)
         referrer.nwu_pending_rewards = (referrer.nwu_pending_rewards or 0.0) + NWU_REWARD_PER_REFERRAL
 
-        # Check and update affiliate status
+        # Check and update affiliate status using existing conversion count
         completed_conversions = (
             db.query(ReferralEvent)
             .filter(
@@ -396,8 +391,6 @@ async def apply_referral_code(
         ) + 1  # +1 for the event we're about to commit
         if not referrer.is_affiliate and completed_conversions >= AFFILIATE_REFERRAL_THRESHOLD:
             referrer.is_affiliate = True
-    else:
-        reward_percent = SUBSCRIPTION_REWARD_PERCENT
 
     db.commit()
 
