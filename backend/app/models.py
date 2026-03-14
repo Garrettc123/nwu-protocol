@@ -289,6 +289,95 @@ class WorkflowExecution(Base):
     contribution = relationship("Contribution", back_populates="workflow_executions")
 
 
+class BusinessAgentType(enum.Enum):
+    """Business agent type enum."""
+    SALES = "sales"
+    MARKETING = "marketing"
+    OPERATIONS = "operations"
+    FINANCE = "finance"
+    CUSTOMER_SERVICE = "customer_service"
+    RESEARCH = "research"
+    DEVELOPMENT = "development"
+    QA = "qa"
+    HR = "hr"
+    LEGAL = "legal"
+    STRATEGY = "strategy"
+    PROJECT_MANAGEMENT = "project_management"
+
+
+class BusinessAgentStatus(enum.Enum):
+    """Business agent lifecycle status."""
+    IDLE = "idle"
+    ACTIVE = "active"
+    BUSY = "busy"
+    PAUSED = "paused"
+    TERMINATED = "terminated"
+
+
+class BusinessTaskStatus(enum.Enum):
+    """Business task status."""
+    QUEUED = "queued"
+    DELEGATED = "delegated"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
+
+class BusinessAgent(Base):
+    """Business agent model for the Business Cooperation Lead system."""
+    __tablename__ = "business_agents"
+
+    id = Column(Integer, primary_key=True, index=True)
+    agent_id = Column(String(100), unique=True, nullable=False, index=True)
+    agent_type = Column(SQLEnum(BusinessAgentType), nullable=False, index=True)
+    status = Column(SQLEnum(BusinessAgentStatus), nullable=False, default=BusinessAgentStatus.IDLE, index=True)
+    name = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    capabilities = Column(Text, nullable=True)  # JSON array of capability strings
+    config = Column(Text, nullable=True)  # JSON object with agent configuration
+    tasks_completed = Column(Integer, default=0)
+    tasks_failed = Column(Integer, default=0)
+    last_active_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    terminated_at = Column(DateTime, nullable=True)
+
+    tasks = relationship("BusinessTask", back_populates="assigned_agent",
+                         foreign_keys="BusinessTask.agent_id")
+
+
+class BusinessTask(Base):
+    """Business task model for the Business Cooperation Lead system."""
+    __tablename__ = "business_tasks"
+    __table_args__ = (
+        Index('ix_business_tasks_status_priority', 'status', 'priority'),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    task_id = Column(String(100), unique=True, nullable=False, index=True)
+    title = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    task_type = Column(String(100), nullable=False, index=True)
+    required_agent_type = Column(SQLEnum(BusinessAgentType), nullable=True, index=True)
+    agent_id = Column(Integer, ForeignKey("business_agents.id"), nullable=True, index=True)
+    status = Column(SQLEnum(BusinessTaskStatus), nullable=False, default=BusinessTaskStatus.QUEUED, index=True)
+    priority = Column(Integer, default=5, index=True)  # 1 (highest) to 10 (lowest)
+    task_data = Column(Text, nullable=True)  # JSON object with task payload
+    result_data = Column(Text, nullable=True)  # JSON object with task result
+    error_message = Column(Text, nullable=True)
+    retry_count = Column(Integer, default=0)
+    max_retries = Column(Integer, default=3)
+    scheduled_at = Column(DateTime, nullable=True)
+    started_at = Column(DateTime, nullable=True)
+    completed_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    assigned_agent = relationship("BusinessAgent", back_populates="tasks",
+                                  foreign_keys=[agent_id])
+
+
 class KnowledgeThread(Base):
     """Knowledge thread management for perplexity integration."""
     __tablename__ = "knowledge_threads"

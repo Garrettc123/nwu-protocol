@@ -116,6 +116,24 @@ services:
       - ipfs
     restart: unless-stopped
 
+  business-lead:
+    build:
+      context: .
+      dockerfile: Dockerfile.business-lead
+    container_name: nwu-business-lead
+    environment:
+      BACKEND_URL: http://backend:8000
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      MAX_CONCURRENT_AGENTS: ${MAX_CONCURRENT_AGENTS:-20}
+      AGENT_CREATION_ENABLED: ${AGENT_CREATION_ENABLED:-true}
+      AUTO_DELEGATE: ${AUTO_DELEGATE:-true}
+      MAX_CONCURRENT_TASKS: ${MAX_CONCURRENT_TASKS:-10}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    depends_on:
+      - backend
+      - rabbitmq
+    restart: unless-stopped
+
 volumes:
   mongodb_data:
   postgres_data:
