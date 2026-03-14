@@ -41,6 +41,8 @@ Decentralized Intelligence & Verified Truth Protocol - Safeguarding humanity thr
 
 A complete, production-ready platform for submitting code, datasets, and documents that are verified by AI agents and rewarded with blockchain tokens.
 
+**NEW: Multi-Agent Orchestration System** - Full-scale "god bots" that dynamically spawn and manage specialized agents. Master agents can create verifier, analyzer, coordinator, and specialist agents on-demand with auto-scaling, health monitoring, and hierarchical structures. See [AGENT_ORCHESTRATION.md](AGENT_ORCHESTRATION.md) for complete documentation.
+
 ## ✨ Features
 
 ### 🚀 Backend API (FastAPI)
@@ -51,6 +53,9 @@ A complete, production-ready platform for submitting code, datasets, and documen
 - ✅ RabbitMQ message queue for async processing
 - ✅ PostgreSQL database with SQLAlchemy ORM
 - ✅ RESTful API with automatic OpenAPI documentation
+- ✅ **Stripe payment processing for real-world currency**
+- ✅ **Token sales and subscription management**
+- ✅ **Automated payout system for contributors**
 - ✅ **Payment integration with Stripe for subscriptions**
 - ✅ **API key management and rate limiting**
 - ✅ **Three-tier subscription system (Free, Pro, Enterprise)**
@@ -62,6 +67,36 @@ A complete, production-ready platform for submitting code, datasets, and documen
 - ✅ Dataset and document verification
 - ✅ Consensus-based scoring system
 - ✅ RabbitMQ consumer for async task processing
+
+### 🌐 Multi-Agent Orchestration System (NEW!)
+
+- ✅ **Dynamic Agent Spawning** - Create agents on-demand based on workload
+- ✅ **Hierarchical Structure** - Master "god bot" agents spawn and manage children
+- ✅ **Auto-scaling** - Automatically scale agents up/down based on utilization (80%/20% thresholds)
+- ✅ **Self-healing** - Failed agents automatically detected and recovered
+- ✅ **5 Agent Types** - Master, Verifier, Analyzer, Coordinator, Specialist
+- ✅ **Load Balancing** - Intelligent task routing to appropriate agents
+- ✅ **Health Monitoring** - Continuous heartbeat monitoring with 60s timeout
+- ✅ **REST API** - Full control via `/api/v1/agents/*` endpoints
+- ✅ **CLI Tool** - Manage agents from command line with `agent_cli.py`
+- ✅ **Metrics Tracking** - Task completion, failures, duration, uptime per agent
+
+**Quick Start:**
+
+```bash
+# The orchestrator auto-initializes with the backend
+python -m backend.app.main
+
+# Use the CLI
+python agent_cli.py status
+python agent_cli.py spawn verifier
+python agent_cli.py list
+
+# Or run the full demo
+python examples/agent_orchestration_demo.py
+```
+
+See [AGENT_ORCHESTRATION.md](AGENT_ORCHESTRATION.md) for complete documentation and [AGENT_QUICKSTART.md](AGENT_QUICKSTART.md) for quick start guide.
 
 ### 🎨 Frontend (Next.js 14)
 
@@ -77,23 +112,54 @@ A complete, production-ready platform for submitting code, datasets, and documen
 - ✅ Verification Registry for on-chain results
 - ✅ Reward Distribution with quality-based calculations
 - ✅ OpenZeppelin security standards
+- ✅ **Mainnet deployment configuration**
+- ✅ **Production-ready with Etherscan verification**
 
-### 💳 Payment System (Stripe)
+### 💳 Payment Processing (Stripe)
 
 - ✅ Three-tier subscription system (Free, Pro, Enterprise)
+- ✅ Stripe-backed payment intents for one-time token sales
+- ✅ Stripe subscriptions with webhook-driven status updates
+- ✅ Stripe payout support for contributor rewards
 - ✅ Secure API key generation and management
 - ✅ Rate limiting per subscription tier
-- ✅ Payment processing and billing
+- ✅ Payment history and billing records
 - ✅ Usage metering foundation
-- ✅ Webhook integration for real-time updates
+- ✅ Webhook signature verification for real-time updates
+- ✅ JWT-authenticated payment endpoints
 
-**Pricing:**
+**Revenue Streams:**
 
-- **Free**: $0/month - 100 API requests/day
-- **Pro**: $99/month - 10,000 API requests/day + advanced features
-- **Enterprise**: $999/month - 100,000 API requests/day + premium support
+| Stream                  | Description                          | Rate             |
+| ----------------------- | ------------------------------------ | ---------------- |
+| Pro Subscription        | 10K req/day, advanced verification   | $99/month        |
+| Enterprise Subscription | 100K req/day, SLA, dedicated support | $999/month       |
+| Token Sales             | One-time NWU token purchases         | Variable         |
+| API Usage Payouts       | Rewards for verified contributions   | Protocol-defined |
 
-See [PAYMENT_INTEGRATION.md](PAYMENT_INTEGRATION.md) for complete documentation.
+**Payment API Endpoints:**
+
+| Endpoint                                          | Description             |
+| ------------------------------------------------- | ----------------------- |
+| `POST /api/v1/payments/subscriptions/create`      | Create subscription     |
+| `GET  /api/v1/payments/subscriptions/current`     | Get active subscription |
+| `POST /api/v1/payments/subscriptions/{id}/cancel` | Cancel subscription     |
+| `POST /api/v1/payments/payment-intent/create`     | One-time payment        |
+| `GET  /api/v1/payments/payments/history`          | Payment history         |
+| `POST /api/v1/payments/api-keys/create`           | Create API key          |
+| `GET  /api/v1/payments/api-keys/list`             | List API keys           |
+| `DELETE /api/v1/payments/api-keys/{id}`           | Revoke API key          |
+| `POST /api/v1/payments/webhook`                   | Stripe webhook handler  |
+| `GET  /api/v1/payments/pricing`                   | Pricing tiers           |
+
+**Quick Stripe Setup:**
+
+```bash
+# Create Stripe products and prices (run once)
+STRIPE_SECRET_KEY=sk_live_... node scripts/setup-stripe-products.js
+```
+
+See [PAYMENT_INTEGRATION.md](PAYMENT_INTEGRATION.md) for complete documentation and [READY_TO_DEPLOY.md](READY_TO_DEPLOY.md) for production checklist.
 
 ## 🔧 CI/CD & Automation
 
@@ -124,6 +190,7 @@ The project includes comprehensive GitHub Actions workflows for continuous integ
 - **Universal CI/CD** (`ci-cd.yml`) - Auto-detecting pipeline for Python, Node.js, and Docker environments
 - **FastAPI Entrypoint Verification** (`fastapi-check.yml`) - Validates FastAPI backend configuration
 - **Project Initialization Helper** (`project-init.yml`) - Automated project setup and configuration
+- **PR Merger Tool** (`scripts/pr-merger.sh`) - CLI tool for managing and batch merging pull requests
 
 All workflows are configured with appropriate permissions and security best practices.
 
@@ -247,6 +314,15 @@ See [BACKEND_VERIFICATION.md](BACKEND_VERIFICATION.md) for complete details on w
 - **[Contributing Guide](CONTRIBUTING.md)** - How to contribute effectively
 - **[Security Policy](SECURITY.md)** - Security practices and reporting
 - **[Code of Conduct](CODE_OF_CONDUCT.md)** - Community guidelines
+
+### Maintainer Tools
+
+- **[PR Merger Guide](PR_MERGER_GUIDE.md)** - Tool for managing and merging multiple pull requests
+  - List open PRs with status
+  - Check merge readiness automatically
+  - Batch merge multiple PRs
+  - Auto-merge all ready PRs
+  - Dry run mode for testing
 
 ### Additional Resources
 
@@ -401,6 +477,10 @@ npx hardhat compile
 npx hardhat test
 npx hardhat node  # Start local blockchain
 npx hardhat run scripts/deploy.js --network localhost
+
+# Mainnet deployment (requires .env — see contracts/.env.example)
+npm run deploy:mainnet   # Deploy to Ethereum mainnet
+npm run verify:mainnet   # Verify contracts on Etherscan
 ```
 
 ## 🏛️ Governance & Quality
@@ -442,14 +522,52 @@ npx hardhat test
 
 ## Deployment
 
+### 💰 Quick Start: Generate Revenue
+
+See [QUICKSTART_REVENUE.md](QUICKSTART_REVENUE.md) for a 30-minute guide to deploy and start generating real-world currency.
+
+### 📖 Deployment Guides
+
+- [Production Deployment](PRODUCTION_DEPLOYMENT.md) - Complete production deployment guide
+- [Payment System](PAYMENT_SYSTEM.md) - Payment integration and API documentation
+- [Deployment Status](DEPLOYMENT_STATUS.md) - Current system status and readiness
+
+### 🚀 Deploy Smart Contracts
+
+```bash
+cd contracts
+npm install
+npm run compile
+npm run deploy:sepolia  # Testnet
+npm run deploy:mainnet  # Production (requires real ETH)
+```
+
+See [READY_TO_DEPLOY.md](READY_TO_DEPLOY.md) for the production deployment checklist (Stripe setup, mainnet contracts, environment configuration).
+
 See [DEPLOYMENT_STATUS.md](DEPLOYMENT_STATUS.md) for detailed deployment instructions.
 
 ## Documentation
 
+- **[💰 Revenue Generation Guide](QUICKSTART_REVENUE.md)** - 30-minute guide to deploy and earn
+- **[🚀 Production Deployment](PRODUCTION_DEPLOYMENT.md)** - Complete deployment guide
+- **[💳 Payment System](PAYMENT_SYSTEM.md)** - Payment integration documentation
 - [Architecture](ARCHITECTURE.md) - System architecture and design
 - [Master Control](MASTER_CONTROL.md) - Complete system status and commands
 - [Quickstart](QUICKSTART.md) - Quick setup guide
 - [Contributing](CONTRIBUTING.md) - How to contribute
+
+## Revenue Streams
+
+The NWU Protocol generates real-world currency through:
+
+1. **Token Sales** - $0.01 per NWU token
+2. **Subscriptions** - $49-$499/month for API access
+3. **Transaction Fees** - 2.5% on withdrawals
+4. **Verification Services** - Enterprise pricing
+
+**Target Revenue:** $180,000+ in Year 1
+
+See [MONETIZATION.md](MONETIZATION.md) for detailed revenue projections.
 
 ## Project Status
 
@@ -461,6 +579,8 @@ See [DEPLOYMENT_STATUS.md](DEPLOYMENT_STATUS.md) for detailed deployment instruc
 - ✅ Database Models (Complete)
 - ✅ IPFS Integration (Complete)
 - ✅ RabbitMQ Messaging (Complete)
+- ✅ **Payment Processing (Complete - Stripe Integration)**
+- ✅ **Production Deployment Ready**
 - 🔄 Additional testing and documentation
 - 📋 [Project Roadmap](https://github.com/Garrettc123/nwu-protocol/issues/1)
 

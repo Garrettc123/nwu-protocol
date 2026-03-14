@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from typing import Optional, Dict, Any, List
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from backend.app.models import (
+from ..models import (
     Contribution,
     EngagementHistory,
     ProcessIteration,

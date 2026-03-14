@@ -9,6 +9,7 @@ from typing import Dict, Any
 from datetime import datetime, timezone
 
 # Import API routers
+from nwu_protocol.api import contributions, verifications, payments
 from nwu_protocol.api import contributions, verifications, users
 
 # Configure logging
@@ -54,6 +55,7 @@ app.add_middleware(
 # Include routers
 app.include_router(contributions.router)
 app.include_router(verifications.router)
+app.include_router(payments.router)
 app.include_router(users.router)
 
 

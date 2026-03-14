@@ -4,10 +4,10 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any
-from backend.app.database import get_db
-from backend.app.services.halt_process_service import HaltProcessService
-from backend.app.services.engagement_service import EngagementIterationService
-from backend.app.services.workflow_engine import ProgressiveAutomationEngine
+from ..database import get_db
+from ..services.halt_process_service import HaltProcessService
+from ..services.engagement_service import EngagementIterationService
+from ..services.workflow_engine import ProgressiveAutomationEngine
 
 router = APIRouter(prefix="/api/v1/halt-process", tags=["halt-process"])
 

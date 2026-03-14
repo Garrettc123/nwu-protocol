@@ -1,6 +1,7 @@
 """API endpoints for payments and subscriptions."""
 
 from fastapi import APIRouter, Depends, HTTPException, status, Header, Request
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from typing import List, Optional
@@ -10,50 +11,72 @@ from ..database import get_db
 from ..models import User, Subscription, Payment, APIKey, SubscriptionTier
 from ..schemas import UserResponse
 from ..services.payment_service import payment_service
+from ..services.auth_service import auth_service
 from ..utils.db_helpers import get_user_by_address_or_404
-from ..utils.validators import validate_subscription_tier
+from ..utils.validators import validate_subscription_tier, normalize_ethereum_address
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/payments", tags=["payments"])
+security = HTTPBearer()
 
 
-# TODO: Replace with proper JWT-based authentication
-# WARNING: Current implementation is NOT secure for production
-# This is a placeholder that accepts address without verification
-# MUST implement proper authentication before deployment
 async def get_current_user(
-    address: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(get_db)
 ) -> User:
     """
-    Get current user from address.
+    Get current authenticated user from JWT token.
 
-    ⚠️ SECURITY WARNING: This is a placeholder implementation.
-    In production, this MUST verify:
-    - JWT token validity
-    - Wallet signature
-    - Session authentication
+    Verifies JWT token and returns the authenticated user.
 
-    DO NOT use this in production without implementing proper auth!
+    Args:
+        credentials: Bearer token from Authorization header
+        db: Database session
+
+    Returns:
+        Authenticated User object
+
+    Raises:
+        HTTPException: If token is invalid or user not found
     """
+    token = credentials.credentials
+
+    # Verify JWT token
+    payload = auth_service.verify_token(token)
+    if not payload:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # Extract user address from token
+    address = payload.get("sub")
+    if not address:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token payload",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # Normalize and get user
+    address = normalize_ethereum_address(address)
     return get_user_by_address_or_404(db, address)
 
 
 @router.post("/subscriptions/create")
 async def create_subscription(
-    address: str,
     tier: str,
     stripe_price_id: str,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
 ):
     """
-    Create a new subscription for a user.
-    
-    - **address**: User's Ethereum address
+    Create a new subscription for the authenticated user.
+
     - **tier**: Subscription tier (free, pro, enterprise)
     - **stripe_price_id**: Stripe price ID for the subscription
     """
-    user = await get_current_user(address, db)
 
     # Validate tier
     tier_enum = validate_subscription_tier(tier)
@@ -79,13 +102,12 @@ async def create_subscription(
     }
 
 
-@router.get("/subscriptions/{address}")
+@router.get("/subscriptions/current")
 async def get_subscription(
-    address: str,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
 ):
-    """Get user's current subscription."""
-    user = await get_current_user(address, db)
+    """Get authenticated user's current subscription."""
     
     subscription = db.query(Subscription).filter(
         Subscription.user_id == user.id,
@@ -139,19 +161,17 @@ async def cancel_subscription(
 
 @router.post("/payment-intent/create")
 async def create_payment_intent(
-    address: str,
     amount: float,
     description: Optional[str] = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
 ):
     """
     Create a payment intent for one-time payments.
-    
-    - **address**: User's Ethereum address
+
     - **amount**: Amount in USD
     - **description**: Optional payment description
     """
-    user = await get_current_user(address, db)
     
     intent = await payment_service.create_payment_intent(
         db, user, amount, "usd", description
@@ -166,15 +186,14 @@ async def create_payment_intent(
     return intent
 
 
-@router.get("/payments/{address}")
+@router.get("/payments/history")
 async def get_payments(
-    address: str,
     skip: int = 0,
     limit: int = 50,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
 ):
-    """Get payment history for a user."""
-    user = await get_current_user(address, db)
+    """Get payment history for authenticated user."""
     
     payments = db.query(Payment).filter(
         Payment.user_id == user.id
@@ -198,19 +217,17 @@ async def get_payments(
 
 @router.post("/api-keys/create")
 async def create_api_key(
-    address: str,
     name: str,
     tier: str = "free",
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
 ):
     """
-    Create an API key for a user.
-    
-    - **address**: User's Ethereum address
+    Create an API key for authenticated user.
+
     - **name**: Name/description for the API key
     - **tier**: Tier level (free, pro, enterprise)
     """
-    user = await get_current_user(address, db)
 
     # Validate tier
     tier_enum = validate_subscription_tier(tier)
@@ -240,13 +257,12 @@ async def create_api_key(
     return api_key
 
 
-@router.get("/api-keys/{address}")
+@router.get("/api-keys/list")
 async def list_api_keys(
-    address: str,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
 ):
-    """List all API keys for a user."""
-    user = await get_current_user(address, db)
+    """List all API keys for authenticated user."""
     
     keys = db.query(APIKey).filter(
         APIKey.user_id == user.id
@@ -272,11 +288,10 @@ async def list_api_keys(
 @router.delete("/api-keys/{key_id}")
 async def revoke_api_key(
     key_id: int,
-    address: str,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
 ):
-    """Revoke an API key."""
-    user = await get_current_user(address, db)
+    """Revoke an API key for authenticated user."""
     
     key = db.query(APIKey).filter(
         APIKey.id == key_id,

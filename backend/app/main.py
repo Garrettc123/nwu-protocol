@@ -9,9 +9,11 @@ from datetime import datetime
 
 from .config import settings
 from .database import init_db, engine
-from .api import contributions_router, users_router, verifications_router, auth_router, websocket_router, payments_router, referrals_router
+from .api import contributions_router, users_router, verifications_router, auth_router, websocket_router, payments_router, referrals_router, business_agents_router, business_tasks_router
 from .api.halt_process import router as halt_process_router
+from .api.agents import router as agents_router
 from .services import rabbitmq_service, redis_service
+from .services.agent_orchestrator import orchestrator
 
 # Configure logging
 logging.basicConfig(
@@ -40,7 +42,14 @@ async def lifespan(app: FastAPI):
         logger.info("Redis connected")
     except Exception as e:
         logger.error(f"Failed to connect to Redis: {e}")
-    
+
+    # Initialize agent orchestrator
+    try:
+        await orchestrator.initialize()
+        logger.info("Agent Orchestrator initialized")
+    except Exception as e:
+        logger.error(f"Failed to initialize Agent Orchestrator: {e}")
+
     yield
     
     # Shutdown
@@ -56,6 +65,13 @@ async def lifespan(app: FastAPI):
         logger.info("Redis disconnected")
     except Exception as e:
         logger.error(f"Error disconnecting Redis: {e}")
+
+    # Shutdown agent orchestrator
+    try:
+        await orchestrator.shutdown()
+        logger.info("Agent Orchestrator shutdown")
+    except Exception as e:
+        logger.error(f"Error shutting down Agent Orchestrator: {e}")
 
 
 # Create FastAPI application
@@ -87,6 +103,9 @@ app.include_router(websocket_router)
 app.include_router(payments_router)
 app.include_router(referrals_router)
 app.include_router(halt_process_router)
+app.include_router(agents_router)
+app.include_router(business_agents_router)
+app.include_router(business_tasks_router)
 
 
 @app.get("/")

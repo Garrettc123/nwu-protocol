@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import Optional, Dict, Any
 from sqlalchemy.orm import Session
-from backend.app.models import Contribution, EngagementHistory, ProcessIteration
+from ..models import Contribution, EngagementHistory, ProcessIteration
 import json
 
 

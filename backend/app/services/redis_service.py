@@ -114,8 +114,8 @@ class RedisService:
             if self.client:
                 await self.client.ping()
                 return True
-        except:
-            pass
+        except Exception as e:
+            logger.debug(f"Redis connection check failed: {e}")
         return False
 
 
