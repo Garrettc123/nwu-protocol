@@ -20,13 +20,15 @@ module.exports = {
       url: 'http://127.0.0.1:8545',
     },
     sepolia: {
-      url: process.env.SEPOLIA_RPC_URL || '',
+      url: process.env.ETHEREUM_RPC_URL || process.env.SEPOLIA_RPC_URL || '',
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      chainId: 11155111,
     },
     mainnet: {
-      url: process.env.MAINNET_RPC_URL || '',
+      url: process.env.ETHEREUM_MAINNET_RPC_URL || '',
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
-      gasPrice: 'auto',
+      chainId: 1,
+              gasPrice: 'auto',
     },
   },
   etherscan: {

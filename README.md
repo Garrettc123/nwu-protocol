@@ -53,6 +53,9 @@ A complete, production-ready platform for submitting code, datasets, and documen
 - ✅ RabbitMQ message queue for async processing
 - ✅ PostgreSQL database with SQLAlchemy ORM
 - ✅ RESTful API with automatic OpenAPI documentation
+- ✅ **Stripe payment processing for real-world currency**
+- ✅ **Token sales and subscription management**
+- ✅ **Automated payout system for contributors**
 - ✅ **Payment integration with Stripe for subscriptions**
 - ✅ **API key management and rate limiting**
 - ✅ **Three-tier subscription system (Free, Pro, Enterprise)**
@@ -109,6 +112,8 @@ See [AGENT_ORCHESTRATION.md](AGENT_ORCHESTRATION.md) for complete documentation 
 - ✅ Verification Registry for on-chain results
 - ✅ Reward Distribution with quality-based calculations
 - ✅ OpenZeppelin security standards
+- ✅ **Mainnet deployment configuration**
+- ✅ **Production-ready with Etherscan verification**
 
 ### 💳 Payment Processing (Stripe)
 
@@ -517,16 +522,48 @@ npx hardhat test
 
 ## Deployment
 
+### 💰 Quick Start: Generate Revenue
+See [QUICKSTART_REVENUE.md](QUICKSTART_REVENUE.md) for a 30-minute guide to deploy and start generating real-world currency.
+
+### 📖 Deployment Guides
+- [Production Deployment](PRODUCTION_DEPLOYMENT.md) - Complete production deployment guide
+- [Payment System](PAYMENT_SYSTEM.md) - Payment integration and API documentation
+- [Deployment Status](DEPLOYMENT_STATUS.md) - Current system status and readiness
+
+### 🚀 Deploy Smart Contracts
+```bash
+cd contracts
+npm install
+npm run compile
+npm run deploy:sepolia  # Testnet
+npm run deploy:mainnet  # Production (requires real ETH)
+```
 See [READY_TO_DEPLOY.md](READY_TO_DEPLOY.md) for the production deployment checklist (Stripe setup, mainnet contracts, environment configuration).
 
 See [DEPLOYMENT_STATUS.md](DEPLOYMENT_STATUS.md) for detailed deployment instructions.
 
 ## Documentation
 
+- **[💰 Revenue Generation Guide](QUICKSTART_REVENUE.md)** - 30-minute guide to deploy and earn
+- **[🚀 Production Deployment](PRODUCTION_DEPLOYMENT.md)** - Complete deployment guide
+- **[💳 Payment System](PAYMENT_SYSTEM.md)** - Payment integration documentation
 - [Architecture](ARCHITECTURE.md) - System architecture and design
 - [Master Control](MASTER_CONTROL.md) - Complete system status and commands
 - [Quickstart](QUICKSTART.md) - Quick setup guide
 - [Contributing](CONTRIBUTING.md) - How to contribute
+
+## Revenue Streams
+
+The NWU Protocol generates real-world currency through:
+
+1. **Token Sales** - $0.01 per NWU token
+2. **Subscriptions** - $49-$499/month for API access
+3. **Transaction Fees** - 2.5% on withdrawals
+4. **Verification Services** - Enterprise pricing
+
+**Target Revenue:** $180,000+ in Year 1
+
+See [MONETIZATION.md](MONETIZATION.md) for detailed revenue projections.
 
 ## Project Status
 
@@ -538,6 +575,8 @@ See [DEPLOYMENT_STATUS.md](DEPLOYMENT_STATUS.md) for detailed deployment instruc
 - ✅ Database Models (Complete)
 - ✅ IPFS Integration (Complete)
 - ✅ RabbitMQ Messaging (Complete)
+- ✅ **Payment Processing (Complete - Stripe Integration)**
+- ✅ **Production Deployment Ready**
 - 🔄 Additional testing and documentation
 - 📋 [Project Roadmap](https://github.com/Garrettc123/nwu-protocol/issues/1)
 
