@@ -35,7 +35,7 @@ const TYPE_LABELS = {
   chore: { label: 'Chores', emoji: '🔧' },
   revert: { label: 'Reverts', emoji: '⏪' },
   security: { label: 'Security', emoji: '🔒' },
-  breaking: { label: 'BREAKING CHANGES', emoji: '💥' }
+  breaking: { label: 'BREAKING CHANGES', emoji: '💥' },
 };
 
 function executeCommand(command) {
@@ -59,20 +59,24 @@ function getCommitsSinceTag(tag) {
   const output = executeCommand(command);
   if (!output) return [];
 
-  return output.split('\n').filter(line => line.trim()).map(line => {
-    const parts = line.split('|||');
-    if (parts.length < 5) return null;
+  return output
+    .split('\n')
+    .filter(line => line.trim())
+    .map(line => {
+      const parts = line.split('|||');
+      if (parts.length < 5) return null;
 
-    const [hash, subject, author, email, date] = parts;
-    return {
-      hash: hash || '',
-      subject: subject || '',
-      body: '',
-      author: author || '',
-      email: email || '',
-      date: date || ''
-    };
-  }).filter(Boolean);
+      const [hash, subject, author, email, date] = parts;
+      return {
+        hash: hash || '',
+        subject: subject || '',
+        body: '',
+        author: author || '',
+        email: email || '',
+        date: date || '',
+      };
+    })
+    .filter(Boolean);
 }
 
 function parseConventionalCommit(commit) {
@@ -90,7 +94,7 @@ function parseConventionalCommit(commit) {
       hash: commit.hash,
       author: commit.author,
       email: commit.email,
-      date: commit.date
+      date: commit.date,
     };
   }
 
@@ -106,7 +110,7 @@ function parseConventionalCommit(commit) {
     hash: commit.hash,
     author: commit.author,
     email: commit.email,
-    date: commit.date
+    date: commit.date,
   };
 }
 
@@ -125,7 +129,7 @@ function categorizeCommits(commits) {
     chore: [],
     revert: [],
     security: [],
-    other: []
+    other: [],
   };
 
   commits.forEach(commit => {
@@ -191,7 +195,7 @@ function generateReleaseNotes(version, tag) {
     'ci',
     'chore',
     'style',
-    'revert'
+    'revert',
   ];
 
   sectionOrder.forEach(type => {
@@ -247,9 +251,7 @@ function updateChangelog(version, releaseNotes) {
   const newEntry = `\n\n## [${version}] - ${date}\n\n${releaseNotes}\n`;
 
   const updatedChangelog =
-    changelog.slice(0, insertPosition) +
-    newEntry +
-    changelog.slice(insertPosition);
+    changelog.slice(0, insertPosition) + newEntry + changelog.slice(insertPosition);
 
   fs.writeFileSync(changelogPath, updatedChangelog);
   console.log(`✅ CHANGELOG.md updated with version ${version}`);
@@ -326,6 +328,8 @@ switch (command) {
     console.log('Usage:');
     console.log('  node generate-release-notes.js generate [version]  - Generate release notes');
     console.log('  node generate-release-notes.js update [version]    - Update CHANGELOG.md');
-    console.log('  node generate-release-notes.js compact             - Generate compact changelog');
+    console.log(
+      '  node generate-release-notes.js compact             - Generate compact changelog'
+    );
     process.exit(1);
 }

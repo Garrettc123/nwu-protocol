@@ -186,6 +186,7 @@ git commit -m "feat(api)!: migrate to new response format"
 ```
 
 **Commit Best Practices:**
+
 - Use imperative mood: "add feature" not "added feature"
 - Keep subject under 50 characters
 - Add body for complex changes (separate with blank line)

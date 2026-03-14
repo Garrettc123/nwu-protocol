@@ -8,12 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
 - Automated Release Notes (RN) generation system
 - CHANGELOG.md file for tracking all changes
 - Conventional commit support for automated categorization
 - Enhanced release workflow with automatic changelog updates
 
 ### Changed
+
 - Release workflow now generates structured release notes automatically
 
 ### Deprecated
@@ -29,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0-alpha] - 2025-12-22
 
 ### Added
+
 - Initial Genesis Release of NWU Protocol
 - Microservices architecture with 5 distinct layers (The Tree)
 - Core Backend (The TRUNK): Contribution Manager, Verification Engine, Reward Calculator
@@ -50,6 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Git hooks for code quality
 
 ### Infrastructure
+
 - Docker containerized deployment (7 orchestrated services)
 - MongoDB for metadata storage
 - RabbitMQ for message bus
@@ -57,6 +61,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GitHub Actions CI/CD
 
 ### Known Limitations
+
 - Testnet only (Sepolia)
 - Limited to Agent-Alpha verifier
 - Web-only interface (no mobile app)

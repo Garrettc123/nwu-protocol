@@ -26,20 +26,20 @@ We use the [Conventional Commits](https://www.conventionalcommits.org/) specific
 
 ### Commit Types
 
-| Type       | Description                                      | Emoji |
-|------------|--------------------------------------------------|-------|
-| `feat`     | A new feature                                    | ✨    |
-| `fix`      | A bug fix                                        | 🐛    |
-| `docs`     | Documentation only changes                       | 📚    |
-| `style`    | Changes that don't affect code meaning           | 💎    |
-| `refactor` | Code change that neither fixes a bug nor adds a feature | ♻️ |
-| `perf`     | Performance improvement                          | ⚡    |
-| `test`     | Adding or correcting tests                       | ✅    |
-| `build`    | Changes to build system or dependencies          | 🔨    |
-| `ci`       | Changes to CI configuration                      | 👷    |
-| `chore`    | Other changes that don't modify src or test files| 🔧    |
-| `revert`   | Reverts a previous commit                        | ⏪    |
-| `security` | Security improvements                            | 🔒    |
+| Type       | Description                                             | Emoji |
+| ---------- | ------------------------------------------------------- | ----- |
+| `feat`     | A new feature                                           | ✨    |
+| `fix`      | A bug fix                                               | 🐛    |
+| `docs`     | Documentation only changes                              | 📚    |
+| `style`    | Changes that don't affect code meaning                  | 💎    |
+| `refactor` | Code change that neither fixes a bug nor adds a feature | ♻️    |
+| `perf`     | Performance improvement                                 | ⚡    |
+| `test`     | Adding or correcting tests                              | ✅    |
+| `build`    | Changes to build system or dependencies                 | 🔨    |
+| `ci`       | Changes to CI configuration                             | 👷    |
+| `chore`    | Other changes that don't modify src or test files       | 🔧    |
+| `revert`   | Reverts a previous commit                               | ⏪    |
+| `security` | Security improvements                                   | 🔒    |
 
 ### Breaking Changes
 
@@ -139,6 +139,7 @@ The automated release workflow runs when:
 5. Click "Run workflow"
 
 The workflow will:
+
 - Generate version number (or use provided version)
 - Generate compact and full release notes
 - Update CHANGELOG.md
@@ -152,12 +153,14 @@ The workflow will:
 ### Step-by-Step Release
 
 1. **Ensure clean state**
+
    ```bash
    git status
    git pull origin main
    ```
 
 2. **Review commits since last release**
+
    ```bash
    ./scripts/release-notes-helper.sh --preview
    ```
@@ -170,11 +173,13 @@ The workflow will:
    - Bug fixes → PATCH
 
 4. **Update CHANGELOG.md**
+
    ```bash
    ./scripts/release-notes-helper.sh --version 1.2.0 --update
    ```
 
 5. **Review and commit**
+
    ```bash
    git add CHANGELOG.md
    git commit -m "docs: Update CHANGELOG.md for v1.2.0"
@@ -192,6 +197,7 @@ The workflow will:
 ### Automated Process
 
 The workflow handles:
+
 - Version management
 - Changelog generation
 - Component building and testing
@@ -210,30 +216,38 @@ The CHANGELOG.md follows the [Keep a Changelog](https://keepachangelog.com/) for
 ## [Unreleased]
 
 ### Added
+
 - New features
 
 ### Changed
+
 - Changes to existing functionality
 
 ### Deprecated
+
 - Soon-to-be removed features
 
 ### Removed
+
 - Removed features
 
 ### Fixed
+
 - Bug fixes
 
 ### Security
+
 - Security improvements
 
 ## [1.2.0] - 2026-03-14
 
 ### ✨ Features
+
 - Feature 1
 - Feature 2
 
 ### 🐛 Bug Fixes
+
 - Fix 1
 - Fix 2
 
@@ -296,6 +310,7 @@ Example:
 ### Examples
 
 ✅ **Good:**
+
 ```
 feat(auth): add OAuth2 support for Google login
 
@@ -307,6 +322,7 @@ Closes #123
 ```
 
 ❌ **Bad:**
+
 ```
 update stuff
 ```
@@ -340,6 +356,7 @@ Follow [Semantic Versioning](https://semver.org/):
 **Issue**: "No changes since last release"
 
 **Solution**:
+
 - Check if you're on the correct branch
 - Verify the last tag with `git tag -l`
 - Ensure commits exist: `git log --oneline`
@@ -349,6 +366,7 @@ Follow [Semantic Versioning](https://semver.org/):
 **Issue**: Permission denied when running scripts
 
 **Solution**:
+
 ```bash
 chmod +x scripts/generate-release-notes.js
 chmod +x scripts/release-notes-helper.sh
@@ -359,6 +377,7 @@ chmod +x scripts/release-notes-helper.sh
 **Issue**: "Node.js is not installed or not in PATH"
 
 **Solution**:
+
 - Install Node.js 18 or later
 - Verify with `node --version`
 
@@ -367,6 +386,7 @@ chmod +x scripts/release-notes-helper.sh
 **Issue**: Can't create or push tags
 
 **Solution**:
+
 ```bash
 # Check existing tags
 git tag -l
@@ -439,6 +459,7 @@ Potential improvements to the automated RN system:
 ## Support
 
 For issues or questions:
+
 - Open an issue on GitHub
 - Review existing release notes for examples
 - Check the troubleshooting section above
