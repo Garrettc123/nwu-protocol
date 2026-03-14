@@ -11,6 +11,7 @@ This document describes all enterprise stack errors fixed for production deploym
 **Problem:** Pydantic and pydantic-settings versions were too low for production compatibility.
 
 **Fix:**
+
 - `pydantic>=2.5.3` → `pydantic>=2.12.5`
 - `pydantic-settings>=2.1.0` → `pydantic-settings>=2.13.1`
 
@@ -19,12 +20,14 @@ This document describes all enterprise stack errors fixed for production deploym
 ## 2. Frontend: Missing `lib/` Utilities
 
 **Files created:**
+
 - `frontend/lib/auth.ts`
 - `frontend/lib/api.ts`
 
 **Problem:** The frontend had no typed auth helpers or API client, causing TypeScript errors on pages that imported from these paths.
 
 **Fix:**
+
 - `frontend/lib/auth.ts` — exports `User`, `AuthState` interfaces plus `getStoredUser`, `storeUser`, `clearUser`, and `getAuthHeaders` helpers for JWT-based auth.
 - `frontend/lib/api.ts` — exports a typed Axios client with `Contribution` and `Verification` interfaces plus `fetchContributions`, `fetchContribution`, `uploadContribution`, and `fetchVerifications` helpers.
 
@@ -53,6 +56,7 @@ This document describes all enterprise stack errors fixed for production deploym
 ## 5. Smart Contracts: OpenZeppelin v5 Import Paths
 
 **Files:**
+
 - `contracts/contracts/NWUToken.sol`
 - `contracts/contracts/VerificationRegistry.sol`
 - `contracts/contracts/RewardDistribution.sol`
@@ -60,6 +64,7 @@ This document describes all enterprise stack errors fixed for production deploym
 **Problem:** OpenZeppelin v5 moved `Pausable` and `ReentrancyGuard` from `@openzeppelin/contracts/security/` to `@openzeppelin/contracts/utils/`. The old paths no longer exist, causing Hardhat compilation to fail.
 
 **Fix (applied to all three contracts):**
+
 - `@openzeppelin/contracts/security/Pausable.sol` → `@openzeppelin/contracts/utils/Pausable.sol`
 - `@openzeppelin/contracts/security/ReentrancyGuard.sol` → `@openzeppelin/contracts/utils/ReentrancyGuard.sol`
 
@@ -80,6 +85,7 @@ tests/test_verification_engine.py   ✅
 ## Frontend Build
 
 The frontend build succeeds with:
+
 - No Google Fonts network dependency
 - Correct `@types/react-dom@^19` typings
 - Typed `lib/auth.ts` and `lib/api.ts` utilities available
