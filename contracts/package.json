@@ -7,11 +7,14 @@
     "test": "hardhat test",
     "deploy:local": "hardhat run scripts/deploy.js --network localhost",
     "deploy:sepolia": "hardhat run scripts/deploy.js --network sepolia",
+    "deploy:mainnet": "hardhat run scripts/deploy-mainnet.js --network mainnet",
+    "verify:mainnet": "hardhat run scripts/verify.js --network mainnet",
     "node": "hardhat node"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^7.0.0",
-    "hardhat": "^3.1.11"
+    "hardhat": "^3.1.11",
+    "dotenv": "^16.4.5"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^5.0.1"
