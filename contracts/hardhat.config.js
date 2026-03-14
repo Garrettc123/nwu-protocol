@@ -28,7 +28,7 @@ module.exports = {
       url: process.env.ETHEREUM_MAINNET_RPC_URL || '',
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
       chainId: 1,
-      gasPrice: 'auto',
+              gasPrice: 'auto',
     },
   },
   etherscan: {

@@ -1,5 +1,57 @@
-# Codex Auto-Fix System
-# All automated PRs require review
+# NWU Protocol Code Owners
+# These users will be automatically requested for review when someone opens a pull request.
+# As per the Governance Framework, all code must be reviewed by designated code owners.
 
+# Global Owners - Review everything
+* @Garrettc123
+
+# Governance & Standards Documents - Require Tiger Team approval
+GOVERNANCE.md @Garrettc123
+STABILITY_MANDATE.md @Garrettc123
+DEFINITION_OF_DONE.md @Garrettc123
+CODING_STANDARDS.md @Garrettc123
+BUILD_STANDARDS.md @Garrettc123
+METRICS_DASHBOARD.md @Garrettc123
+STABILITY_AUDIT_CHECKLIST.md @Garrettc123
+ONBOARDING.md @Garrettc123
+
+# Backend - Backend Lead
+backend/ @Garrettc123
+app.py @Garrettc123
+main.py @Garrettc123
+requirements.txt @Garrettc123
+
+# Frontend - Frontend Lead
+frontend/ @Garrettc123
+src/ @Garrettc123
+public/ @Garrettc123
+package.json @Garrettc123
+tsconfig.json @Garrettc123
+
+# Smart Contracts - Security Lead + Contracts Lead
+contracts/ @Garrettc123
+
+# AI Agents - AI/ML Lead
+agent-alpha/ @Garrettc123
+nwu_protocol/ @Garrettc123
+
+# Infrastructure & CI/CD - DevOps Lead
+.github/workflows/ @Garrettc123
+docker-compose*.yml @Garrettc123
+Dockerfile* @Garrettc123
+.env* @Garrettc123
+
+# Security - Security Lead
+SECURITY.md @Garrettc123
+.github/workflows/defender-for-devops.yml @Garrettc123
+.github/workflows/quality-checks.yml @Garrettc123
+.github/workflows/standards-enforcement.yml @Garrettc123
+
+# Documentation - Technical Writer + Tech Lead
+*.md @Garrettc123
+docs/ @Garrettc123
+
+# Automated Fixes - Require manual review
 .github/workflows/codex-autofix.yml @Garrettc123
 autofix/* @Garrettc123
+

@@ -26,10 +26,15 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
+permissions:
+  contents: read
+
 jobs:
   prepare-release:
     name: Prepare Release
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     outputs:
       version: ${{ steps.version.outputs.version }}
       changelog: ${{ steps.changelog.outputs.changelog }}
@@ -37,7 +42,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      
       - name: Generate version
         id: version
         run: |
@@ -47,7 +51,6 @@ jobs:
             VERSION=$(date +%Y.%m.%d)
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-      
       - name: Generate changelog
         id: changelog
         run: |
@@ -57,44 +60,39 @@ jobs:
     name: Release Backend
     needs: prepare-release
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     if: |
-      github.event.inputs.component == 'all' || 
+      github.event.inputs.component == 'all' ||
       github.event.inputs.component == 'backend' ||
       hashFiles('backend/**') != ''
     steps:
       - uses: actions/checkout@v4
-      
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
           registry-url: 'https://registry.npmjs.org'
           cache: ${{ hashFiles('backend/package-lock.json') != '' && 'npm' || '' }}
-      
       - name: Install dependencies
         run: cd backend && npm install
-      
       - name: Run tests
         run: cd backend && npm test
-      
       - name: Build
         run: cd backend && npm run build
-      
       - name: Update version
         run: cd backend && npm version ${{ needs.prepare-release.outputs.version }} --no-git-tag-version
-      
       - name: Publish to npm
         run: cd backend && npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         continue-on-error: true
-      
       - name: Build Docker image
         run: |
           docker build -t ${{ env.REGISTRY }}/nwu-backend:${{ needs.prepare-release.outputs.version }} \
-                       -t ${{ env.REGISTRY }}/nwu-backend:latest \
-                       ./backend
-      
+            -t ${{ env.REGISTRY }}/nwu-backend:latest \
+            ./backend
       - name: Push Docker image
         run: |
           echo ${{ secrets.GITHUB_TOKEN }} | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
@@ -106,28 +104,26 @@ jobs:
     name: Release Frontend
     needs: prepare-release
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     if: |
-      github.event.inputs.component == 'all' || 
+      github.event.inputs.component == 'all' ||
       github.event.inputs.component == 'frontend' ||
       hashFiles('frontend/**') != ''
     steps:
       - uses: actions/checkout@v4
-      
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: ${{ hashFiles('frontend/package-lock.json') != '' && 'npm' || '' }}
-      
       - name: Install dependencies
         run: cd frontend && npm install
-      
       - name: Run tests
         run: cd frontend && npm test -- --coverage
-      
       - name: Build
         run: cd frontend && npm run build
-      
       - name: Deploy to Vercel
         uses: vercel/action@master
         with:
@@ -135,13 +131,11 @@ jobs:
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         continue-on-error: true
-      
       - name: Build Docker image
         run: |
           docker build -t ${{ env.REGISTRY }}/nwu-frontend:${{ needs.prepare-release.outputs.version }} \
-                       -t ${{ env.REGISTRY }}/nwu-frontend:latest \
-                       ./frontend
-      
+            -t ${{ env.REGISTRY }}/nwu-frontend:latest \
+            ./frontend
       - name: Push Docker image
         run: |
           echo ${{ secrets.GITHUB_TOKEN }} | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
@@ -153,32 +147,28 @@ jobs:
     name: Release Smart Contracts
     needs: prepare-release
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     if: |
-      github.event.inputs.component == 'all' || 
+      github.event.inputs.component == 'all' ||
       github.event.inputs.component == 'contracts' ||
       hashFiles('contracts/**') != ''
     steps:
       - uses: actions/checkout@v4
-      
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
           registry-url: 'https://registry.npmjs.org'
           cache: ${{ hashFiles('contracts/package-lock.json') != '' && 'npm' || '' }}
-      
       - name: Install dependencies
         run: cd contracts && npm install
-      
       - name: Compile contracts
         run: cd contracts && npm run compile
-      
       - name: Run tests
         run: cd contracts && npm test
-      
       - name: Update version
         run: cd contracts && npm version ${{ needs.prepare-release.outputs.version }} --no-git-tag-version
-      
       - name: Publish to npm
         run: cd contracts && npm publish
         env:
@@ -189,10 +179,11 @@ jobs:
     name: Create GitHub Release
     needs: [prepare-release, backend-release, frontend-release, contracts-release]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     if: always()
     steps:
       - uses: actions/checkout@v4
-      
       - name: Create release
         uses: actions/create-release@v1
         env:
@@ -202,18 +193,14 @@ jobs:
           release_name: Release ${{ needs.prepare-release.outputs.version }}
           body: |
             # Release ${{ needs.prepare-release.outputs.version }}
-            
+
             ## Changes
             ${{ needs.prepare-release.outputs.changelog }}
-            
+
             ## Components Released
-            - ✅ Backend
-            - ✅ Frontend  
-            - ✅ Smart Contracts
-            
-            ## Docker Images
-            - `ghcr.io/${{ github.repository }}/nwu-backend:${{ needs.prepare-release.outputs.version }}`
-            - `ghcr.io/${{ github.repository }}/nwu-frontend:${{ needs.prepare-release.outputs.version }}`
+            - Backend
+            - Frontend
+            - Smart Contracts
           draft: false
           prerelease: false
         continue-on-error: true
@@ -222,6 +209,7 @@ jobs:
     name: Notify Release
     needs: [prepare-release, create-release]
     runs-on: ubuntu-latest
+    permissions: {}
     if: always()
     steps:
       - name: Post to Discord
@@ -233,20 +221,19 @@ jobs:
           description: "Version ${{ needs.prepare-release.outputs.version }} is now available!"
           color: 0x28a745
         continue-on-error: true
-      
       - name: Send Slack notification
         uses: slackapi/slack-github-action@v1
         with:
           webhook-url: ${{ secrets.SLACK_WEBHOOK }}
           payload: |
             {
-              "text": "NWU Protocol v${{ needs.prepare-release.outputs.version }} released! 📄",
+              "text": "NWU Protocol v${{ needs.prepare-release.outputs.version }} released!",
               "blocks": [
                 {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "*NWU Protocol Release* \nVersion: `${{ needs.prepare-release.outputs.version }}`\n<${{ github.server_url }}/${{ github.repository }}/releases/tag/v${{ needs.prepare-release.outputs.version }}|View Release>"
+                    "text": "*NWU Protocol Release*\nVersion: `${{ needs.prepare-release.outputs.version }}`\n<${{ github.server_url }}/${{ github.repository }}/releases/tag/v${{ needs.prepare-release.outputs.version }}|View Release>"
                   }
                 }
               ]

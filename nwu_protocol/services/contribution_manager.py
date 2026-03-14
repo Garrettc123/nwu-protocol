@@ -88,10 +88,10 @@ class ContributionManager:
         contributions = list(self._contributions.values())
 
         if submitter:
-            contributions = [c for c in contributions if c.submitter == submitter]
+            contributions = [contribution for contribution in contributions if contribution.submitter == submitter]
 
         if status:
-            contributions = [c for c in contributions if c.status == status]
+            contributions = [contribution for contribution in contributions if contribution.status == status]
 
         # Sort by created_at descending
         contributions.sort(key=lambda x: x.created_at, reverse=True)

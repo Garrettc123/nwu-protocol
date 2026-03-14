@@ -9,6 +9,8 @@ jobs:
   health-check:
     name: System Health & Auto-Healing
     runs-on: ubuntu-latest
+        permissions:
+      contents: write
     
     steps:
       - name: Checkout Code

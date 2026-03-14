@@ -89,8 +89,8 @@ class RewardCalculator:
         quality_bonus = (average_quality / 100) * 0.4
 
         # Reputation bonus (0-0.3)
-        rep_bonus = min(reputation_score / 10, 0.3)
+        reputation_bonus = min(reputation_score / 10, 0.3)
 
-        total_bonus = count_bonus + quality_bonus + rep_bonus
+        total_bonus = count_bonus + quality_bonus + reputation_bonus
 
         return min(total_bonus, 1.0)

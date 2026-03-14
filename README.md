@@ -5,11 +5,43 @@
 [![Microsoft Defender for DevOps](https://github.com/Garrettc123/nwu-protocol/actions/workflows/defender-for-devops.yml/badge.svg)](https://github.com/Garrettc123/nwu-protocol/actions)
 [![codecov](https://codecov.io/gh/Garrettc123/nwu-protocol/branch/main/graph/badge.svg)](https://codecov.io/gh/Garrettc123/nwu-protocol)
 
+## 🎯 Stability & Excellence Initiative
+
+**NWU Protocol operates under a zero-tolerance stability mandate.** We maintain world-class engineering standards with strict governance, comprehensive testing, and security-first practices.
+
+📋 **[Read our Stability Mandate](STABILITY_MANDATE.md)** | 🏛️ **[Governance Framework](GOVERNANCE.md)** | ✅ **[Definition of Done](DEFINITION_OF_DONE.md)**
+
+---
+
+## 🚀 Perfect One-Command Deployment
+
+```bash
+./deploy.sh
+```
+
+**That's it!** The deployment script automatically handles everything:
+
+- ✅ Builds all Docker images
+- ✅ Starts 7 infrastructure services
+- ✅ Runs database migrations
+- ✅ Performs health checks
+- ✅ Displays all service URLs
+
+**Alternative with Make:**
+
+```bash
+make deploy
+```
+
+See [DEPLOY_NOW.md](DEPLOY_NOW.md) for the complete quick-start guide.
+
 ## Overview
 
 Decentralized Intelligence & Verified Truth Protocol - Safeguarding humanity through AI-powered verification and blockchain immutability.
 
-A complete platform for submitting code, datasets, and documents that are verified by AI agents and rewarded with blockchain tokens.
+A complete, production-ready platform for submitting code, datasets, and documents that are verified by AI agents and rewarded with blockchain tokens.
+
+**NEW: Multi-Agent Orchestration System** - Full-scale "god bots" that dynamically spawn and manage specialized agents. Master agents can create verifier, analyzer, coordinator, and specialist agents on-demand with auto-scaling, health monitoring, and hierarchical structures. See [AGENT_ORCHESTRATION.md](AGENT_ORCHESTRATION.md) for complete documentation.
 
 ## ✨ Features
 
@@ -24,6 +56,9 @@ A complete platform for submitting code, datasets, and documents that are verifi
 - ✅ **Stripe payment processing for real-world currency**
 - ✅ **Token sales and subscription management**
 - ✅ **Automated payout system for contributors**
+- ✅ **Payment integration with Stripe for subscriptions**
+- ✅ **API key management and rate limiting**
+- ✅ **Three-tier subscription system (Free, Pro, Enterprise)**
 
 ### 🤖 Agent-Alpha (AI Verification)
 
@@ -32,6 +67,36 @@ A complete platform for submitting code, datasets, and documents that are verifi
 - ✅ Dataset and document verification
 - ✅ Consensus-based scoring system
 - ✅ RabbitMQ consumer for async task processing
+
+### 🌐 Multi-Agent Orchestration System (NEW!)
+
+- ✅ **Dynamic Agent Spawning** - Create agents on-demand based on workload
+- ✅ **Hierarchical Structure** - Master "god bot" agents spawn and manage children
+- ✅ **Auto-scaling** - Automatically scale agents up/down based on utilization (80%/20% thresholds)
+- ✅ **Self-healing** - Failed agents automatically detected and recovered
+- ✅ **5 Agent Types** - Master, Verifier, Analyzer, Coordinator, Specialist
+- ✅ **Load Balancing** - Intelligent task routing to appropriate agents
+- ✅ **Health Monitoring** - Continuous heartbeat monitoring with 60s timeout
+- ✅ **REST API** - Full control via `/api/v1/agents/*` endpoints
+- ✅ **CLI Tool** - Manage agents from command line with `agent_cli.py`
+- ✅ **Metrics Tracking** - Task completion, failures, duration, uptime per agent
+
+**Quick Start:**
+
+```bash
+# The orchestrator auto-initializes with the backend
+python -m backend.app.main
+
+# Use the CLI
+python agent_cli.py status
+python agent_cli.py spawn verifier
+python agent_cli.py list
+
+# Or run the full demo
+python examples/agent_orchestration_demo.py
+```
+
+See [AGENT_ORCHESTRATION.md](AGENT_ORCHESTRATION.md) for complete documentation and [AGENT_QUICKSTART.md](AGENT_QUICKSTART.md) for quick start guide.
 
 ### 🎨 Frontend (Next.js 14)
 
@@ -49,6 +114,52 @@ A complete platform for submitting code, datasets, and documents that are verifi
 - ✅ OpenZeppelin security standards
 - ✅ **Mainnet deployment configuration**
 - ✅ **Production-ready with Etherscan verification**
+
+### 💳 Payment Processing (Stripe)
+
+- ✅ Three-tier subscription system (Free, Pro, Enterprise)
+- ✅ Stripe-backed payment intents for one-time token sales
+- ✅ Stripe subscriptions with webhook-driven status updates
+- ✅ Stripe payout support for contributor rewards
+- ✅ Secure API key generation and management
+- ✅ Rate limiting per subscription tier
+- ✅ Payment history and billing records
+- ✅ Usage metering foundation
+- ✅ Webhook signature verification for real-time updates
+- ✅ JWT-authenticated payment endpoints
+
+**Revenue Streams:**
+
+| Stream                  | Description                          | Rate             |
+| ----------------------- | ------------------------------------ | ---------------- |
+| Pro Subscription        | 10K req/day, advanced verification   | $99/month        |
+| Enterprise Subscription | 100K req/day, SLA, dedicated support | $999/month       |
+| Token Sales             | One-time NWU token purchases         | Variable         |
+| API Usage Payouts       | Rewards for verified contributions   | Protocol-defined |
+
+**Payment API Endpoints:**
+
+| Endpoint                                          | Description             |
+| ------------------------------------------------- | ----------------------- |
+| `POST /api/v1/payments/subscriptions/create`      | Create subscription     |
+| `GET  /api/v1/payments/subscriptions/current`     | Get active subscription |
+| `POST /api/v1/payments/subscriptions/{id}/cancel` | Cancel subscription     |
+| `POST /api/v1/payments/payment-intent/create`     | One-time payment        |
+| `GET  /api/v1/payments/payments/history`          | Payment history         |
+| `POST /api/v1/payments/api-keys/create`           | Create API key          |
+| `GET  /api/v1/payments/api-keys/list`             | List API keys           |
+| `DELETE /api/v1/payments/api-keys/{id}`           | Revoke API key          |
+| `POST /api/v1/payments/webhook`                   | Stripe webhook handler  |
+| `GET  /api/v1/payments/pricing`                   | Pricing tiers           |
+
+**Quick Stripe Setup:**
+
+```bash
+# Create Stripe products and prices (run once)
+STRIPE_SECRET_KEY=sk_live_... node scripts/setup-stripe-products.js
+```
+
+See [PAYMENT_INTEGRATION.md](PAYMENT_INTEGRATION.md) for complete documentation and [READY_TO_DEPLOY.md](READY_TO_DEPLOY.md) for production checklist.
 
 ## 🔧 CI/CD & Automation
 
@@ -79,17 +190,19 @@ The project includes comprehensive GitHub Actions workflows for continuous integ
 - **Universal CI/CD** (`ci-cd.yml`) - Auto-detecting pipeline for Python, Node.js, and Docker environments
 - **FastAPI Entrypoint Verification** (`fastapi-check.yml`) - Validates FastAPI backend configuration
 - **Project Initialization Helper** (`project-init.yml`) - Automated project setup and configuration
+- **PR Merger Tool** (`scripts/pr-merger.sh`) - CLI tool for managing and batch merging pull requests
 
 All workflows are configured with appropriate permissions and security best practices.
 
-## Quick Start
+## 🎯 Quick Start (3 Simple Steps)
 
 ### Prerequisites
 
 - Docker & Docker Compose
-- OpenAI API key (optional for AI verification)
+- Node.js 18+ (for frontend)
+- OpenAI API key (optional, for AI verification)
 
-### 1. Clone and Setup
+### Step 1: Clone and Configure
 
 ```bash
 git clone https://github.com/Garrettc123/nwu-protocol.git
@@ -98,13 +211,30 @@ cp .env.example .env
 # Edit .env and add your OPENAI_API_KEY
 ```
 
-### 2. Start All Services
+### Step 2: Perfect Deployment
 
 ```bash
-docker-compose up -d
+./deploy.sh
 ```
 
-This starts:
+Or use Make:
+
+```bash
+make deploy
+```
+
+### Step 3: Access Your System
+
+The deployment script will display all URLs automatically:
+
+- **Backend API** - http://localhost:8000
+- **API Documentation** - http://localhost:8000/docs
+- **Frontend** - http://localhost:3000 (run `make frontend` in another terminal)
+- **RabbitMQ Management** - http://localhost:15672 (guest/guest)
+
+## 📦 What's Included
+
+This deployment automatically starts:
 
 - **Backend API** - http://localhost:8000
 - **Agent-Alpha** - Background AI verification service
@@ -114,7 +244,94 @@ This starts:
 - **RabbitMQ** - Message queue on port 5672 (Management UI: http://localhost:15672)
 - **IPFS** - Decentralized storage on port 8080
 
-### 3. Access Services
+## 💡 Useful Commands
+
+### Standard Commands
+
+```bash
+make help          # Show all available commands
+make status        # Check service status
+make logs          # View all logs
+make health        # Check system health
+make validate      # Run comprehensive backend validation
+make test-api      # Test all API endpoints
+make test-all      # Full system validation
+make frontend      # Start frontend dev server
+make clean         # Clean up everything
+```
+
+### 🤖 Automation Commands (New!)
+
+```bash
+./scripts/setup-automation.sh   # Install all automation (run once)
+./configure.sh                  # Interactive environment setup
+./test-all.sh                   # Smart test runner with caching
+./test-all.sh --no-cache        # Force run all tests
+./test-all.sh api health        # Run specific test categories
+```
+
+**See [AUTOMATION_GUIDE.md](AUTOMATION_GUIDE.md) for complete automation documentation.**
+
+## 🔍 Backend Verification
+
+All backend services (invisible components) are automatically validated:
+
+```bash
+# Run comprehensive backend validation
+make validate
+
+# Test all API endpoints
+make test-api
+
+# Full validation (infrastructure + API)
+make test-all
+```
+
+See [BACKEND_VERIFICATION.md](BACKEND_VERIFICATION.md) for complete details on what gets tested.
+
+## 📖 Documentation
+
+### Getting Started
+
+- **[Quick Start Guide](DEPLOY_NOW.md)** - Get running in minutes
+- **[Automation Guide](AUTOMATION_GUIDE.md)** - Eliminate repetitive tasks ⚡ **NEW!**
+- **[Onboarding Guide](ONBOARDING.md)** - New to the project? Start here
+- **[Deployment Guide](DEPLOYMENT.md)** - Comprehensive deployment documentation
+- **[API Reference](API_REFERENCE.md)** - Complete API documentation
+
+### Governance & Standards
+
+- **[Governance Framework](GOVERNANCE.md)** - Decision-making, roles, and accountability
+- **[Stability Mandate](STABILITY_MANDATE.md)** - Our commitment to excellence
+- **[Definition of Done](DEFINITION_OF_DONE.md)** - Completion criteria for all work
+- **[Coding Standards](CODING_STANDARDS.md)** - Code style and quality guidelines
+- **[Build Standards](BUILD_STANDARDS.md)** - CI/CD and deployment requirements
+- **[Metrics Dashboard](METRICS_DASHBOARD.md)** - KPIs and performance tracking
+- **[Stability Audit Checklist](STABILITY_AUDIT_CHECKLIST.md)** - Quarterly audit process
+
+### Contributing
+
+- **[Contributing Guide](CONTRIBUTING.md)** - How to contribute effectively
+- **[Security Policy](SECURITY.md)** - Security practices and reporting
+- **[Code of Conduct](CODE_OF_CONDUCT.md)** - Community guidelines
+
+### Maintainer Tools
+
+- **[PR Merger Guide](PR_MERGER_GUIDE.md)** - Tool for managing and merging multiple pull requests
+  - List open PRs with status
+  - Check merge readiness automatically
+  - Batch merge multiple PRs
+  - Auto-merge all ready PRs
+  - Dry run mode for testing
+
+### Additional Resources
+
+- **[Architecture](ARCHITECTURE.md)** - System architecture and design
+- **[Implementation Status](IMPLEMENTATION_COMPLETE.md)** - Implementation checklist
+
+## 🔍 Service Details
+
+### Access Points
 
 - **API Documentation**: http://localhost:8000/docs
 - **Health Check**: http://localhost:8000/health
@@ -260,7 +477,36 @@ npx hardhat compile
 npx hardhat test
 npx hardhat node  # Start local blockchain
 npx hardhat run scripts/deploy.js --network localhost
+
+# Mainnet deployment (requires .env — see contracts/.env.example)
+npm run deploy:mainnet   # Deploy to Ethereum mainnet
+npm run verify:mainnet   # Verify contracts on Etherscan
 ```
+
+## 🏛️ Governance & Quality
+
+NWU Protocol follows a comprehensive governance model to ensure stability and excellence:
+
+- **Tiger Team**: Elite cross-functional squad with authority to enforce standards
+- **Code Owners**: All changes require approval from designated code owners
+- **Quality Gates**: Automated checks enforce coding standards, testing, and security
+- **Metrics-Driven**: KPIs tracked bi-weekly with transparent dashboards
+- **Quarterly Audits**: Regular stability audits to prevent regression
+
+See [Governance Framework](GOVERNANCE.md) for complete details.
+
+## 📊 Our Standards
+
+- ✅ **80%+ Test Coverage** across all components
+- ✅ **Zero Critical Vulnerabilities** in production
+- ✅ **95%+ Deployment Success Rate**
+- ✅ **< 24h Lead Time** from commit to production
+- ✅ **99.9% System Uptime** target
+- ✅ **100% Code Review** requirement
+- ✅ **Comprehensive Security Scanning** in CI/CD
+- ✅ **Signed and Traceable Builds**
+
+View real-time metrics in our [Metrics Dashboard](METRICS_DASHBOARD.md).
 
 ## Testing
 
@@ -292,6 +538,9 @@ npm run compile
 npm run deploy:sepolia  # Testnet
 npm run deploy:mainnet  # Production (requires real ETH)
 ```
+See [READY_TO_DEPLOY.md](READY_TO_DEPLOY.md) for the production deployment checklist (Stripe setup, mainnet contracts, environment configuration).
+
+See [DEPLOYMENT_STATUS.md](DEPLOYMENT_STATUS.md) for detailed deployment instructions.
 
 ## Documentation
 

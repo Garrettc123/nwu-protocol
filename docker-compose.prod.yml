@@ -1,0 +1,180 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:5.0
+    container_name: nwu-mongodb-prod
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_INITDB_DATABASE: nwu_db
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - nwu-network
+
+  postgres:
+    image: postgres:15
+    container_name: nwu-postgres-prod
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-nwu_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: nwu_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-nwu_user}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - nwu-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: nwu-redis-prod
+    restart: always
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "--pass", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - nwu-network
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: nwu-rabbitmq-prod
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-nwu_admin}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - nwu-network
+
+  ipfs:
+    image: ipfs/kubo:latest
+    container_name: nwu-ipfs-prod
+    restart: always
+    ports:
+      - "5001:5001"
+      - "8080:8080"
+    volumes:
+      - ipfs_data:/data/ipfs
+    environment:
+      IPFS_PATH: /data/ipfs
+    networks:
+      - nwu-network
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: nwu-backend-prod
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-nwu_user}:${POSTGRES_PASSWORD}@postgres:5432/nwu_db
+      MONGO_URL: mongodb://${MONGO_USER:-admin}:${MONGO_PASSWORD}@mongodb:27017/nwu_db?authSource=admin
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-nwu_admin}:${RABBITMQ_PASSWORD}@rabbitmq:5672
+      IPFS_HOST: ipfs
+      IPFS_PORT: 5001
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      ENVIRONMENT: production
+      DEBUG: false
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      ipfs:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - nwu-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  agent-alpha:
+    build:
+      context: .
+      dockerfile: Dockerfile.agent
+    container_name: nwu-agent-alpha-prod
+    restart: always
+    environment:
+      BACKEND_URL: http://backend:8000
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-nwu_admin}:${RABBITMQ_PASSWORD}@rabbitmq:5672
+      IPFS_HOST: ipfs
+      IPFS_PORT: 5001
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+    depends_on:
+      backend:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      ipfs:
+        condition: service_started
+    networks:
+      - nwu-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  mongodb_data:
+    driver: local
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  rabbitmq_data:
+    driver: local
+  ipfs_data:
+    driver: local
+
+networks:
+  nwu-network:
+    driver: bridge

@@ -7,6 +7,11 @@ on:
     branches: [main, develop]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+
 jobs:
   # 🔍 Code Quality & Security
   lint-and-security:
@@ -59,8 +64,8 @@ jobs:
         image: mongo:latest
         ports:
           - 27017:27017
-        options: >
-          --health-cmd "mongosh --eval 'db.runCommand(\"ping\")'"
+        options: >-
+          --health-cmd "mongosh --eval 'db.runCommand({ ping: 1 }).ok' --quiet"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -214,7 +219,7 @@ jobs:
       
       - name: Setup Python
         if: steps.check-agents.outputs.has_agents == 'true'
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.11'
       

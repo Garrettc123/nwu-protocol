@@ -9,8 +9,11 @@ from datetime import datetime
 
 from .config import settings
 from .database import init_db, engine
-from .api import contributions_router, users_router, verifications_router
-from .services import rabbitmq_service
+from .api import contributions_router, users_router, verifications_router, auth_router, websocket_router, payments_router, referrals_router, business_agents_router, business_tasks_router
+from .api.halt_process import router as halt_process_router
+from .api.agents import router as agents_router
+from .services import rabbitmq_service, redis_service
+from .services.agent_orchestrator import orchestrator
 
 # Configure logging
 logging.basicConfig(
@@ -34,6 +37,19 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"Failed to connect to RabbitMQ: {e}")
     
+    try:
+        await redis_service.connect()
+        logger.info("Redis connected")
+    except Exception as e:
+        logger.error(f"Failed to connect to Redis: {e}")
+
+    # Initialize agent orchestrator
+    try:
+        await orchestrator.initialize()
+        logger.info("Agent Orchestrator initialized")
+    except Exception as e:
+        logger.error(f"Failed to initialize Agent Orchestrator: {e}")
+
     yield
     
     # Shutdown
@@ -43,6 +59,19 @@ async def lifespan(app: FastAPI):
         logger.info("RabbitMQ disconnected")
     except Exception as e:
         logger.error(f"Error disconnecting RabbitMQ: {e}")
+    
+    try:
+        await redis_service.disconnect()
+        logger.info("Redis disconnected")
+    except Exception as e:
+        logger.error(f"Error disconnecting Redis: {e}")
+
+    # Shutdown agent orchestrator
+    try:
+        await orchestrator.shutdown()
+        logger.info("Agent Orchestrator shutdown")
+    except Exception as e:
+        logger.error(f"Error shutting down Agent Orchestrator: {e}")
 
 
 # Create FastAPI application
@@ -69,6 +98,14 @@ app.add_middleware(
 app.include_router(contributions_router)
 app.include_router(users_router)
 app.include_router(verifications_router)
+app.include_router(auth_router)
+app.include_router(websocket_router)
+app.include_router(payments_router)
+app.include_router(referrals_router)
+app.include_router(halt_process_router)
+app.include_router(agents_router)
+app.include_router(business_agents_router)
+app.include_router(business_tasks_router)
 
 
 @app.get("/")
@@ -104,15 +141,19 @@ async def health_check():
     # Check RabbitMQ
     rabbitmq_healthy = await rabbitmq_service.is_connected()
     
+    # Check Redis
+    redis_healthy = await redis_service.is_connected()
+    
     return {
-        "status": "healthy" if all([db_healthy, ipfs_healthy, rabbitmq_healthy]) else "degraded",
+        "status": "healthy" if all([db_healthy, ipfs_healthy, rabbitmq_healthy, redis_healthy]) else "degraded",
         "service": "nwu-protocol-backend",
         "version": "1.0.0",
         "timestamp": datetime.utcnow().isoformat(),
         "checks": {
             "database": db_healthy,
             "ipfs": ipfs_healthy,
-            "rabbitmq": rabbitmq_healthy
+            "rabbitmq": rabbitmq_healthy,
+            "redis": redis_healthy
         }
     }
 

@@ -3,6 +3,10 @@
 
 name: Auto PR Workflow
 
+permissions:
+  contents: read
+  pull-requests: write
+
 on:
   push:
     branches:

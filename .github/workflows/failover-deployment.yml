@@ -18,6 +18,8 @@ jobs:
   deploy-with-failover:
     name: 🚀 Deploy with Auto-Retry
     runs-on: ubuntu-latest
+        permissions:
+      contents: read
     
     steps:
       - uses: actions/checkout@v4
