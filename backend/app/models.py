@@ -1,12 +1,34 @@
 """Database models for NWU Protocol."""
 
-from sqlalchemy import Column, String, Integer, Float, DateTime, Boolean, Text, ForeignKey, Enum as SQLEnum, Index
+from sqlalchemy import Column, String, Integer, Float, DateTime, Boolean, Text, ForeignKey, Enum as SQLEnum, Index, Date, UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, date
 import enum
 import secrets
 import string
+
+# API Key tier rate limits (requests per day; -1 = unlimited)
+FREE_TIER_DAILY_LIMIT = 100
+PRO_TIER_DAILY_LIMIT = 10_000
+ENTERPRISE_TIER_DAILY_LIMIT = -1  # Unlimited
+
+# Monthly quotas (derived from daily limits × 30 days)
+FREE_TIER_MONTHLY_QUOTA = FREE_TIER_DAILY_LIMIT * 30
+PRO_TIER_MONTHLY_QUOTA = PRO_TIER_DAILY_LIMIT * 30
+ENTERPRISE_TIER_MONTHLY_QUOTA = -1  # Unlimited
+
+TIER_DAILY_LIMITS = {
+    "free": FREE_TIER_DAILY_LIMIT,
+    "pro": PRO_TIER_DAILY_LIMIT,
+    "enterprise": ENTERPRISE_TIER_DAILY_LIMIT,
+}
+
+TIER_MONTHLY_QUOTAS = {
+    "free": FREE_TIER_MONTHLY_QUOTA,
+    "pro": PRO_TIER_MONTHLY_QUOTA,
+    "enterprise": ENTERPRISE_TIER_MONTHLY_QUOTA,
+}
 
 Base = declarative_base()
 
@@ -197,12 +219,33 @@ class APIKey(Base):
     name = Column(String(100), nullable=False)
     prefix = Column(String(20), nullable=False)  # First 12 chars for display
     tier = Column(SQLEnum(SubscriptionTier), nullable=False, default=SubscriptionTier.FREE)
+    rate_limit_per_day = Column(Integer, nullable=False, default=FREE_TIER_DAILY_LIMIT)
+    monthly_quota = Column(Integer, nullable=False, default=FREE_TIER_MONTHLY_QUOTA)
     is_active = Column(Boolean, default=True)
     last_used_at = Column(DateTime, nullable=True)
     expires_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     
     user = relationship("User", back_populates="api_keys")
+    usage_records = relationship("APIKeyUsage", back_populates="api_key", cascade="all, delete-orphan")
+
+
+class APIKeyUsage(Base):
+    """Per-day usage tracking for API keys."""
+    __tablename__ = "api_key_usage"
+    __table_args__ = (
+        UniqueConstraint("api_key_id", "usage_date", name="uq_api_key_usage_date"),
+        Index("ix_api_key_usage_key_date", "api_key_id", "usage_date"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    api_key_id = Column(Integer, ForeignKey("api_keys.id"), nullable=False, index=True)
+    usage_date = Column(Date, nullable=False, index=True)
+    request_count = Column(Integer, default=0, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    api_key = relationship("APIKey", back_populates="usage_records")
 
 
 REFERRAL_CODE_LENGTH = 10
