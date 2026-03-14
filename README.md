@@ -183,7 +183,24 @@ The project includes comprehensive GitHub Actions workflows for continuous integ
 - **Deploy to Production** (`deploy.yml`) - Production deployment pipeline
 - **Failover Deployment System** (`failover-deployment.yml`) - Multi-region failover and disaster recovery
 - **Self-Healing Deployment** (`autofix-deploy.yml`) - Node.js-focused deployment with auto-recovery
-- **Automated Release** (`release.yml`) - Automated version management and release notes generation
+- **Automated Release** (`release.yml`) - Automated version management and release notes generation with conventional commits
+
+**📄 Automated Release Notes System:**
+
+Generate structured release notes automatically from git commits:
+
+```bash
+# Preview release notes
+./scripts/release-notes-helper.sh --preview
+
+# Generate compact changelog
+./scripts/release-notes-helper.sh --compact
+
+# Update CHANGELOG.md
+./scripts/release-notes-helper.sh --version 1.2.0 --update
+```
+
+See [docs/AUTOMATED_RELEASE_NOTES.md](docs/AUTOMATED_RELEASE_NOTES.md) for complete documentation.
 
 ### Project Management
 

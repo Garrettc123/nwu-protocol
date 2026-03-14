@@ -102,8 +102,10 @@ We follow strict coding standards for all languages. See [Coding Standards](CODI
 
 **Commit Messages**
 
-- Use Conventional Commits format
-- Examples: `feat:`, `fix:`, `docs:`, `refactor:`
+- Use [Conventional Commits](https://www.conventionalcommits.org/) format
+- Format: `<type>(<scope>): <subject>`
+- Examples: `feat(auth): add OAuth support`, `fix: resolve memory leak`, `docs: update API guide`
+- See [docs/AUTOMATED_RELEASE_NOTES.md](docs/AUTOMATED_RELEASE_NOTES.md) for detailed guidelines
 
 ## Testing Requirements
 
@@ -152,20 +154,44 @@ npm test -- --coverage
 
 ### 3. Commit Your Changes
 
+Use [Conventional Commits](https://www.conventionalcommits.org/) format for all commits:
+
 ```bash
 git add .
-git commit -m "type: description"
+git commit -m "type(scope): description"
 
-# Commit types:
-# feat: New feature
-# fix: Bug fix
-# docs: Documentation
-# style: Formatting
-# refactor: Code restructuring
-# test: Adding tests
-# chore: Maintenance
-# security: Security fix
+# Commit format: <type>(<scope>): <subject>
+# Types:
+#   feat     - New feature
+#   fix      - Bug fix
+#   docs     - Documentation only
+#   style    - Code style/formatting
+#   refactor - Code refactoring
+#   perf     - Performance improvement
+#   test     - Adding tests
+#   build    - Build system changes
+#   ci       - CI configuration
+#   chore    - Maintenance tasks
+#   security - Security improvements
+#   revert   - Revert previous commit
+
+# Examples:
+git commit -m "feat(auth): add JWT token refresh"
+git commit -m "fix: resolve memory leak in agent"
+git commit -m "docs: update deployment guide"
+git commit -m "refactor(api): simplify error handling"
+
+# Breaking changes - add ! after type:
+git commit -m "feat(api)!: migrate to new response format"
 ```
+
+**Commit Best Practices:**
+- Use imperative mood: "add feature" not "added feature"
+- Keep subject under 50 characters
+- Add body for complex changes (separate with blank line)
+- Reference issues: `Closes #123` or `Fixes #456`
+
+See [docs/AUTOMATED_RELEASE_NOTES.md](docs/AUTOMATED_RELEASE_NOTES.md) for complete commit message guidelines.
 
 ### 4. Pre-PR Checklist
 
@@ -283,6 +309,7 @@ We continuously improve our processes:
 - **[Definition of Done](DEFINITION_OF_DONE.md)** - Completion criteria
 - **[Coding Standards](CODING_STANDARDS.md)** - Code style and quality
 - **[Build Standards](BUILD_STANDARDS.md)** - CI/CD and deployment
+- **[Automated Release Notes](docs/AUTOMATED_RELEASE_NOTES.md)** - Release process and commit guidelines
 - **[Metrics Dashboard](METRICS_DASHBOARD.md)** - KPIs and tracking
 - **[Onboarding Guide](ONBOARDING.md)** - Getting started
 - **[Security Policy](SECURITY.md)** - Security practices
