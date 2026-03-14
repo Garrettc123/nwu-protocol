@@ -45,33 +45,33 @@ REST API (persistent state).
 
 **Key files**:
 
-| File | Purpose |
-|------|---------|
-| `agent-business-lead/app/main.py` | Entry point; RabbitMQ consumer; orchestrator |
-| `agent-business-lead/app/agent_factory.py` | Creates & manages the 12 agent types |
+| File                                          | Purpose                                         |
+| --------------------------------------------- | ----------------------------------------------- |
+| `agent-business-lead/app/main.py`             | Entry point; RabbitMQ consumer; orchestrator    |
+| `agent-business-lead/app/agent_factory.py`    | Creates & manages the 12 agent types            |
 | `agent-business-lead/app/task_coordinator.py` | Priority queue, load balancer, execution engine |
-| `backend/app/api/business_agents.py` | REST endpoints for agents & tasks |
-| `backend/app/models.py` | `BusinessAgent` and `BusinessTask` DB models |
-| `Dockerfile.business-lead` | Container image for the lead agent |
+| `backend/app/api/business_agents.py`          | REST endpoints for agents & tasks               |
+| `backend/app/models.py`                       | `BusinessAgent` and `BusinessTask` DB models    |
+| `Dockerfile.business-lead`                    | Container image for the lead agent              |
 
 ---
 
 ## 12 Specialised Agent Types
 
-| # | Type | `agent_type` value | Domain responsibilities |
-|---|------|--------------------|------------------------|
-| 1 | Sales | `sales` | Lead qualification, pipeline management, deal tracking, forecasting |
-| 2 | Marketing | `marketing` | Campaign creation, content strategy, brand analysis, SEO |
-| 3 | Operations | `operations` | Process optimisation, resource allocation, logistics, KPI tracking |
-| 4 | Finance | `finance` | Budget analysis, forecasting, expense approval, reporting |
-| 5 | Customer Service | `customer_service` | Ticket resolution, escalation, feedback analysis, SLA tracking |
-| 6 | Research | `research` | Market analysis, competitive intelligence, trend detection |
-| 7 | Development | `development` | Feature planning, code review, technical debt, architecture |
-| 8 | QA | `qa` | Test planning, bug triage, quality metrics, regression testing |
-| 9 | HR | `hr` | Recruitment, onboarding, performance reviews, policy management |
-| 10 | Legal | `legal` | Contract review, compliance checks, risk assessment, IP management |
-| 11 | Strategy | `strategy` | OKR planning, partnership evaluation, growth analysis, roadmapping |
-| 12 | Project Management | `project_management` | Sprint planning, risk tracking, stakeholder updates, dependency mgmt |
+| #   | Type               | `agent_type` value   | Domain responsibilities                                              |
+| --- | ------------------ | -------------------- | -------------------------------------------------------------------- |
+| 1   | Sales              | `sales`              | Lead qualification, pipeline management, deal tracking, forecasting  |
+| 2   | Marketing          | `marketing`          | Campaign creation, content strategy, brand analysis, SEO             |
+| 3   | Operations         | `operations`         | Process optimisation, resource allocation, logistics, KPI tracking   |
+| 4   | Finance            | `finance`            | Budget analysis, forecasting, expense approval, reporting            |
+| 5   | Customer Service   | `customer_service`   | Ticket resolution, escalation, feedback analysis, SLA tracking       |
+| 6   | Research           | `research`           | Market analysis, competitive intelligence, trend detection           |
+| 7   | Development        | `development`        | Feature planning, code review, technical debt, architecture          |
+| 8   | QA                 | `qa`                 | Test planning, bug triage, quality metrics, regression testing       |
+| 9   | HR                 | `hr`                 | Recruitment, onboarding, performance reviews, policy management      |
+| 10  | Legal              | `legal`              | Contract review, compliance checks, risk assessment, IP management   |
+| 11  | Strategy           | `strategy`           | OKR planning, partnership evaluation, growth analysis, roadmapping   |
+| 12  | Project Management | `project_management` | Sprint planning, risk tracking, stakeholder updates, dependency mgmt |
 
 ---
 
@@ -79,15 +79,15 @@ REST API (persistent state).
 
 Configure the `business-lead` Docker service via these environment variables:
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `RABBITMQ_URL` | `amqp://guest:guest@rabbitmq:5672` | RabbitMQ AMQP connection URL |
-| `BACKEND_URL` | `http://backend:8000` | NWU Protocol backend base URL |
-| `MAX_CONCURRENT_AGENTS` | `20` | Maximum simultaneous agent instances |
-| `AGENT_CREATION_ENABLED` | `true` | Allow dynamic agent creation at runtime |
-| `AUTO_DELEGATE` | `true` | Automatically dispatch queued tasks to agents |
-| `MAX_CONCURRENT_TASKS` | `10` | Maximum tasks executing concurrently |
-| `LOG_LEVEL` | `INFO` | Python logging level (`DEBUG`, `INFO`, `WARNING`, `ERROR`) |
+| Variable                 | Default                            | Description                                                |
+| ------------------------ | ---------------------------------- | ---------------------------------------------------------- |
+| `RABBITMQ_URL`           | `amqp://guest:guest@rabbitmq:5672` | RabbitMQ AMQP connection URL                               |
+| `BACKEND_URL`            | `http://backend:8000`              | NWU Protocol backend base URL                              |
+| `MAX_CONCURRENT_AGENTS`  | `20`                               | Maximum simultaneous agent instances                       |
+| `AGENT_CREATION_ENABLED` | `true`                             | Allow dynamic agent creation at runtime                    |
+| `AUTO_DELEGATE`          | `true`                             | Automatically dispatch queued tasks to agents              |
+| `MAX_CONCURRENT_TASKS`   | `10`                               | Maximum tasks executing concurrently                       |
+| `LOG_LEVEL`              | `INFO`                             | Python logging level (`DEBUG`, `INFO`, `WARNING`, `ERROR`) |
 
 ---
 
@@ -124,7 +124,7 @@ POST /api/v1/business-agents/
   "name": "Sales Lead Agent",
   "description": "Handles inbound lead qualification",
   "capabilities": ["lead_qualification", "pipeline_management"],
-  "config": {"max_daily_leads": 100}
+  "config": { "max_daily_leads": 100 }
 }
 ```
 
@@ -139,7 +139,7 @@ POST /api/v1/business-agents/
   "name": "Sales Lead Agent",
   "description": "Handles inbound lead qualification",
   "capabilities": ["lead_qualification", "pipeline_management"],
-  "config": {"max_daily_leads": 100},
+  "config": { "max_daily_leads": 100 },
   "tasks_completed": 0,
   "tasks_failed": 0,
   "last_active_at": null,
@@ -157,12 +157,12 @@ GET /api/v1/business-agents/?agent_type=sales&status=idle&skip=0&limit=50
 
 Query parameters:
 
-| Param | Type | Description |
-|-------|------|-------------|
-| `agent_type` | string | Filter by one of the 12 agent types |
-| `status` | string | Filter by `idle`, `active`, `busy`, `paused`, or `terminated` |
-| `skip` | int | Pagination offset (default 0) |
-| `limit` | int | Page size (default 50, max 200) |
+| Param        | Type   | Description                                                   |
+| ------------ | ------ | ------------------------------------------------------------- |
+| `agent_type` | string | Filter by one of the 12 agent types                           |
+| `status`     | string | Filter by `idle`, `active`, `busy`, `paused`, or `terminated` |
+| `skip`       | int    | Pagination offset (default 0)                                 |
+| `limit`      | int    | Page size (default 50, max 200)                               |
 
 ### Get a single agent
 
@@ -239,7 +239,7 @@ POST /api/v1/business-tasks/
   "agent_id": null,
   "status": "queued",
   "priority": 2,
-  "task_data": {"lead_id": "lead-9f2a", "company": "Acme Corp", "lead_score": 78},
+  "task_data": { "lead_id": "lead-9f2a", "company": "Acme Corp", "lead_score": 78 },
   "result_data": null,
   "error_message": null,
   "retry_count": 0,
@@ -277,7 +277,7 @@ PATCH /api/v1/business-tasks/{task_id}
 ```json
 {
   "status": "completed",
-  "result_data": {"score": 92, "next_step": "schedule_demo"}
+  "result_data": { "score": 92, "next_step": "schedule_demo" }
 }
 ```
 
@@ -298,7 +298,7 @@ POST /api/v1/business-tasks/{task_id}/delegate
 **Request body** (JSON):
 
 ```json
-{"agent_id": "business-sales-a3f7b2c1"}
+{ "agent_id": "business-sales-a3f7b2c1" }
 ```
 
 ---
@@ -343,18 +343,18 @@ agent type is inferred from keywords in `task_type`.
 
 ## Priority Queue Levels
 
-| Level | Constant | Meaning |
-|-------|----------|---------|
-| 1 | `PRIORITY_CRITICAL` | Immediate action required |
-| 2 | `PRIORITY_HIGH` | Urgent business impact |
-| 3 | `PRIORITY_ELEVATED` | Time-sensitive |
-| 4 | `PRIORITY_ABOVE_NORMAL` | Important but not urgent |
-| 5 | `PRIORITY_NORMAL` | Default priority |
-| 6 | `PRIORITY_BELOW_NORMAL` | Can wait |
-| 7 | `PRIORITY_LOW` | Low business impact |
-| 8 | `PRIORITY_BACKGROUND` | Batch / overnight processing |
-| 9 | `PRIORITY_DEFERRED` | Deferred until capacity available |
-| 10 | `PRIORITY_IDLE` | Lowest; run only when queue is empty |
+| Level | Constant                | Meaning                              |
+| ----- | ----------------------- | ------------------------------------ |
+| 1     | `PRIORITY_CRITICAL`     | Immediate action required            |
+| 2     | `PRIORITY_HIGH`         | Urgent business impact               |
+| 3     | `PRIORITY_ELEVATED`     | Time-sensitive                       |
+| 4     | `PRIORITY_ABOVE_NORMAL` | Important but not urgent             |
+| 5     | `PRIORITY_NORMAL`       | Default priority                     |
+| 6     | `PRIORITY_BELOW_NORMAL` | Can wait                             |
+| 7     | `PRIORITY_LOW`          | Low business impact                  |
+| 8     | `PRIORITY_BACKGROUND`   | Batch / overnight processing         |
+| 9     | `PRIORITY_DEFERRED`     | Deferred until capacity available    |
+| 10    | `PRIORITY_IDLE`         | Lowest; run only when queue is empty |
 
 ---
 
