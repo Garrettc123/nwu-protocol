@@ -5,6 +5,7 @@
 The PR Merger tool is already installed in the repository. Just ensure you have:
 
 1. **GitHub CLI (gh)**
+
    ```bash
    # macOS
    brew install gh
@@ -75,6 +76,7 @@ make pr-auto-dry
 ## Common Workflows
 
 ### Weekly PR Cleanup
+
 ```bash
 # 1. See what's open
 make pr-list
@@ -87,6 +89,7 @@ make pr-auto
 ```
 
 ### Selective Merge
+
 ```bash
 # Check specific PRs
 make pr-check PR=84
@@ -98,6 +101,7 @@ make pr-batch PRS='84 86 87'
 ```
 
 ### Safe Testing
+
 ```bash
 # Always test first
 DRY_RUN=true ./scripts/pr-merger.sh auto
@@ -109,6 +113,7 @@ DRY_RUN=true ./scripts/pr-merger.sh auto
 ## Merge Readiness Checks
 
 A PR is ready to merge when:
+
 - ✅ Not a draft
 - ✅ No merge conflicts
 - ✅ No changes requested in reviews
@@ -117,6 +122,7 @@ A PR is ready to merge when:
 ## Configuration
 
 Environment variables:
+
 ```bash
 # Custom repository
 GITHUB_REPO_OWNER=myorg GITHUB_REPO_NAME=myrepo ./scripts/pr-merger.sh list
@@ -147,6 +153,7 @@ make help
 ## Full Documentation
 
 For comprehensive documentation, see:
+
 - **[PR_MERGER_GUIDE.md](PR_MERGER_GUIDE.md)** - Complete guide with examples, workflows, and troubleshooting
 - **[README.md](README.md)** - Main project documentation
 
@@ -161,6 +168,7 @@ For comprehensive documentation, see:
 ## Support
 
 For issues or questions:
+
 - Check the [PR_MERGER_GUIDE.md](PR_MERGER_GUIDE.md)
 - Create an issue in the repository
 - Consult GitHub CLI docs: https://cli.github.com/

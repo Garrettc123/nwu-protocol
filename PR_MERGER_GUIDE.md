@@ -23,11 +23,13 @@ The PR Merger script (`scripts/pr-merger.sh`) is designed to help maintainers ma
 The script requires the GitHub CLI tool. Install it if you haven't already:
 
 **macOS:**
+
 ```bash
 brew install gh
 ```
 
 **Linux:**
+
 ```bash
 # Debian/Ubuntu
 curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
@@ -37,6 +39,7 @@ sudo apt install gh
 ```
 
 **Windows:**
+
 ```bash
 winget install --id GitHub.cli
 ```
@@ -44,11 +47,13 @@ winget install --id GitHub.cli
 ### 2. Authentication
 
 Authenticate with GitHub:
+
 ```bash
 gh auth login
 ```
 
 Follow the prompts to authenticate. You'll need:
+
 - A GitHub account with push access to the repository
 - Personal access token or web-based authentication
 
@@ -57,6 +62,7 @@ Follow the prompts to authenticate. You'll need:
 ### Basic Commands
 
 #### List All Open PRs
+
 View all open pull requests with their current status:
 
 ```bash
@@ -64,6 +70,7 @@ View all open pull requests with their current status:
 ```
 
 Output includes:
+
 - PR number and title
 - Author
 - Draft status
@@ -72,6 +79,7 @@ Output includes:
 - Number of status checks
 
 #### Check PR Readiness
+
 Verify if a specific PR is ready to merge:
 
 ```bash
@@ -79,17 +87,20 @@ Verify if a specific PR is ready to merge:
 ```
 
 Example:
+
 ```bash
 ./scripts/pr-merger.sh check 88
 ```
 
 The script checks:
+
 - ✓ PR is not a draft
 - ✓ No merge conflicts
 - ✓ No changes requested in reviews
 - ⚠️ Reviews (informational only, doesn't block)
 
 #### Merge a Single PR
+
 Merge a specific pull request:
 
 ```bash
@@ -97,11 +108,13 @@ Merge a specific pull request:
 ```
 
 Example:
+
 ```bash
 ./scripts/pr-merger.sh merge 88
 ```
 
 #### Batch Merge Multiple PRs
+
 Merge several PRs in one operation:
 
 ```bash
@@ -109,17 +122,20 @@ Merge several PRs in one operation:
 ```
 
 Example:
+
 ```bash
 ./scripts/pr-merger.sh batch 84 86 87 88
 ```
 
 The script will:
+
 1. Check each PR for readiness
 2. Merge ready PRs sequentially
 3. Skip PRs that aren't ready
 4. Provide a summary at the end
 
 #### Auto-Merge All Ready PRs
+
 Automatically find and merge all PRs that are ready:
 
 ```bash
@@ -127,6 +143,7 @@ Automatically find and merge all PRs that are ready:
 ```
 
 This will:
+
 1. Scan all open PRs
 2. Identify those ready to merge
 3. Display the list
@@ -136,6 +153,7 @@ This will:
 ### Advanced Options
 
 #### Dry Run Mode
+
 Test what would happen without actually merging:
 
 ```bash
@@ -143,12 +161,14 @@ DRY_RUN=true ./scripts/pr-merger.sh auto
 ```
 
 Or:
+
 ```bash
 export DRY_RUN=true
 ./scripts/pr-merger.sh merge 88
 ```
 
 #### Custom Merge Method
+
 Choose between different merge strategies:
 
 ```bash
@@ -163,6 +183,7 @@ MERGE_METHOD=rebase ./scripts/pr-merger.sh merge 88
 ```
 
 #### Custom Repository
+
 Work with a different repository:
 
 ```bash
@@ -170,6 +191,7 @@ GITHUB_REPO_OWNER=myorg GITHUB_REPO_NAME=myrepo ./scripts/pr-merger.sh list
 ```
 
 #### Custom Base Branch
+
 Target a different base branch:
 
 ```bash
@@ -182,13 +204,13 @@ BASE_BRANCH=develop ./scripts/pr-merger.sh auto
 
 The script can be configured using environment variables:
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `GITHUB_REPO_OWNER` | Repository owner | `Garrettc123` |
-| `GITHUB_REPO_NAME` | Repository name | `nwu-protocol` |
-| `BASE_BRANCH` | Target base branch | `main` |
-| `DRY_RUN` | Enable dry run mode | `false` |
-| `MERGE_METHOD` | Merge strategy | `squash` |
+| Variable            | Description         | Default        |
+| ------------------- | ------------------- | -------------- |
+| `GITHUB_REPO_OWNER` | Repository owner    | `Garrettc123`  |
+| `GITHUB_REPO_NAME`  | Repository name     | `nwu-protocol` |
+| `BASE_BRANCH`       | Target base branch  | `main`         |
+| `DRY_RUN`           | Enable dry run mode | `false`        |
+| `MERGE_METHOD`      | Merge strategy      | `squash`       |
 
 ### Creating a Configuration File
 
@@ -203,6 +225,7 @@ export MERGE_METHOD=squash
 ```
 
 Then source it before running:
+
 ```bash
 source .pr-merger.env
 ./scripts/pr-merger.sh auto
@@ -259,15 +282,18 @@ DRY_RUN=true ./scripts/pr-merger.sh batch 88 89 90
 A PR is considered "ready to merge" when:
 
 ### ✅ Required Criteria (Blocking)
+
 - PR is not in draft status
 - No merge conflicts with base branch
 - No "changes requested" reviews
 
 ### ⚠️ Optional Criteria (Non-blocking)
+
 - Review approval (warned but not blocked)
 - Passing CI checks (warned but not blocked)
 
 ### ❌ Blocking Issues
+
 - Draft PR
 - Merge conflicts
 - Changes requested
@@ -275,19 +301,25 @@ A PR is considered "ready to merge" when:
 ## Safety Features
 
 ### 1. Pre-Merge Validation
+
 Every merge attempt includes automatic validation:
+
 - Checks PR status
 - Verifies no conflicts
 - Confirms review status
 
 ### 2. Dry Run Mode
+
 Test operations without making changes:
+
 ```bash
 DRY_RUN=true ./scripts/pr-merger.sh auto
 ```
 
 ### 3. User Confirmation
+
 Auto-merge requests confirmation before proceeding:
+
 ```
 Found 3 PRs ready to merge:
   - PR #84
@@ -298,13 +330,17 @@ Do you want to merge these PRs? (y/N)
 ```
 
 ### 4. Sequential Processing
+
 PRs are merged one at a time with delays to avoid:
+
 - API rate limiting
 - Concurrent merge conflicts
 - System overload
 
 ### 5. Error Handling
+
 Failed merges don't stop the batch:
+
 - Continues to next PR
 - Reports failures at end
 - Provides summary statistics
@@ -322,6 +358,7 @@ Failed merges don't stop the batch:
 ### Issue: "PR has merge conflicts"
 
 **Solution:**
+
 1. The PR needs to be updated to resolve conflicts
 2. Have the PR author rebase or merge the base branch
 3. Try again after conflicts are resolved
@@ -329,6 +366,7 @@ Failed merges don't stop the batch:
 ### Issue: "Changes requested in review"
 
 **Solution:**
+
 1. Address the requested changes
 2. Push updates to the PR branch
 3. Request re-review
@@ -337,6 +375,7 @@ Failed merges don't stop the batch:
 ### Issue: "Permission denied"
 
 **Solution:**
+
 1. Verify you have push access to the repository
 2. Check your GitHub token has the correct scopes
 3. Re-authenticate with `gh auth login`
@@ -344,6 +383,7 @@ Failed merges don't stop the batch:
 ### Issue: "API rate limit exceeded"
 
 **Solution:**
+
 1. Wait for rate limit to reset (usually 1 hour)
 2. Reduce batch size
 3. Use authenticated requests (automatic with gh CLI)
@@ -390,7 +430,9 @@ jobs:
 ## Best Practices
 
 ### 1. Review Before Merging
+
 Always review PR content before batch merging:
+
 ```bash
 ./scripts/pr-merger.sh list
 # Review each PR manually
@@ -398,26 +440,34 @@ Always review PR content before batch merging:
 ```
 
 ### 2. Use Dry Run First
+
 Test operations with dry run:
+
 ```bash
 DRY_RUN=true ./scripts/pr-merger.sh auto
 ```
 
 ### 3. Prefer Squash Merges
+
 For cleaner history:
+
 ```bash
 MERGE_METHOD=squash ./scripts/pr-merger.sh auto
 ```
 
 ### 4. Monitor CI Status
+
 Check CI before merging:
+
 ```bash
 ./scripts/pr-merger.sh list
 # Look at "Status Checks" count
 ```
 
 ### 5. Handle Conflicts Promptly
+
 Don't merge PRs with conflicts:
+
 - Address conflicts first
 - Rebase or merge base branch
 - Then retry merge
@@ -464,6 +514,7 @@ To improve the PR merger script:
 ## Support
 
 For issues or questions:
+
 - Create an issue in the repository
 - Tag maintainers for urgent matters
 - Check GitHub CLI docs: https://cli.github.com/
