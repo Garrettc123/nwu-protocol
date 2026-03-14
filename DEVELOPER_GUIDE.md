@@ -3,6 +3,7 @@
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 ```bash
 # Required
 - Python 3.12+
@@ -16,11 +17,13 @@
 ```
 
 ### One-Command Setup
+
 ```bash
 ./deploy.sh
 ```
 
 ### Manual Setup
+
 ```bash
 # 1. Clone and configure
 git clone https://github.com/Garrettc123/nwu-protocol.git
@@ -43,6 +46,7 @@ cd frontend && npm install && npm run dev
 ## 🔐 Authentication Flow
 
 ### 1. Connect Wallet
+
 ```python
 POST /api/v1/auth/connect
 {
@@ -58,12 +62,14 @@ Response:
 ```
 
 ### 2. Sign Message
+
 ```javascript
 // Client-side (Web3)
 const signature = await web3.eth.personal.sign(message, address);
 ```
 
 ### 3. Verify & Get Token
+
 ```python
 POST /api/v1/auth/verify
 {
@@ -82,6 +88,7 @@ Response:
 ```
 
 ### 4. Use Token
+
 ```python
 GET /api/v1/payments/subscriptions/current
 Headers:
@@ -112,6 +119,7 @@ async def get_data(
 ```
 
 ### Add to Main App
+
 ```python
 # backend/app/main.py
 from .api.my_feature import router as my_feature_router
@@ -150,6 +158,7 @@ my_service = MyService()
 ```
 
 ### Export Service
+
 ```python
 # backend/app/services/__init__.py
 from .my_service import my_service, MyService
@@ -178,6 +187,7 @@ class MyModel(Base):
 ```
 
 ### Create Migration
+
 ```bash
 cd backend
 alembic revision --autogenerate -m "Add my_models table"
@@ -211,6 +221,7 @@ async def test_my_service():
 ## 🛠️ Common Tasks
 
 ### Run Tests
+
 ```bash
 # All tests
 cd backend && pytest
@@ -226,6 +237,7 @@ pytest tests/test_my_feature.py::test_my_endpoint -v
 ```
 
 ### Database Operations
+
 ```bash
 # Create migration
 alembic revision --autogenerate -m "Description"
@@ -244,6 +256,7 @@ alembic history
 ```
 
 ### Docker Operations
+
 ```bash
 # Start all services
 docker-compose up -d
@@ -262,6 +275,7 @@ docker-compose up -d --build
 ```
 
 ### Code Quality
+
 ```bash
 # Format code
 black backend/app
@@ -281,12 +295,14 @@ flake8 backend/app
 ### Common Issues
 
 #### Import Errors
+
 ```bash
 # Solution: Install in editable mode
 pip install -e .
 ```
 
 #### Database Connection Failed
+
 ```bash
 # Check if PostgreSQL is running
 docker ps | grep postgres
@@ -296,6 +312,7 @@ psql -h localhost -U nwu_user -d nwu_db
 ```
 
 #### Redis Connection Failed
+
 ```bash
 # Check if Redis is running
 docker ps | grep redis
@@ -305,12 +322,14 @@ redis-cli ping
 ```
 
 #### JWT Token Invalid
+
 ```bash
 # Check if JWT_SECRET_KEY is set consistently
 python -c "from app.config import settings; print(settings.jwt_secret_key)"
 ```
 
 ### Debug Mode
+
 ```python
 # backend/.env
 DEBUG=true
@@ -323,6 +342,7 @@ logging.basicConfig(level=logging.DEBUG)
 ## 📊 Useful Commands
 
 ### Health Checks
+
 ```bash
 # Backend health
 curl http://localhost:8000/health
@@ -335,6 +355,7 @@ open http://localhost:15672
 ```
 
 ### Database Queries
+
 ```python
 # In Python shell
 from app.database import SessionLocal
@@ -346,6 +367,7 @@ print(f"Total users: {len(users)}")
 ```
 
 ### Check Service Status
+
 ```bash
 make status
 # Or
@@ -355,6 +377,7 @@ docker-compose ps
 ## 🔑 Environment Variables
 
 ### Required for Production
+
 ```bash
 JWT_SECRET_KEY="your-256-bit-secret"
 SECRET_KEY="your-256-bit-secret"
@@ -362,6 +385,7 @@ DATABASE_URL="postgresql://user:pass@host/db"
 ```
 
 ### Optional Features
+
 ```bash
 # Stripe Payments
 STRIPE_API_KEY="sk_live_..."
@@ -379,6 +403,7 @@ CONTRACT_ADDRESS="0x..."
 ## 📚 Code Conventions
 
 ### Import Order
+
 ```python
 # 1. Standard library
 import os
@@ -394,6 +419,7 @@ from ..services import auth_service
 ```
 
 ### Naming Conventions
+
 ```python
 # Classes: PascalCase
 class UserManager:
@@ -409,6 +435,7 @@ user_count = 10
 ```
 
 ### Error Handling
+
 ```python
 # Always specify exception type
 try:
@@ -420,6 +447,7 @@ except Exception as e:
 ```
 
 ### Docstrings
+
 ```python
 def my_function(param: str) -> dict:
     """

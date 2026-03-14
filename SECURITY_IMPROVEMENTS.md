@@ -11,6 +11,7 @@ This document outlines the security improvements implemented to address critical
 **Issue**: Payment API endpoints were using placeholder authentication that accepted addresses without verification.
 
 **Fix**:
+
 - Implemented proper JWT-based authentication using Bearer tokens
 - All payment endpoints now require valid JWT tokens in Authorization header
 - Tokens are verified using the `AuthService` with proper signature validation
@@ -21,11 +22,13 @@ This document outlines the security improvements implemented to address critical
   4. Uses JWT token for all authenticated endpoints
 
 **Files Modified**:
+
 - `backend/app/api/payments.py` - Replaced placeholder auth with JWT verification
 - Added `HTTPBearer` security scheme
 - Updated all endpoints to use `Depends(get_current_user)`
 
 **API Changes**:
+
 - Old: `POST /api/v1/payments/subscriptions/create?address=...`
 - New: `POST /api/v1/payments/subscriptions/create` with `Authorization: Bearer <jwt_token>`
 
@@ -34,16 +37,19 @@ This document outlines the security improvements implemented to address critical
 **Issue**: Hardcoded placeholder secrets in configuration (`CHANGE-ME-IN-PRODUCTION-USE-ENV-VARIABLE`)
 
 **Fix**:
+
 - Auto-generate cryptographically secure keys using `secrets.token_urlsafe(32)`
 - Keys are generated at startup if not provided via environment variables
 - Warning logged when auto-generation occurs
 - Proper Pydantic v2 field validators ensure keys are never None
 
 **Files Modified**:
+
 - `backend/app/config.py` - Added field validators for JWT and secret keys
 - Updated to Pydantic v2 patterns (SettingsConfigDict)
 
 **Production Recommendation**:
+
 ```bash
 # Set these environment variables in production:
 export JWT_SECRET_KEY="your-256-bit-secret-key"
@@ -55,10 +61,12 @@ export SECRET_KEY="your-256-bit-secret-key"
 **Issue**: Bare `except:` clauses without exception types masked errors and made debugging difficult.
 
 **Locations Fixed**:
+
 - `backend/app/services/redis_service.py:117` - Connection check
 - `backend/app/services/ipfs_service.py:165` - Connection check
 
 **Fix**:
+
 - Changed to `except Exception as e:`
 - Added proper error logging
 - Prevents catching system exits and keyboard interrupts
@@ -68,6 +76,7 @@ export SECRET_KEY="your-256-bit-secret-key"
 **Issue**: Mixed use of absolute (`from backend.app.*`) and relative (`from ..*`) imports caused inconsistencies.
 
 **Files Fixed**:
+
 - `backend/app/services/engagement_service.py`
 - `backend/app/services/workflow_engine.py`
 - `backend/app/services/halt_process_service.py`
@@ -80,6 +89,7 @@ export SECRET_KEY="your-256-bit-secret-key"
 **Issue**: New services were not exported from `services/__init__.py`
 
 **Fix**: Added exports for:
+
 - `PaymentService` and `payment_service`
 - `EngagementIterationService`
 - `ProgressiveAutomationEngine` and `WorkflowStage`
@@ -105,10 +115,12 @@ export SECRET_KEY="your-256-bit-secret-key"
 ### Environment Variable Security
 
 **Development**:
+
 - Auto-generated secrets with warnings
 - Default database credentials (should be changed)
 
 **Production**:
+
 - MUST set JWT_SECRET_KEY via environment
 - MUST set SECRET_KEY via environment
 - MUST change database credentials
@@ -118,6 +130,7 @@ export SECRET_KEY="your-256-bit-secret-key"
 ### Configuration Validation
 
 The system now:
+
 - ✅ Validates all configuration on startup
 - ✅ Generates secure defaults when safe to do so
 - ✅ Logs warnings for missing production configs
@@ -130,6 +143,7 @@ The system now:
 **Current State**: Example files contain default passwords (`rocket69!`)
 
 **Recommendation**:
+
 ```bash
 # Generate strong passwords:
 export DATABASE_URL="postgresql://user:$(openssl rand -base64 32)@host:5432/db"
@@ -163,6 +177,7 @@ export MONGO_URL="mongodb://user:$(openssl rand -base64 32)@host:27017/db"
 ## Testing
 
 All critical security fixes have been tested:
+
 - ✅ JWT token validation working correctly
 - ✅ Secure key generation functional
 - ✅ Service imports working properly
