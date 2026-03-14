@@ -5,6 +5,7 @@ This guide will get your NWU Protocol deployed and generating real-world currenc
 ## 🎯 Goal
 
 Deploy a fully functional system that:
+
 - ✅ Accepts payments from users via credit card
 - ✅ Sells NWU tokens for real USD
 - ✅ Processes recurring subscriptions
@@ -44,6 +45,7 @@ nano .env  # or use your favorite editor
 ```
 
 **Add these keys to .env:**
+
 ```bash
 # Minimum required for payments
 STRIPE_SECRET_KEY=sk_test_YOUR_KEY
@@ -70,6 +72,7 @@ npm run deploy:sepolia
 ```
 
 **Note:** You'll get some Sepolia test ETH from faucets like:
+
 - https://sepoliafaucet.com
 - https://sepolia-faucet.pk910.de
 
@@ -89,12 +92,14 @@ uvicorn app:app --host 0.0.0.0 --port 8000
 ## ✅ Verify It's Working (2 minutes)
 
 1. **Check API is running:**
+
    ```bash
    curl http://localhost:8000/health
    # Should return: {"status":"healthy","service":"nwu-protocol"}
    ```
 
 2. **Check payment config:**
+
    ```bash
    curl http://localhost:8000/api/v1/payments/config
    # Should return Stripe publishable key and pricing info
@@ -142,9 +147,10 @@ curl -X POST http://localhost:8000/api/v1/payments/create-subscription \
   }'
 ```
 
-**Revenue:** 
+**Revenue:**
+
 - Basic: $49/month
-- Premium: $149/month  
+- Premium: $149/month
 - Enterprise: $499/month
 
 ### Method 3: Transaction Fees
@@ -174,6 +180,7 @@ For production deployment with real money:
    - Update .env with `sk_live_` and `pk_live_` keys
 
 2. **Deploy to Mainnet:**
+
    ```bash
    cd contracts
    npm run deploy:mainnet
@@ -219,6 +226,7 @@ WITHDRAWAL_FEE_PERCENTAGE=2.5
 ```
 
 For subscription prices, update in Stripe dashboard:
+
 1. Products → Create product
 2. Add pricing → Set monthly price
 3. Copy price ID → Add to .env as `STRIPE_PRICE_ID_BASIC`, etc.
@@ -241,18 +249,22 @@ Card: 4000 0000 0000 0002
 ## 🚨 Troubleshooting
 
 ### Payment fails with "No such payment_intent"
+
 - Check Stripe API key is correct in .env
 - Make sure you're using the right mode (test vs live)
 
 ### "Stripe library not available"
+
 - Install: `pip install stripe==8.0.0`
 
 ### Smart contract deployment fails
+
 - Check you have Sepolia ETH (get from faucet)
 - Verify PRIVATE_KEY is set correctly
 - Make sure RPC URL is working
 
 ### Webhook not receiving events
+
 - In test mode, use Stripe CLI: `stripe listen --forward-to localhost:8000/api/v1/payments/webhook`
 - In production, configure webhook in Stripe dashboard
 
@@ -285,6 +297,7 @@ Card: 4000 0000 0000 0002
 ## 🎉 You're Done!
 
 Your NWU Protocol is now:
+
 - ✅ Accepting payments
 - ✅ Processing subscriptions
 - ✅ Generating real revenue

@@ -5,6 +5,7 @@ This file tells you exactly what to do next to get your NWU Protocol deployed an
 ## ✅ What's Already Done
 
 The code is complete and ready! You have:
+
 - ✅ Full Stripe payment integration
 - ✅ 8 payment API endpoints
 - ✅ Smart contracts ready for mainnet
@@ -23,6 +24,7 @@ The code is complete and ready! You have:
 **Time: 15 minutes**
 
 1. **Get Stripe Test Account** (FREE)
+
    ```
    Go to: https://stripe.com
    Sign up (no credit card required for test mode)
@@ -31,13 +33,15 @@ The code is complete and ready! You have:
    ```
 
 2. **Configure Environment**
+
    ```bash
    cd /path/to/nwu-protocol
    cp .env.example .env
    nano .env  # or use your editor
    ```
-   
+
    Add these lines to `.env`:
+
    ```
    STRIPE_SECRET_KEY=sk_test_YOUR_KEY_HERE
    STRIPE_PUBLISHABLE_KEY=pk_test_YOUR_KEY_HERE
@@ -45,19 +49,21 @@ The code is complete and ready! You have:
    ```
 
 3. **Start the Backend**
+
    ```bash
    docker-compose up -d
    # Wait 30 seconds for startup
    ```
 
 4. **Test It Works**
+
    ```bash
    # Check API health
    curl http://localhost:8000/health
-   
+
    # Test payment config
    curl http://localhost:8000/api/v1/payments/config
-   
+
    # Calculate token price
    curl -X POST http://localhost:8000/api/v1/payments/calculate-token-price \
      -H "Content-Type: application/json" \
@@ -65,12 +71,13 @@ The code is complete and ready! You have:
    ```
 
 5. **Setup Subscription Plans**
+
    ```bash
    python scripts/setup_stripe.py
    # This creates Basic, Premium, and Enterprise plans in Stripe
    ```
 
-6. **Test a Payment** 
+6. **Test a Payment**
    ```bash
    # Create a payment intent for 1000 tokens ($10)
    curl -X POST http://localhost:8000/api/v1/payments/create-payment-intent \
@@ -84,6 +91,7 @@ The code is complete and ready! You have:
 **✅ Done! Your test system is running!**
 
 To test the full payment flow, use Stripe test card:
+
 - Card: `4242 4242 4242 4242`
 - Expiry: Any future date
 - CVC: Any 3 digits
@@ -101,28 +109,30 @@ Follow **Option 1** first to test everything, then:
    - Complete business verification
    - Add bank account for payouts
    - Switch to "Live mode"
-   - Get live API keys (sk_live_... and pk_live_...)
+   - Get live API keys (sk*live*... and pk*live*...)
 
 2. **Get Production Infrastructure**
-   
+
    Choose one:
-   
+
    **A) Vercel (Easiest)**
+
    ```bash
    npm i -g vercel
    vercel --prod
    # Add environment variables in Vercel dashboard
    ```
-   
+
    **B) AWS/GCP/Azure**
    - See PRODUCTION_DEPLOYMENT.md for details
-   
+
    **C) Your Own Server**
    - Deploy with docker-compose
    - Configure nginx/SSL
    - Set up domain name
 
 3. **Deploy Smart Contracts to Mainnet**
+
    ```bash
    cd contracts
    npm run deploy:mainnet
@@ -131,14 +141,15 @@ Follow **Option 1** first to test everything, then:
    ```
 
 4. **Update .env with Production Values**
+
    ```bash
    # Use LIVE Stripe keys
    STRIPE_SECRET_KEY=sk_live_...
    STRIPE_PUBLISHABLE_KEY=pk_live_...
-   
+
    # Use mainnet RPC
    ETHEREUM_MAINNET_RPC_URL=https://mainnet.infura.io/v3/...
-   
+
    # Update contract addresses from deployment
    NWU_TOKEN_ADDRESS=0x...
    ```
@@ -163,24 +174,28 @@ Follow **Option 1** first to test everything, then:
 ## 💰 How to Make Your First $1,000
 
 ### Week 1: Setup & Test
+
 - [ ] Deploy test system
 - [ ] Test all payment flows
 - [ ] Create marketing materials
 - [ ] Set up social media
 
 ### Week 2: Soft Launch
+
 - [ ] Deploy production system
 - [ ] Invite 10 beta users
 - [ ] Offer launch discount (20% off)
 - [ ] Get feedback
 
 ### Week 3-4: Growth
+
 - [ ] Launch on Product Hunt
 - [ ] Post on Reddit (r/cryptocurrency, r/ethereum)
 - [ ] Reach out to 50 potential enterprise customers
 - [ ] Write blog posts
 
 ### Month 2: Scale
+
 - [ ] Add more features
 - [ ] Optimize pricing
 - [ ] Build community
@@ -191,18 +206,21 @@ Follow **Option 1** first to test everything, then:
 ## 📚 Important Links
 
 **Documentation:**
+
 - [QUICKSTART_REVENUE.md](QUICKSTART_REVENUE.md) - Quick start guide
 - [PRODUCTION_DEPLOYMENT.md](PRODUCTION_DEPLOYMENT.md) - Full deployment
 - [PAYMENT_SYSTEM.md](PAYMENT_SYSTEM.md) - API docs
 - [READY_TO_DEPLOY.md](READY_TO_DEPLOY.md) - Summary
 
 **External Services:**
+
 - Stripe: https://stripe.com
 - Infura: https://infura.io
 - OpenAI: https://platform.openai.com
 - Etherscan: https://etherscan.io
 
 **Support:**
+
 - GitHub Issues: https://github.com/Garrettc123/nwu-protocol/issues
 - Stripe Support: https://support.stripe.com
 
@@ -233,13 +251,16 @@ Follow **Option 1** first to test everything, then:
 ### Common Issues
 
 **"Stripe library not available"**
+
 - Solution: `pip install stripe==8.0.0`
 
 **"Payment intent creation failed"**
+
 - Check Stripe API key is correct
 - Make sure you're in right mode (test vs live)
 
 **"Smart contract deployment failed"**
+
 - Make sure you have ETH for gas
 - Check RPC URL is correct
 - Verify private key is set
@@ -249,26 +270,31 @@ Follow **Option 1** first to test everything, then:
 ## 🎯 Success Checklist
 
 ### Day 1
+
 - [ ] Stripe account created
 - [ ] Test deployment working
 - [ ] First test payment successful
 
 ### Week 1
+
 - [ ] Production deployment complete
 - [ ] Smart contracts on mainnet
 - [ ] Subscription plans live
 
 ### Month 1
+
 - [ ] First real customer
 - [ ] First real payment
 - [ ] First $100 revenue
 
 ### Month 3
+
 - [ ] 10+ paying customers
 - [ ] $1,000+ revenue
 - [ ] System running stable
 
 ### Month 6
+
 - [ ] 50+ paying customers
 - [ ] $5,000+ MRR
 - [ ] Team scaling
@@ -280,6 +306,7 @@ Follow **Option 1** first to test everything, then:
 Everything is built. Everything is documented. Everything is tested.
 
 **All you need to do is:**
+
 1. Get Stripe account (5 min)
 2. Configure .env (2 min)
 3. Run docker-compose up (1 min)

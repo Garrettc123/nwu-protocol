@@ -523,14 +523,17 @@ npx hardhat test
 ## Deployment
 
 ### 💰 Quick Start: Generate Revenue
+
 See [QUICKSTART_REVENUE.md](QUICKSTART_REVENUE.md) for a 30-minute guide to deploy and start generating real-world currency.
 
 ### 📖 Deployment Guides
+
 - [Production Deployment](PRODUCTION_DEPLOYMENT.md) - Complete production deployment guide
 - [Payment System](PAYMENT_SYSTEM.md) - Payment integration and API documentation
 - [Deployment Status](DEPLOYMENT_STATUS.md) - Current system status and readiness
 
 ### 🚀 Deploy Smart Contracts
+
 ```bash
 cd contracts
 npm install
@@ -538,6 +541,7 @@ npm run compile
 npm run deploy:sepolia  # Testnet
 npm run deploy:mainnet  # Production (requires real ETH)
 ```
+
 See [READY_TO_DEPLOY.md](READY_TO_DEPLOY.md) for the production deployment checklist (Stripe setup, mainnet contracts, environment configuration).
 
 See [DEPLOYMENT_STATUS.md](DEPLOYMENT_STATUS.md) for detailed deployment instructions.

@@ -53,9 +53,10 @@ Create a one-time payment for purchasing tokens or services.
 **Endpoint:** `POST /api/v1/payments/create-payment-intent`
 
 **Request:**
+
 ```json
 {
-  "amount": 100.00,
+  "amount": 100.0,
   "customer_email": "user@example.com",
   "token_amount": 10000,
   "metadata": {
@@ -66,13 +67,14 @@ Create a one-time payment for purchasing tokens or services.
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
   "data": {
     "client_secret": "pi_xxx_secret_xxx",
     "payment_intent_id": "pi_xxx",
-    "amount": 100.00,
+    "amount": 100.0,
     "currency": "usd"
   }
 }
@@ -85,6 +87,7 @@ Set up recurring payments for API access.
 **Endpoint:** `POST /api/v1/payments/create-subscription`
 
 **Request:**
+
 ```json
 {
   "customer_email": "user@example.com",
@@ -96,11 +99,13 @@ Set up recurring payments for API access.
 ```
 
 **Plans:**
+
 - `basic` - $49/month for individual developers
 - `premium` - $149/month for small teams
 - `enterprise` - $499/month for large organizations
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -120,9 +125,10 @@ Send rewards to contributors in real currency.
 **Endpoint:** `POST /api/v1/payments/create-payout`
 
 **Request:**
+
 ```json
 {
-  "amount": 50.00,
+  "amount": 50.0,
   "destination": "ba_xxx",
   "metadata": {
     "contributor_id": "456",
@@ -132,18 +138,19 @@ Send rewards to contributors in real currency.
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
   "data": {
     "payout_id": "po_xxx",
-    "amount": 50.00,
+    "amount": 50.0,
     "currency": "usd",
     "status": "pending",
     "arrival_date": 1234567890
   },
   "fee_info": {
-    "gross_amount": 50.00,
+    "gross_amount": 50.0,
     "fee_percentage": 2.5,
     "fee_amount": 1.25,
     "net_amount": 48.75
@@ -158,6 +165,7 @@ Receive notifications about payment events.
 **Endpoint:** `POST /api/v1/payments/webhook`
 
 **Stripe will send events for:**
+
 - `payment_intent.succeeded` - Payment completed
 - `payment_intent.payment_failed` - Payment failed
 - `customer.subscription.created` - New subscription
@@ -170,6 +178,7 @@ Get USD price for a number of tokens.
 **Endpoint:** `POST /api/v1/payments/calculate-token-price`
 
 **Request:**
+
 ```json
 {
   "token_amount": 1000
@@ -177,12 +186,13 @@ Get USD price for a number of tokens.
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
   "data": {
     "token_amount": 1000,
-    "usd_price": 10.00,
+    "usd_price": 10.0,
     "price_per_token": 0.01
   }
 }
@@ -195,18 +205,20 @@ Get number of tokens for a USD amount.
 **Endpoint:** `POST /api/v1/payments/calculate-token-amount`
 
 **Request:**
+
 ```json
 {
-  "usd_amount": 50.00
+  "usd_amount": 50.0
 }
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
   "data": {
-    "usd_amount": 50.00,
+    "usd_amount": 50.0,
     "token_amount": 5000,
     "price_per_token": 0.01
   }
@@ -220,6 +232,7 @@ Get public configuration for the frontend.
 **Endpoint:** `GET /api/v1/payments/config`
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -259,11 +272,13 @@ Get public configuration for the frontend.
 ## Fee Structure
 
 ### Transaction Fees
+
 - **Withdrawal Fee:** 2.5% of withdrawal amount
 - **Minimum Withdrawal:** $10.00
 - **Payment Processing:** Stripe fees (2.9% + $0.30 per transaction)
 
 ### Revenue Split
+
 - Platform: 70%
 - Contributors: 25%
 - Community fund: 5%
@@ -323,8 +338,8 @@ const response = await fetch('/api/v1/payments/create-payment-intent', {
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
     token_amount: 1000,
-    customer_email: 'user@example.com'
-  })
+    customer_email: 'user@example.com',
+  }),
 });
 
 const { client_secret } = await response.json();
@@ -337,9 +352,9 @@ const { error } = await stripe.confirmCardPayment(client_secret, {
   payment_method: {
     card: cardElement,
     billing_details: {
-      email: 'user@example.com'
-    }
-  }
+      email: 'user@example.com',
+    },
+  },
 });
 
 if (error) {
@@ -361,16 +376,20 @@ if (error) {
 ## Testing
 
 ### Test Mode
+
 Use Stripe test keys for development:
+
 - `sk_test_...` for secret key
 - `pk_test_...` for publishable key
 
 ### Test Cards
+
 - Success: `4242 4242 4242 4242`
 - Decline: `4000 0000 0000 0002`
 - Require 3D Secure: `4000 0025 0000 3155`
 
 ### Test Webhooks
+
 ```bash
 # Install Stripe CLI
 stripe listen --forward-to localhost:8000/api/v1/payments/webhook
@@ -382,6 +401,7 @@ stripe trigger payment_intent.succeeded
 ## Monitoring
 
 Track these key metrics:
+
 - Total revenue
 - Payment success rate
 - Average transaction value
@@ -393,6 +413,7 @@ Track these key metrics:
 ## Support
 
 For issues or questions:
+
 - GitHub Issues: https://github.com/Garrettc123/nwu-protocol/issues
 - Documentation: See PRODUCTION_DEPLOYMENT.md
 - Stripe Support: https://support.stripe.com

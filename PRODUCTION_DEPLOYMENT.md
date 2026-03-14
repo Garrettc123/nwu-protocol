@@ -73,6 +73,7 @@ API_PORT=8000
 **⚠️ WARNING: Deploying to mainnet requires real ETH for gas fees**
 
 1. **Test on Sepolia first:**
+
    ```bash
    cd contracts
    npm install
@@ -82,11 +83,13 @@ API_PORT=8000
    ```
 
 2. **Verify everything works on testnet, then deploy to mainnet:**
+
    ```bash
    npx hardhat run scripts/deploy.js --network mainnet
    ```
 
 3. **Verify contracts on Etherscan:**
+
    ```bash
    npx hardhat verify --network mainnet [CONTRACT_ADDRESS]
    ```
@@ -175,6 +178,7 @@ vercel --prod
 ## Step 6: Test Payment Flow
 
 1. **Test Payment Intent Creation:**
+
    ```bash
    curl -X POST https://your-domain.com/api/v1/payments/create-payment-intent \
      -H "Content-Type: application/json" \
@@ -185,6 +189,7 @@ vercel --prod
    ```
 
 2. **Test Token Price Calculation:**
+
    ```bash
    curl -X POST https://your-domain.com/api/v1/payments/calculate-token-price \
      -H "Content-Type: application/json" \
@@ -206,7 +211,7 @@ vercel --prod
 
 2. **Subscription Plans:**
    - Basic: $49/month - Individual developers
-   - Premium: $149/month - Small teams  
+   - Premium: $149/month - Small teams
    - Enterprise: $499/month - Large organizations
    - Revenue: Recurring monthly income
 
@@ -221,6 +226,7 @@ vercel --prod
 ### Monitoring Revenue
 
 Track key metrics:
+
 - Total payment volume
 - Active subscriptions
 - Token sales
@@ -272,16 +278,19 @@ Track key metrics:
 ## Maintenance
 
 ### Daily Tasks
+
 - Check error logs
 - Monitor payment processing
 - Review user feedback
 
 ### Weekly Tasks
+
 - Review revenue metrics
 - Check system performance
 - Update dependencies (security patches)
 
 ### Monthly Tasks
+
 - Smart contract balance check
 - Security audit
 - Backup verification
@@ -317,6 +326,7 @@ Track key metrics:
 Based on the monetization strategy:
 
 **Year 1 Target:**
+
 - 1,000 token buyers/month: $10,000/month
 - 50 basic subscriptions: $2,450/month
 - 10 premium subscriptions: $1,490/month
@@ -328,9 +338,10 @@ Based on the monetization strategy:
 
 ## Conclusion
 
-Your NWU Protocol is now deployed and generating real-world currency! 
+Your NWU Protocol is now deployed and generating real-world currency!
 
 Remember to:
+
 - Keep security as top priority
 - Monitor systems constantly
 - Respond to user feedback
