@@ -49,17 +49,14 @@ const SUBSCRIPTION_TIERS = [
 
 async function findExistingProduct(tierName) {
   const products = await stripe.products.list({ limit: 100 });
-  return products.data.find((product) => product.name === tierName && product.active) || null;
+  return products.data.find(product => product.name === tierName && product.active) || null;
 }
 
 async function findExistingPrice(productId, unitAmount) {
   const prices = await stripe.prices.list({ product: productId, limit: 100 });
   return (
     prices.data.find(
-      (price) =>
-        price.unit_amount === unitAmount &&
-        price.currency === 'usd' &&
-        price.active
+      price => price.unit_amount === unitAmount && price.currency === 'usd' && price.active
     ) || null
   );
 }
@@ -116,9 +113,7 @@ async function main() {
   }
 
   console.log('=== Stripe Setup Complete ===');
-  console.log(
-    'Add the following price IDs to your backend .env / environment configuration:\n'
-  );
+  console.log('Add the following price IDs to your backend .env / environment configuration:\n');
   for (const { tier, productId, priceId } of results) {
     const envKey = `STRIPE_PRICE_ID_${tier.toUpperCase()}`;
     console.log(`  ${envKey}=${priceId || 'N/A (free tier)'}`);
@@ -129,7 +124,7 @@ async function main() {
   );
 }
 
-main().catch((error) => {
+main().catch(error => {
   console.error(error);
   process.exit(1);
 });

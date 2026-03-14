@@ -30,7 +30,9 @@ async function main() {
     address: VerificationRegistry,
     constructorArguments: [],
   });
-  console.log(`VerificationRegistry verified: https://etherscan.io/address/${VerificationRegistry}`);
+  console.log(
+    `VerificationRegistry verified: https://etherscan.io/address/${VerificationRegistry}`
+  );
 
   console.log('\nVerifying RewardDistribution...');
   await hre.run('verify:verify', {
@@ -47,7 +49,7 @@ async function main() {
 
 main()
   .then(() => process.exit(0))
-  .catch((error) => {
+  .catch(error => {
     console.error(error);
     process.exit(1);
   });

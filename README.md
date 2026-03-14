@@ -125,27 +125,27 @@ See [AGENT_ORCHESTRATION.md](AGENT_ORCHESTRATION.md) for complete documentation 
 
 **Revenue Streams:**
 
-| Stream | Description | Rate |
-|--------|-------------|------|
-| Pro Subscription | 10K req/day, advanced verification | $99/month |
-| Enterprise Subscription | 100K req/day, SLA, dedicated support | $999/month |
-| Token Sales | One-time NWU token purchases | Variable |
-| API Usage Payouts | Rewards for verified contributions | Protocol-defined |
+| Stream                  | Description                          | Rate             |
+| ----------------------- | ------------------------------------ | ---------------- |
+| Pro Subscription        | 10K req/day, advanced verification   | $99/month        |
+| Enterprise Subscription | 100K req/day, SLA, dedicated support | $999/month       |
+| Token Sales             | One-time NWU token purchases         | Variable         |
+| API Usage Payouts       | Rewards for verified contributions   | Protocol-defined |
 
 **Payment API Endpoints:**
 
-| Endpoint | Description |
-|----------|-------------|
-| `POST /api/v1/payments/subscriptions/create` | Create subscription |
-| `GET  /api/v1/payments/subscriptions/current` | Get active subscription |
-| `POST /api/v1/payments/subscriptions/{id}/cancel` | Cancel subscription |
-| `POST /api/v1/payments/payment-intent/create` | One-time payment |
-| `GET  /api/v1/payments/payments/history` | Payment history |
-| `POST /api/v1/payments/api-keys/create` | Create API key |
-| `GET  /api/v1/payments/api-keys/list` | List API keys |
-| `DELETE /api/v1/payments/api-keys/{id}` | Revoke API key |
-| `POST /api/v1/payments/webhook` | Stripe webhook handler |
-| `GET  /api/v1/payments/pricing` | Pricing tiers |
+| Endpoint                                          | Description             |
+| ------------------------------------------------- | ----------------------- |
+| `POST /api/v1/payments/subscriptions/create`      | Create subscription     |
+| `GET  /api/v1/payments/subscriptions/current`     | Get active subscription |
+| `POST /api/v1/payments/subscriptions/{id}/cancel` | Cancel subscription     |
+| `POST /api/v1/payments/payment-intent/create`     | One-time payment        |
+| `GET  /api/v1/payments/payments/history`          | Payment history         |
+| `POST /api/v1/payments/api-keys/create`           | Create API key          |
+| `GET  /api/v1/payments/api-keys/list`             | List API keys           |
+| `DELETE /api/v1/payments/api-keys/{id}`           | Revoke API key          |
+| `POST /api/v1/payments/webhook`                   | Stripe webhook handler  |
+| `GET  /api/v1/payments/pricing`                   | Pricing tiers           |
 
 **Quick Stripe Setup:**
 
