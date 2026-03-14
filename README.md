@@ -41,6 +41,8 @@ Decentralized Intelligence & Verified Truth Protocol - Safeguarding humanity thr
 
 A complete, production-ready platform for submitting code, datasets, and documents that are verified by AI agents and rewarded with blockchain tokens.
 
+**NEW: Multi-Agent Orchestration System** - Full-scale "god bots" that dynamically spawn and manage specialized agents. Master agents can create verifier, analyzer, coordinator, and specialist agents on-demand with auto-scaling, health monitoring, and hierarchical structures. See [AGENT_ORCHESTRATION.md](AGENT_ORCHESTRATION.md) for complete documentation.
+
 ## ✨ Features
 
 ### 🚀 Backend API (FastAPI)
@@ -51,6 +53,9 @@ A complete, production-ready platform for submitting code, datasets, and documen
 - ✅ RabbitMQ message queue for async processing
 - ✅ PostgreSQL database with SQLAlchemy ORM
 - ✅ RESTful API with automatic OpenAPI documentation
+- ✅ **Payment integration with Stripe for subscriptions**
+- ✅ **API key management and rate limiting**
+- ✅ **Three-tier subscription system (Free, Pro, Enterprise)**
 
 ### 🤖 Agent-Alpha (AI Verification)
 
@@ -59,6 +64,36 @@ A complete, production-ready platform for submitting code, datasets, and documen
 - ✅ Dataset and document verification
 - ✅ Consensus-based scoring system
 - ✅ RabbitMQ consumer for async task processing
+
+### 🌐 Multi-Agent Orchestration System (NEW!)
+
+- ✅ **Dynamic Agent Spawning** - Create agents on-demand based on workload
+- ✅ **Hierarchical Structure** - Master "god bot" agents spawn and manage children
+- ✅ **Auto-scaling** - Automatically scale agents up/down based on utilization (80%/20% thresholds)
+- ✅ **Self-healing** - Failed agents automatically detected and recovered
+- ✅ **5 Agent Types** - Master, Verifier, Analyzer, Coordinator, Specialist
+- ✅ **Load Balancing** - Intelligent task routing to appropriate agents
+- ✅ **Health Monitoring** - Continuous heartbeat monitoring with 60s timeout
+- ✅ **REST API** - Full control via `/api/v1/agents/*` endpoints
+- ✅ **CLI Tool** - Manage agents from command line with `agent_cli.py`
+- ✅ **Metrics Tracking** - Task completion, failures, duration, uptime per agent
+
+**Quick Start:**
+
+```bash
+# The orchestrator auto-initializes with the backend
+python -m backend.app.main
+
+# Use the CLI
+python agent_cli.py status
+python agent_cli.py spawn verifier
+python agent_cli.py list
+
+# Or run the full demo
+python examples/agent_orchestration_demo.py
+```
+
+See [AGENT_ORCHESTRATION.md](AGENT_ORCHESTRATION.md) for complete documentation and [AGENT_QUICKSTART.md](AGENT_QUICKSTART.md) for quick start guide.
 
 ### 🎨 Frontend (Next.js 14)
 
@@ -74,6 +109,23 @@ A complete, production-ready platform for submitting code, datasets, and documen
 - ✅ Verification Registry for on-chain results
 - ✅ Reward Distribution with quality-based calculations
 - ✅ OpenZeppelin security standards
+
+### 💳 Payment System (Stripe)
+
+- ✅ Three-tier subscription system (Free, Pro, Enterprise)
+- ✅ Secure API key generation and management
+- ✅ Rate limiting per subscription tier
+- ✅ Payment processing and billing
+- ✅ Usage metering foundation
+- ✅ Webhook integration for real-time updates
+
+**Pricing:**
+
+- **Free**: $0/month - 100 API requests/day
+- **Pro**: $99/month - 10,000 API requests/day + advanced features
+- **Enterprise**: $999/month - 100,000 API requests/day + premium support
+
+See [PAYMENT_INTEGRATION.md](PAYMENT_INTEGRATION.md) for complete documentation.
 
 ## 🔧 CI/CD & Automation
 

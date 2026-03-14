@@ -5,11 +5,15 @@ from .users import router as users_router
 from .verifications import router as verifications_router
 from .auth import router as auth_router
 from .websocket import router as websocket_router
+from .payments import router as payments_router
+from .referrals import router as referrals_router
 
 __all__ = [
     'contributions_router',
     'users_router',
     'verifications_router',
     'auth_router',
-    'websocket_router'
+    'websocket_router',
+    'payments_router',
+    'referrals_router',
 ]

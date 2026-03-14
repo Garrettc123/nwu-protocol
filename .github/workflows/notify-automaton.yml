@@ -7,9 +7,12 @@ on:
       - staging
       - production
 
+permissions: {}
+
 jobs:
   notify:
     runs-on: ubuntu-latest
+    permissions: {}
     steps:
       - name: Notify Automaton
         run: |
