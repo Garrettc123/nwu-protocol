@@ -1,11 +1,8 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/next';
 import './globals.css';
 import Link from 'next/link';
 import WalletConnect from '@/components/WalletConnect';
-
-const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'NWU Protocol',
@@ -15,9 +12,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
-        {children}
-        <Analytics />
+      <body>
         <nav className="bg-gray-900 border-b border-gray-800">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
@@ -38,6 +33,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   <Link href="/dashboard" className="text-gray-300 hover:text-white transition">
                     Dashboard
                   </Link>
+                  <Link href="/wallet" className="text-gray-300 hover:text-white transition">
+                    Wallet
+                  </Link>
                 </div>
               </div>
               <WalletConnect />
@@ -45,6 +43,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </div>
         </nav>
         {children}
+        <Analytics />
       </body>
     </html>
   );
