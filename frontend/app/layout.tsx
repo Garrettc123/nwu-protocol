@@ -16,6 +16,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className={inter.className}>
+        {children}
+        <Analytics />
         <nav className="bg-gray-900 border-b border-gray-800">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
@@ -29,6 +31,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   </Link>
                   <Link href="/contributions" className="text-gray-300 hover:text-white transition">
                     Contributions
+                  </Link>
+                  <Link href="/pricing" className="text-gray-300 hover:text-white transition">
+                    Pricing
                   </Link>
                   <Link href="/dashboard" className="text-gray-300 hover:text-white transition">
                     Dashboard

@@ -14,6 +14,9 @@ from ..schemas import (
     ContributionStatus
 )
 from ..services import ipfs_service, rabbitmq_service
+from ..utils.db_helpers import get_or_create_user, get_contribution_by_id_or_404
+from ..utils.validators import validate_file_type
+from nwu_protocol.utils.api_helpers import parse_json_or_400
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/contributions", tags=["contributions"])
@@ -40,45 +43,30 @@ async def create_contribution(
     - **metadata**: Optional metadata as JSON string
     """
     # Validate file type
-    if file_type not in ["code", "dataset", "document"]:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid file type. Must be 'code', 'dataset', or 'document'"
-        )
-    
+    validate_file_type(file_type)
+
     # Get or create user
-    user = db.query(User).filter(User.address == user_address).first()
-    if not user:
-        user = User(address=user_address)
-        db.add(user)
-        db.commit()
-        db.refresh(user)
+    user, created = get_or_create_user(db, user_address)
     
     # Read file content
     file_content = await file.read()
     file_size = len(file_content)
     
-    # Upload to IPFS
-    ipfs_hash = ipfs_service.add_file(file_content, file.filename)
+    # Upload to IPFS asynchronously
+    ipfs_hash = await ipfs_service.add_file_async(file_content, file.filename)
     if not ipfs_hash:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to upload file to IPFS"
         )
     
-    # Pin the file for persistence
-    ipfs_service.pin_file(ipfs_hash)
+    # Pin the file for persistence asynchronously
+    await ipfs_service.pin_file_async(ipfs_hash)
     
     # Parse metadata
     metadata_dict = None
     if metadata:
-        try:
-            metadata_dict = json.loads(metadata)
-        except json.JSONDecodeError:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid JSON in metadata"
-            )
+        metadata_dict = parse_json_or_400(metadata, "metadata")
     
     # Create contribution record
     contribution = Contribution(
@@ -89,7 +77,7 @@ async def create_contribution(
         file_size=file_size,
         title=title,
         description=description,
-        metadata=json.dumps(metadata_dict) if metadata_dict else None,
+        meta_data=json.dumps(metadata_dict) if metadata_dict else None,
         status="pending"
     )
     
@@ -119,24 +107,13 @@ async def create_contribution(
 @router.get("/{contribution_id}", response_model=ContributionResponse)
 def get_contribution(contribution_id: int, db: Session = Depends(get_db)):
     """Get contribution by ID."""
-    contribution = db.query(Contribution).filter(Contribution.id == contribution_id).first()
-    if not contribution:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Contribution not found"
-        )
-    return contribution
+    return get_contribution_by_id_or_404(db, contribution_id)
 
 
 @router.get("/{contribution_id}/status")
 def get_contribution_status(contribution_id: int, db: Session = Depends(get_db)):
     """Get verification status of a contribution."""
-    contribution = db.query(Contribution).filter(Contribution.id == contribution_id).first()
-    if not contribution:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Contribution not found"
-        )
+    contribution = get_contribution_by_id_or_404(db, contribution_id)
     
     return {
         "contribution_id": contribution.id,
@@ -175,14 +152,9 @@ def list_contributions(
 @router.get("/{contribution_id}/file")
 async def get_contribution_file(contribution_id: int, db: Session = Depends(get_db)):
     """Download the original file from IPFS."""
-    contribution = db.query(Contribution).filter(Contribution.id == contribution_id).first()
-    if not contribution:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Contribution not found"
-        )
+    contribution = get_contribution_by_id_or_404(db, contribution_id)
     
-    file_content = ipfs_service.get_file(contribution.ipfs_hash)
+    file_content = await ipfs_service.get_file_async(contribution.ipfs_hash)
     if not file_content:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

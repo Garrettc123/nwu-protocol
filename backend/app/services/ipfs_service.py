@@ -3,6 +3,8 @@
 import ipfshttpclient
 import logging
 from typing import Optional, BinaryIO
+from concurrent.futures import ThreadPoolExecutor
+import asyncio
 from ..config import settings
 
 logger = logging.getLogger(__name__)
@@ -14,6 +16,7 @@ class IPFSService:
     def __init__(self):
         """Initialize IPFS client."""
         self.client = None
+        self._executor = ThreadPoolExecutor(max_workers=settings.ipfs_thread_pool_size)
         self._connect()
     
     def _connect(self):
@@ -29,19 +32,22 @@ class IPFSService:
     
     def add_file(self, file_data: BinaryIO, file_name: str) -> Optional[str]:
         """
-        Add file to IPFS.
-        
+        Add file to IPFS (synchronous).
+
         Args:
             file_data: File binary data
             file_name: Original file name
-            
+
         Returns:
             IPFS hash (CID) or None if failed
         """
         try:
             if not self.client:
                 self._connect()
-            
+
+            if not self.client:
+                return None
+
             result = self.client.add(file_data)
             ipfs_hash = result['Hash']
             logger.info(f"File {file_name} added to IPFS: {ipfs_hash}")
@@ -50,9 +56,51 @@ class IPFSService:
             logger.error(f"Failed to add file to IPFS: {e}")
             return None
     
+    async def add_file_async(self, file_data: BinaryIO, file_name: str) -> Optional[str]:
+        """
+        Add file to IPFS (asynchronous).
+        
+        Args:
+            file_data: File binary data
+            file_name: Original file name
+            
+        Returns:
+            IPFS hash (CID) or None if failed
+        """
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(
+            self._executor,
+            self.add_file,
+            file_data,
+            file_name
+        )
+    
     def get_file(self, ipfs_hash: str) -> Optional[bytes]:
         """
-        Get file from IPFS.
+        Get file from IPFS (synchronous).
+
+        Args:
+            ipfs_hash: IPFS hash (CID)
+
+        Returns:
+            File content as bytes or None if failed
+        """
+        try:
+            if not self.client:
+                self._connect()
+
+            if not self.client:
+                return None
+
+            content = self.client.cat(ipfs_hash)
+            return content
+        except Exception as e:
+            logger.error(f"Failed to get file from IPFS: {e}")
+            return None
+    
+    async def get_file_async(self, ipfs_hash: str) -> Optional[bytes]:
+        """
+        Get file from IPFS (asynchronous).
         
         Args:
             ipfs_hash: IPFS hash (CID)
@@ -60,30 +108,30 @@ class IPFSService:
         Returns:
             File content as bytes or None if failed
         """
-        try:
-            if not self.client:
-                self._connect()
-            
-            content = self.client.cat(ipfs_hash)
-            return content
-        except Exception as e:
-            logger.error(f"Failed to get file from IPFS: {e}")
-            return None
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(
+            self._executor,
+            self.get_file,
+            ipfs_hash
+        )
     
     def pin_file(self, ipfs_hash: str) -> bool:
         """
-        Pin file to ensure persistence.
-        
+        Pin file to ensure persistence (synchronous).
+
         Args:
             ipfs_hash: IPFS hash (CID)
-            
+
         Returns:
             True if successful, False otherwise
         """
         try:
             if not self.client:
                 self._connect()
-            
+
+            if not self.client:
+                return False
+
             self.client.pin.add(ipfs_hash)
             logger.info(f"File pinned: {ipfs_hash}")
             return True
@@ -91,14 +139,31 @@ class IPFSService:
             logger.error(f"Failed to pin file: {e}")
             return False
     
+    async def pin_file_async(self, ipfs_hash: str) -> bool:
+        """
+        Pin file to ensure persistence (asynchronous).
+        
+        Args:
+            ipfs_hash: IPFS hash (CID)
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(
+            self._executor,
+            self.pin_file,
+            ipfs_hash
+        )
+    
     def is_connected(self) -> bool:
         """Check if connected to IPFS."""
         try:
             if self.client:
                 self.client.id()
                 return True
-        except:
-            pass
+        except Exception as e:
+            logger.debug(f"IPFS connection check failed: {e}")
         return False
 
 

@@ -13,6 +13,9 @@ class ContributionStatus(str, Enum):
     VERIFIED = "verified"
     REJECTED = "rejected"
     FAILED = "failed"
+    HALTED = "halted"
+    PAUSED = "paused"
+    RESUMED = "resumed"
 
 
 class ContributionType(str, Enum):

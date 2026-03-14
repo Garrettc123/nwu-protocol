@@ -6,35 +6,35 @@ on:
     tags:
       - 'v*.*.*'
 
+permissions:
+  contents: read
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     environment: production
+    permissions:
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
-
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: ${{ hashFiles('package-lock.json') != '' && 'npm' || '' }}
-
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-
       - name: Run migrations
         run: |
           echo "Running database migrations..."
           # Add your migration commands here
-
       - name: Deploy to production
         env:
           DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
@@ -47,27 +47,16 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H $DEPLOY_HOST >> ~/.ssh/known_hosts
           ssh $DEPLOY_USER@$DEPLOY_HOST "cd $DEPLOY_PATH && git pull origin main && ./deploy.sh"
-
       - name: Verify deployment
         run: |
           curl -f https://nwu-protocol.vercel.app/health || exit 1
-
       - name: Notify Slack on success
         if: success()
         uses: slackapi/slack-github-action@v1.24.0
         with:
           payload: |
             {
-              "text": "✅ NWU Protocol deployed successfully to production",
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*✅ Deployment Successful*\n*Repository:* nwu-protocol\n*Commit:* <https://github.com/Garrettc123/nwu-protocol/commit/${{ github.sha }}|${{ github.sha }}>"
-                  }
-                }
-              ]
+              "text": "✅ NWU Protocol deployed successfully to production"
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
@@ -75,11 +64,11 @@ jobs:
 
   release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     if: startsWith(github.ref, 'refs/tags/v')
-
     steps:
       - uses: actions/checkout@v4
-
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
