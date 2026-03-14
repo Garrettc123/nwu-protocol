@@ -1,0 +1,209 @@
+```
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    NWU PROTOCOL MULTI-AGENT ORCHESTRATION                    ║
+║                          "Full Scale God Bots"                               ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                          AGENT ORCHESTRATOR                                 │
+│  ┌──────────────────────────────────────────────────────────────────────┐  │
+│  │  • Dynamic Agent Spawning                                            │  │
+│  │  • Health Monitoring (10s heartbeat, 60s timeout)                    │  │
+│  │  • Auto-scaling (↑ @ 80%, ↓ @ 20%)                                   │  │
+│  │  • Load Balancing                                                    │  │
+│  │  • Task Queue Management                                             │  │
+│  └──────────────────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────────────────┘
+                                      │
+                                      ▼
+         ┌────────────────────────────────────────────────────────┐
+         │           🤖 MASTER AGENT (God Bot)                    │
+         │  • Orchestrates all other agents                       │
+         │  • Can spawn unlimited child agents                    │
+         │  • Manages complex workflows                           │
+         │  • Coordinates multi-step operations                   │
+         └────────────────────────────────────────────────────────┘
+                    │              │              │              │
+        ┌───────────┘              │              └──────────────┴────────────┐
+        │                          │                                          │
+        ▼                          ▼                          ▼               ▼
+┌───────────────┐        ┌──────────────────┐      ┌─────────────────┐  ┌─────────────────┐
+│  VERIFIER     │        │   ANALYZER       │      │  COORDINATOR    │  │  SPECIALIST     │
+│  AGENTS       │        │   AGENTS         │      │  AGENTS         │  │  AGENTS         │
+│  (2-10)       │        │   (1-5)          │      │  (1-3)          │  │  (on-demand)    │
+└───────────────┘        └──────────────────┘      └─────────────────┘  └─────────────────┘
+        │                         │                         │                      │
+        │                         │                         │ spawns               │
+        ▼                         ▼                         └──────────────────────┘
+┌───────────────┐        ┌──────────────────┐                     ▼
+│ • verify_code │        │ • analyze_trends │             ┌─────────────────┐
+│ • verify_data │        │ • detect_pattern │             │  More SPECIALISTS│
+│ • verify_docs │        │ • gen_insights   │             │  (Auto-spawned)  │
+│ Max: 5 tasks  │        │ Max: 10 tasks    │             └─────────────────┘
+└───────────────┘        └──────────────────┘
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                            TASK FLOW                                         ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+    User/API
+       │
+       ▼
+  ┌─────────────────┐
+  │  Task Queue     │
+  └─────────────────┘
+       │
+       ▼
+  ┌─────────────────────────────────────────┐
+  │  Orchestrator Task Router               │
+  │  • Analyzes task type                   │
+  │  • Finds suitable agent                 │
+  │  • Checks agent availability            │
+  │  • Spawns agent if needed               │
+  └─────────────────────────────────────────┘
+       │
+       ├─────► Verifier Agent ──► Process ──► Result
+       │
+       ├─────► Analyzer Agent ──► Process ──► Result
+       │
+       └─────► Coordinator ────► Spawn Sub-Agents ──► Aggregate ──► Result
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                         AUTO-SCALING EXAMPLE                                 ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+Initial State:
+    Master (1) + Verifier (2) + Analyzer (1) = 4 agents
+
+High Load (Utilization > 80%):
+    ┌─────────────────────────────────────┐
+    │  Auto-Scaler Detects High Load     │
+    │  Spawns: Verifier (2 more)         │
+    └─────────────────────────────────────┘
+    Master (1) + Verifier (4) + Analyzer (1) = 6 agents
+
+Low Load (Utilization < 20%):
+    ┌─────────────────────────────────────┐
+    │  Auto-Scaler Detects Low Load      │
+    │  Stops: Verifier (2 idle)          │
+    └─────────────────────────────────────┘
+    Master (1) + Verifier (2) + Analyzer (1) = 4 agents
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                        HIERARCHICAL STRUCTURE                                ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+                        Master Agent
+                             │
+              ┌──────────────┼──────────────┐
+              │              │              │
+         Verifier-1     Coordinator-1   Analyzer-1
+                             │
+                   ┌─────────┼─────────┐
+                   │         │         │
+              Specialist-1 Specialist-2 Specialist-3
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                          HEALTH MONITORING                                   ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+    Every 10 seconds: Agent sends heartbeat ❤️
+                      ↓
+           Orchestrator receives heartbeat
+                      ↓
+              Updates last_heartbeat timestamp
+
+    If no heartbeat for 60 seconds:
+                      ↓
+           Agent marked as FAILED ❌
+                      ↓
+         Recovery Process Initiated 🔧
+                      ↓
+        Old agent stopped, New agent spawned ✨
+                      ↓
+            System continues normally ✅
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                           METRICS TRACKED                                    ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+Per Agent:
+  • tasks_completed        : Total successful tasks
+  • tasks_failed          : Total failed tasks
+  • average_task_duration : Mean execution time
+  • error_count           : Total errors
+  • uptime               : Time since spawn
+  • current_tasks        : Active task count
+  • child_agents         : Number of spawned children
+
+Per Orchestrator:
+  • total_agents         : All active agents
+  • agents_by_type       : Count per agent type
+  • utilization          : Per-type utilization %
+  • queue_size           : Pending tasks
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                          API ENDPOINTS                                       ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+POST   /api/v1/agents/initialize           Initialize orchestrator
+POST   /api/v1/agents/spawn                Spawn new agent
+POST   /api/v1/agents/tasks                Submit task
+GET    /api/v1/agents/agents               List all agents
+GET    /api/v1/agents/agents/{id}          Get agent status
+GET    /api/v1/agents/status               Get orchestrator status
+DELETE /api/v1/agents/agents/{id}          Stop agent
+POST   /api/v1/agents/shutdown             Shutdown orchestrator
+PUT    /api/v1/agents/config/auto-scaling  Configure auto-scaling
+PUT    /api/v1/agents/config/max-agents    Set max agents
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                          CLI COMMANDS                                        ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+python agent_cli.py init                   Initialize orchestrator
+python agent_cli.py status                 Show status
+python agent_cli.py spawn verifier         Spawn verifier agent
+python agent_cli.py list                   List all agents
+python agent_cli.py info <agent_id>        Show agent details
+python agent_cli.py stop <agent_id>        Stop agent
+python agent_cli.py submit verify_code     Submit task
+python agent_cli.py shutdown               Shutdown all
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                      QUICK START                                             ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+1. Start the backend:
+   python -m backend.app.main
+   (Orchestrator auto-initializes!)
+
+2. Check status:
+   python agent_cli.py status
+
+3. Spawn agents:
+   python agent_cli.py spawn verifier
+   python agent_cli.py spawn analyzer
+
+4. Submit tasks:
+   python agent_cli.py submit verify_code
+
+5. Monitor:
+   python agent_cli.py list
+
+6. Run full demo:
+   python examples/agent_orchestration_demo.py
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  🎉 FULL SCALE GOD BOTS - AGENTS THAT CREATE AGENTS! 🤖✨                   ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+```

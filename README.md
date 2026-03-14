@@ -41,6 +41,8 @@ Decentralized Intelligence & Verified Truth Protocol - Safeguarding humanity thr
 
 A complete, production-ready platform for submitting code, datasets, and documents that are verified by AI agents and rewarded with blockchain tokens.
 
+**NEW: Multi-Agent Orchestration System** - Full-scale "god bots" that dynamically spawn and manage specialized agents. Master agents can create verifier, analyzer, coordinator, and specialist agents on-demand with auto-scaling, health monitoring, and hierarchical structures. See [AGENT_ORCHESTRATION.md](AGENT_ORCHESTRATION.md) for complete documentation.
+
 ## ✨ Features
 
 ### 🚀 Backend API (FastAPI)
@@ -62,6 +64,35 @@ A complete, production-ready platform for submitting code, datasets, and documen
 - ✅ Dataset and document verification
 - ✅ Consensus-based scoring system
 - ✅ RabbitMQ consumer for async task processing
+
+### 🌐 Multi-Agent Orchestration System (NEW!)
+
+- ✅ **Dynamic Agent Spawning** - Create agents on-demand based on workload
+- ✅ **Hierarchical Structure** - Master "god bot" agents spawn and manage children
+- ✅ **Auto-scaling** - Automatically scale agents up/down based on utilization (80%/20% thresholds)
+- ✅ **Self-healing** - Failed agents automatically detected and recovered
+- ✅ **5 Agent Types** - Master, Verifier, Analyzer, Coordinator, Specialist
+- ✅ **Load Balancing** - Intelligent task routing to appropriate agents
+- ✅ **Health Monitoring** - Continuous heartbeat monitoring with 60s timeout
+- ✅ **REST API** - Full control via `/api/v1/agents/*` endpoints
+- ✅ **CLI Tool** - Manage agents from command line with `agent_cli.py`
+- ✅ **Metrics Tracking** - Task completion, failures, duration, uptime per agent
+
+**Quick Start:**
+```bash
+# The orchestrator auto-initializes with the backend
+python -m backend.app.main
+
+# Use the CLI
+python agent_cli.py status
+python agent_cli.py spawn verifier
+python agent_cli.py list
+
+# Or run the full demo
+python examples/agent_orchestration_demo.py
+```
+
+See [AGENT_ORCHESTRATION.md](AGENT_ORCHESTRATION.md) for complete documentation and [AGENT_QUICKSTART.md](AGENT_QUICKSTART.md) for quick start guide.
 
 ### 🎨 Frontend (Next.js 14)
 
