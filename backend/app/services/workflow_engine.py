@@ -7,7 +7,7 @@ turnkey automation with progressive capability levels.
 from datetime import datetime
 from typing import Optional, Dict, Any, List, Callable
 from sqlalchemy.orm import Session
-from backend.app.models import Contribution, WorkflowExecution, EngagementHistory
+from ..models import Contribution, WorkflowExecution, EngagementHistory
 import json
 
 
