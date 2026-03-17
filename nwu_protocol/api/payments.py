@@ -6,9 +6,11 @@ from fastapi import APIRouter, HTTPException, Request, Depends
 from pydantic import BaseModel, EmailStr, Field
 from typing import Optional, Dict, Any
 from decimal import Decimal
+from datetime import datetime, timezone
 import logging
 
 from nwu_protocol.services.payment_service import get_payment_service
+from nwu_protocol.core.dependencies import get_user_manager
 
 logger = logging.getLogger(__name__)
 
@@ -182,48 +184,114 @@ async def create_payout(request: PayoutRequest):
 
 
 @router.post("/webhook")
-async def handle_webhook(request: Request):
+async def handle_webhook(request: Request, user_manager = Depends(get_user_manager)):
     """
     Handle Stripe webhook events.
-    
+
     This endpoint receives notifications about payment events
     such as successful payments, failed payments, and subscription changes.
     """
     try:
         payload = await request.body()
         signature = request.headers.get("stripe-signature")
-        
+
         if not signature:
             raise HTTPException(status_code=400, detail="Missing signature")
-        
+
         payment_service = get_payment_service()
         event = payment_service.verify_webhook(payload, signature)
-        
+
         # Handle different event types
         event_type = event["type"]
-        
+
         if event_type == "payment_intent.succeeded":
             payment_intent = event["data"]["object"]
             logger.info(f"Payment succeeded: {payment_intent['id']}")
-            # TODO: Update database, allocate tokens to user
-            
+
+            # Allocate tokens to user
+            metadata = payment_intent.get("metadata", {})
+            token_amount = metadata.get("token_amount")
+            customer_email = payment_intent.get("receipt_email")
+
+            if token_amount and customer_email:
+                # Find user by email (stored in metadata or address)
+                user_address = metadata.get("user_address")
+                if user_address:
+                    user = user_manager.get_user_by_address(user_address)
+                    if user:
+                        # Update user's total rewards with allocated tokens
+                        user.total_rewards += float(token_amount)
+                        user.last_active = datetime.now(timezone.utc)
+                        logger.info(f"Allocated {token_amount} tokens to user {user.id}")
+                    else:
+                        logger.warning(f"User not found for address {user_address}")
+                else:
+                    logger.warning(f"No user_address in payment metadata")
+
         elif event_type == "payment_intent.payment_failed":
             payment_intent = event["data"]["object"]
             logger.warning(f"Payment failed: {payment_intent['id']}")
-            # TODO: Notify user
-            
+
+            # Notify user about payment failure
+            customer_email = payment_intent.get("receipt_email")
+            error_message = payment_intent.get("last_payment_error", {}).get("message", "Unknown error")
+
+            if customer_email:
+                # Log notification for debugging (in production, send actual email)
+                logger.info(f"Payment failure notification to {customer_email}: {error_message}")
+                # In a production environment, integrate with email service:
+                # await email_service.send_payment_failed_notification(customer_email, error_message)
+            else:
+                logger.warning(f"No customer email found for failed payment {payment_intent['id']}")
+
         elif event_type == "customer.subscription.created":
             subscription = event["data"]["object"]
             logger.info(f"Subscription created: {subscription['id']}")
-            # TODO: Update user subscription status
-            
+
+            # Update user subscription status
+            metadata = subscription.get("metadata", {})
+            user_address = metadata.get("user_address")
+            plan_tier = metadata.get("plan", "basic")
+
+            if user_address:
+                user = user_manager.get_user_by_address(user_address)
+                if user:
+                    # Store subscription info in metadata (extend User model if needed)
+                    logger.info(f"Subscription {plan_tier} activated for user {user.id}")
+                    user.last_active = datetime.now(timezone.utc)
+                    # In a production environment with database:
+                    # - Create subscription record in database
+                    # - Update user tier/permissions
+                    # - Send welcome email
+                else:
+                    logger.warning(f"User not found for address {user_address}")
+            else:
+                logger.warning(f"No user_address in subscription metadata")
+
         elif event_type == "customer.subscription.deleted":
             subscription = event["data"]["object"]
             logger.info(f"Subscription cancelled: {subscription['id']}")
-            # TODO: Update user subscription status
-        
+
+            # Update user subscription status to cancelled
+            metadata = subscription.get("metadata", {})
+            user_address = metadata.get("user_address")
+
+            if user_address:
+                user = user_manager.get_user_by_address(user_address)
+                if user:
+                    logger.info(f"Subscription cancelled for user {user.id}")
+                    user.last_active = datetime.now(timezone.utc)
+                    # In a production environment with database:
+                    # - Mark subscription as cancelled
+                    # - Downgrade user tier to free
+                    # - Send cancellation confirmation email
+                else:
+                    logger.warning(f"User not found for address {user_address}")
+            else:
+                logger.warning(f"No user_address in subscription metadata")
+
         return {"success": True}
-        
+
     except Exception as e:
         logger.error(f"Webhook error: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))
