@@ -282,10 +282,7 @@ export default function AdminDashboard() {
         {/* User Stats */}
         <h2 className="text-xl font-semibold mb-4">Users</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <MetricCard
-            label="Total Users"
-            value={String(userStats?.total_users ?? '—')}
-          />
+          <MetricCard label="Total Users" value={String(userStats?.total_users ?? '—')} />
           <MetricCard
             label="Active (30d)"
             value={String(userStats?.active_users_30d ?? '—')}

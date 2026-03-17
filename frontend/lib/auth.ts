@@ -19,7 +19,7 @@ export const authService = {
   async verify(
     address: string,
     signature: string,
-    nonce: string,
+    nonce: string
   ): Promise<{ access_token: string; token_type: string }> {
     const response = await axios.post(`${API_BASE}/api/v1/auth/verify`, {
       address,

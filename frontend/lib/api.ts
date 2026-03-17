@@ -51,11 +51,9 @@ export const api = {
 
   /** Fetch a user's contributions. */
   async getUserContributions(
-    address: string,
+    address: string
   ): Promise<{ contributions: Contribution[]; total: number }> {
-    const response = await axios.get(
-      `${API_BASE}/api/v1/users/${address}/contributions`,
-    );
+    const response = await axios.get(`${API_BASE}/api/v1/users/${address}/contributions`);
     return response.data;
   },
 
