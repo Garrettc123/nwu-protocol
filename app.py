@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 
 # Import API routers
 from nwu_protocol.api import contributions, verifications
+from nwu_protocol.api import auto_repair
 
 # Configure logging
 logging.basicConfig(
@@ -54,6 +55,7 @@ app.add_middleware(
 # Include routers
 app.include_router(contributions.router)
 app.include_router(verifications.router)
+app.include_router(auto_repair.router)
 
 
 @app.get("/")
