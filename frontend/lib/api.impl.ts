@@ -38,3 +38,5 @@ export class User implements User {}
 export class Contribution implements Contribution {}
 export class User implements User {}
 export class Contribution implements Contribution {}
+export class User implements User {}
+export class Contribution implements Contribution {}
