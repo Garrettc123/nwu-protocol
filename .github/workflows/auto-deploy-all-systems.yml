@@ -4,8 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches: [ main ]
-  schedule:
-    - cron: '0 9 * * *'
+  # cron removed — this workflow only prints echo statements; no need for scheduled runs
 
 jobs:
   deploy-all:

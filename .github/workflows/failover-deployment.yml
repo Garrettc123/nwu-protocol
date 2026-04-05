@@ -1,4 +1,4 @@
-name: 🔄 Failover Deployment System
+name: Failover Deployment System
 
 on:
   push:
@@ -16,60 +16,60 @@ env:
 
 jobs:
   deploy-with-failover:
-    name: 🚀 Deploy with Auto-Retry
+    name: Deploy with Auto-Retry
     runs-on: ubuntu-latest
-        permissions:
+    permissions:
       contents: read
-    
+
     steps:
       - uses: actions/checkout@v4
 
-      - name: 🔧 Setup Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: ${{ hashFiles('package-lock.json') != '' && 'npm' || '' }}
 
-      - name: 📦 Install with Retry
+      - name: Install with Retry
         run: |
           attempt=1
           while [ $attempt -le ${{ env.MAX_RETRY_ATTEMPTS }} ]; do
-            echo "📦 Attempt $attempt/${{ env.MAX_RETRY_ATTEMPTS }}"
+            echo "Attempt $attempt/${{ env.MAX_RETRY_ATTEMPTS }}"
             if npm ci || npm install; then
-              echo "✅ Dependencies installed!"
+              echo "Dependencies installed!"
               exit 0
             fi
-            echo "🔄 Retrying in ${{ env.RETRY_DELAY_SECONDS }}s..."
+            echo "Retrying in ${{ env.RETRY_DELAY_SECONDS }}s..."
             sleep ${{ env.RETRY_DELAY_SECONDS }}
             attempt=$((attempt + 1))
           done
 
-      - name: 🔨 Build with Retry
+      - name: Build with Retry
         run: |
           attempt=1
           while [ $attempt -le ${{ env.MAX_RETRY_ATTEMPTS }} ]; do
-            echo "🔨 Build attempt $attempt/${{ env.MAX_RETRY_ATTEMPTS }}"
+            echo "Build attempt $attempt/${{ env.MAX_RETRY_ATTEMPTS }}"
             if npm run build || npm run compile; then
-              echo "✅ Build successful!"
+              echo "Build successful!"
               exit 0
             fi
             sleep ${{ env.RETRY_DELAY_SECONDS }}
             attempt=$((attempt + 1))
           done
 
-      - name: 🚀 Deploy with Retry
+      - name: Deploy with Retry
         run: |
           attempt=1
           while [ $attempt -le ${{ env.MAX_RETRY_ATTEMPTS }} ]; do
-            echo "🚀 Deploy attempt $attempt/${{ env.MAX_RETRY_ATTEMPTS }}"
+            echo "Deploy attempt $attempt/${{ env.MAX_RETRY_ATTEMPTS }}"
             if npm run deploy || echo "No deploy script"; then
-              echo "✅ Deployment successful!"
+              echo "Deployment successful!"
               exit 0
             fi
             sleep ${{ env.RETRY_DELAY_SECONDS }}
             attempt=$((attempt + 1))
           done
 
-      - name: ✅ Complete
+      - name: Complete
         run: |
-          echo "✅ FAILOVER DEPLOYMENT OPERATIONAL!"
+          echo "FAILOVER DEPLOYMENT OPERATIONAL!"

@@ -4,8 +4,8 @@ on:
   workflow_run:
     workflows: ["CI"]
     types: [completed]
-  push:
-    branches: [main, master, develop]
+  # cron removed — redundant with other auto-fix workflows
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -15,18 +15,23 @@ permissions:
 
 jobs:
   auto-fix:
-    if: github.event.workflow_run.conclusion == 'failure' || github.event_name == 'push'
+    if: github.event.workflow_run.conclusion == 'failure' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
 
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
     steps:
+      - name: Guard — check OPENAI_API_KEY
+        run: |
+          if [ -z "$OPENAI_API_KEY" ]; then
+            echo "OPENAI_API_KEY not configured — skipping"
+            exit 0
+          fi
+
       - name: Checkout Trusted Ref
         uses: actions/checkout@v4
         with:
-          # Use the merge commit SHA (trusted) instead of the PR head SHA
-          # This prevents untrusted code from a PR from running in a privileged context
           ref: ${{ github.sha }}
           fetch-depth: 0
 
@@ -110,7 +115,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "fix(ci): auto-fix via Codex"
           branch: codex-auto-fix-${{ github.event.workflow_run.run_id || github.run_id }}
-          title: "🤖 Auto-fix: ${{ github.event.workflow_run.name || 'CI Failure' }}"
+          title: "Auto-fix: ${{ github.event.workflow_run.name || 'CI Failure' }}"
           body: |
             ## Automated Fix Applied
 
@@ -121,7 +126,7 @@ jobs:
 
             ---
 
-            ⚠️ **Review Required:** Please verify this fix before merging.
+            **Review Required:** Please verify this fix before merging.
 
             **Original run:** ${{ github.event.workflow_run.html_url || github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
             **Triggering branch:** ${{ github.event.workflow_run.head_branch || github.ref_name }}

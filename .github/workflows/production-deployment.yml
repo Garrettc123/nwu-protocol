@@ -68,7 +68,7 @@ jobs:
                   .price span { font-size: 1.5rem; color: #666; font-weight: normal; }
                   ul { list-style: none; margin: 36px 0; text-align: left; }
                   li { padding: 12px 0; padding-left: 32px; position: relative; font-size: 1.05rem; }
-                  li:before { content: "✓"; position: absolute; left: 0; color: #667eea; font-weight: bold; font-size: 1.3rem; }
+                  li:before { content: "v"; position: absolute; left: 0; color: #667eea; font-weight: bold; font-size: 1.3rem; }
                   .cta { background: #667eea; color: white; border: none; padding: 16px 42px; font-size: 1.15rem; border-radius: 8px; cursor: pointer; margin-top: 24px; transition: all 0.3s; font-weight: 600; }
                   .cta:hover { background: #5568d3; transform: scale(1.05); }
                   .stats { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 80px 20px; }
@@ -81,7 +81,7 @@ jobs:
               <div class="hero">
                   <h1>Zero-Human AI Business Platform</h1>
                   <p>Complete AI automation, data monetization, and billing infrastructure. Deploy in hours, not months.</p>
-                  <button class="cta-primary" onclick="document.getElementById('pricing').scrollIntoView({behavior: 'smooth'})">View Pricing →</button>
+                  <button class="cta-primary" onclick="document.getElementById('pricing').scrollIntoView({behavior: 'smooth'})">View Pricing</button>
               </div>
 
               <div class="stats">
@@ -179,7 +179,7 @@ jobs:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         run: |
           if [ -z "$DOCKER_USERNAME" ]; then
-            echo "::warning::DOCKER_USERNAME secret not configured - skipping backend deployment"
+            echo "::warning::DOCKER_USERNAME secret not configured — skipping backend deployment"
             echo "skip=true" >> $GITHUB_OUTPUT
           else
             echo "skip=false" >> $GITHUB_OUTPUT
@@ -228,7 +228,7 @@ jobs:
             sleep 15
             docker exec nwu-backend alembic upgrade head || echo "Migrations already applied"
             curl -f http://localhost:8000/health || exit 1
-            echo "✅ NWU Backend deployed successfully"
+            echo "NWU Backend deployed successfully"
 
   deploy-railway:
     name: Deploy to Railway
@@ -241,7 +241,7 @@ jobs:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: |
           if [ -z "$RAILWAY_TOKEN" ]; then
-            echo "::warning::RAILWAY_TOKEN secret not configured - skipping Railway deployment"
+            echo "::warning::RAILWAY_TOKEN secret not configured — skipping Railway deployment"
             echo "skip=true" >> $GITHUB_OUTPUT
           else
             echo "skip=false" >> $GITHUB_OUTPUT
@@ -262,7 +262,7 @@ jobs:
         run: |
           railway link ${{ secrets.RAILWAY_PROJECT_ID }}
           railway up --service wealth-api
-          echo "✅ Railway deployment triggered"
+          echo "Railway deployment triggered"
 
   health-check:
     name: Verify All Deployments
@@ -276,25 +276,33 @@ jobs:
       - name: Check GitHub Pages
         run: |
           if curl -f -s https://garrettc123.github.io > /dev/null; then
-            echo "✅ GitHub Pages: LIVE"
+            echo "GitHub Pages: LIVE"
           else
-            echo "⚠️ GitHub Pages: Not responding"
+            echo "GitHub Pages: Not responding"
           fi
 
       - name: Check NWU Backend
+        env:
+          PRODUCTION_HOST: ${{ secrets.PRODUCTION_HOST }}
         run: |
-          if curl -f -s ${{ secrets.PRODUCTION_HOST }}/health > /dev/null; then
-            echo "✅ NWU Backend: HEALTHY"
+          if [ -z "$PRODUCTION_HOST" ]; then
+            echo "PRODUCTION_HOST not configured — skipping backend health check"
+          elif curl -f -s "$PRODUCTION_HOST/health" > /dev/null; then
+            echo "NWU Backend: HEALTHY"
           else
-            echo "⚠️ NWU Backend: Not responding"
+            echo "NWU Backend: Not responding"
           fi
 
       - name: Check Railway API
+        env:
+          RAILWAY_URL: ${{ secrets.RAILWAY_URL }}
         run: |
-          if curl -f -s ${{ secrets.RAILWAY_URL }}/health > /dev/null; then
-            echo "✅ Railway API: HEALTHY"
+          if [ -z "$RAILWAY_URL" ]; then
+            echo "RAILWAY_URL not configured — skipping Railway health check"
+          elif curl -f -s "$RAILWAY_URL/health" > /dev/null; then
+            echo "Railway API: HEALTHY"
           else
-            echo "⚠️ Railway API: Not responding"
+            echo "Railway API: Not responding"
           fi
 
       - name: Deployment Summary
@@ -304,6 +312,4 @@ jobs:
           echo "   DEPLOYMENT COMPLETE"
           echo "========================================"
           echo "GitHub Pages:  https://garrettc123.github.io"
-          echo "NWU Backend:   ${{ secrets.PRODUCTION_HOST }}"
-          echo "Railway API:   ${{ secrets.RAILWAY_URL }}"
           echo "========================================"

@@ -5,23 +5,24 @@ on:
     branches: [ main, develop ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   auto-detect-and-test:
     runs-on: ubuntu-latest
-        permissions:
+    permissions:
       contents: read
     steps:
       - uses: actions/checkout@v4
 
-      # 🐍 PYTHON PATH (If requirements.txt exists)
+      # PYTHON PATH (If requirements.txt exists)
       - name: Setup Python
         if: hashFiles('requirements.txt') != ''
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: 'pip'
-      
+
       - name: Install Python Dependencies
         if: hashFiles('requirements.txt') != ''
         run: |
@@ -39,7 +40,7 @@ jobs:
             echo "No Python tests found, skipping"
           fi
 
-      # 📦 NODE.JS PATH (Only if package.json exists in root)
+      # NODE.JS PATH (Only if package.json exists in root)
       - name: Setup Node.js
         if: hashFiles('package.json') != ''
         uses: actions/setup-node@v4
@@ -61,12 +62,12 @@ jobs:
         if: hashFiles('package.json') != ''
         run: npm test --if-present
 
-      # 🐳 DOCKER PATH (Always build if Dockerfile exists)
+      # DOCKER PATH (Always build if Dockerfile exists)
       - name: Build Docker Image
         if: hashFiles('Dockerfile') != ''
         run: |
           docker build -t app:${{ github.sha }} .
-          echo "✅ Docker build successful"
+          echo "Docker build successful"
 
       - name: Final Status
-        run: echo "✅ Pipeline completed successfully"
+        run: echo "Pipeline completed successfully"

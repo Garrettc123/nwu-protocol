@@ -23,14 +23,14 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-  schedule:
-    - cron: '43 21 * * 2'
+  # cron removed — CodeQL already provides weekly security scanning
+  workflow_dispatch:
 
 jobs:
   MSDO:
     # currently only windows latest is supported
     runs-on: windows-latest
-        permissions:
+    permissions:
       contents: read
       security-events: write
       id-token: write

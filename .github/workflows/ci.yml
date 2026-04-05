@@ -5,6 +5,9 @@ on:
     branches: [main, develop]
   pull_request:
     branches: [main, develop]
+  schedule:
+    # ONE daily health/CI check — the only daily scheduled CI workflow
+    - cron: '41 6 * * *'
   workflow_dispatch:
 
 permissions:
@@ -13,18 +16,18 @@ permissions:
   checks: write
 
 jobs:
-  # 🔍 Code Quality & Security
+  # Code Quality & Security
   lint-and-security:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: ${{ hashFiles('package-lock.json') != '' && 'npm' || '' }}
-      
+
       - name: Check for package.json
         id: check-npm
         run: |
@@ -33,61 +36,40 @@ jobs:
           else
             echo "has_npm=false" >> $GITHUB_OUTPUT
           fi
-      
+
       - name: Install dependencies
         if: steps.check-npm.outputs.has_npm == 'true'
         run: npm install || echo "npm install failed, continuing..."
-      
+
       - name: Run ESLint
         if: steps.check-npm.outputs.has_npm == 'true'
         run: npm run lint 2>/dev/null || echo "No lint script found"
-      
+
       - name: Run Prettier check
         if: steps.check-npm.outputs.has_npm == 'true'
         run: npx prettier --check "**/*.{js,ts,jsx,tsx,json,md}" 2>/dev/null || echo "Prettier check skipped"
-      
+
       - name: Security audit
         if: steps.check-npm.outputs.has_npm == 'true'
         run: npm audit --audit-level=high 2>/dev/null || echo "No critical vulnerabilities"
-      
+
       - name: Check for secrets
         continue-on-error: true
         run: |
           echo "Secret scanning would run here"
-          # TruffleHog requires more setup
 
-  # 🧪 Backend Tests
+  # Backend Tests
   test-backend:
     runs-on: ubuntu-latest
-    services:
-      mongodb:
-        image: mongo:latest
-        ports:
-          - 27017:27017
-        options: >-
-          --health-cmd "mongosh --eval 'db.runCommand({ ping: 1 }).ok' --quiet"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-      redis:
-        image: redis:latest
-        ports:
-          - 6379:6379
-        options: >
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: ${{ hashFiles('backend/package-lock.json') != '' && 'npm' || '' }}
-          cache-dependency-path: backend/package-lock.json
-      
+
       - name: Check for backend
         id: check-backend
         run: |
@@ -98,7 +80,7 @@ jobs:
           else
             echo "has_backend=false" >> $GITHUB_OUTPUT
           fi
-      
+
       - name: Install dependencies
         if: steps.check-backend.outputs.has_backend == 'true'
         run: |
@@ -107,7 +89,7 @@ jobs:
           else
             npm install
           fi
-      
+
       - name: Run backend tests
         if: steps.check-backend.outputs.has_backend == 'true'
         continue-on-error: true
@@ -117,26 +99,22 @@ jobs:
           else
             npm test 2>/dev/null || echo "No tests found"
           fi
-        env:
-          MONGODB_URI: mongodb://localhost:27017/nwu-test
-          REDIS_URL: redis://localhost:6379
-      
-      - name: Backend status
-        run: echo "✅ Backend checks complete"
 
-  # 🎨 Frontend Tests
+      - name: Backend status
+        run: echo "Backend checks complete"
+
+  # Frontend Tests
   test-frontend:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: ${{ hashFiles('frontend/package-lock.json') != '' && 'npm' || '' }}
-          cache-dependency-path: frontend/package-lock.json
-      
+
       - name: Check for frontend
         id: check-frontend
         run: |
@@ -145,37 +123,36 @@ jobs:
           else
             echo "has_frontend=false" >> $GITHUB_OUTPUT
           fi
-      
+
       - name: Install dependencies
         if: steps.check-frontend.outputs.has_frontend == 'true'
         run: cd frontend && npm install
-      
+
       - name: Run frontend tests
         if: steps.check-frontend.outputs.has_frontend == 'true'
         continue-on-error: true
         run: cd frontend && npm test 2>/dev/null || echo "No frontend tests found"
-      
+
       - name: Build frontend
         if: steps.check-frontend.outputs.has_frontend == 'true'
         continue-on-error: true
         run: cd frontend && npm run build 2>/dev/null || echo "No build script found"
-      
-      - name: Frontend status
-        run: echo "✅ Frontend checks complete"
 
-  # 🔗 Smart Contract Tests
+      - name: Frontend status
+        run: echo "Frontend checks complete"
+
+  # Smart Contract Tests
   test-contracts:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: ${{ hashFiles('contracts/package-lock.json') != '' && 'npm' || '' }}
-          cache-dependency-path: contracts/package-lock.json
-      
+
       - name: Check for contracts
         id: check-contracts
         run: |
@@ -184,30 +161,30 @@ jobs:
           else
             echo "has_contracts=false" >> $GITHUB_OUTPUT
           fi
-      
+
       - name: Install dependencies
         if: steps.check-contracts.outputs.has_contracts == 'true'
         run: npm install
-      
+
       - name: Compile contracts
         if: steps.check-contracts.outputs.has_contracts == 'true'
         continue-on-error: true
         run: npx hardhat compile 2>/dev/null || echo "No contracts to compile"
-      
+
       - name: Run contract tests
         if: steps.check-contracts.outputs.has_contracts == 'true'
         continue-on-error: true
         run: npx hardhat test 2>/dev/null || echo "No contract tests found"
-      
-      - name: Contracts status
-        run: echo "✅ Contract checks complete"
 
-  # 🐍 AI Agent Tests
+      - name: Contracts status
+        run: echo "Contract checks complete"
+
+  # AI Agent Tests
   test-ai-agents:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Check for Python agents
         id: check-agents
         run: |
@@ -216,35 +193,35 @@ jobs:
           else
             echo "has_agents=false" >> $GITHUB_OUTPUT
           fi
-      
+
       - name: Setup Python
         if: steps.check-agents.outputs.has_agents == 'true'
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      
+
       - name: Install dependencies
         if: steps.check-agents.outputs.has_agents == 'true'
         run: |
           pip install -r agents/requirements.txt
           pip install pytest pytest-cov
-      
+
       - name: Run AI agent tests
         if: steps.check-agents.outputs.has_agents == 'true'
         continue-on-error: true
         run: pytest agents/tests/ 2>/dev/null || echo "No agent tests found"
-      
-      - name: AI agents status
-        run: echo "✅ AI agent checks complete"
 
-  # ✅ Summary
+      - name: AI agents status
+        run: echo "AI agent checks complete"
+
+  # Summary
   ci-complete:
     runs-on: ubuntu-latest
     if: always()
     steps:
       - name: All checks complete
         run: |
-          echo "🎉 CI/CD Pipeline Complete!"
+          echo "CI/CD Pipeline Complete!"
           echo "Timestamp: $(date)"
           echo "Commit: ${{ github.sha }}"
           echo "Branch: ${{ github.ref_name }}"
