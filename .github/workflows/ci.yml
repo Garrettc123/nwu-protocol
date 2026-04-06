@@ -20,10 +20,10 @@ jobs:
   lint-and-security:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '18'
           cache: ${{ hashFiles('package-lock.json') != '' && 'npm' || '' }}
@@ -62,10 +62,10 @@ jobs:
   test-backend:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '18'
           cache: ${{ hashFiles('backend/package-lock.json') != '' && 'npm' || '' }}
@@ -107,10 +107,10 @@ jobs:
   test-frontend:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '18'
           cache: ${{ hashFiles('frontend/package-lock.json') != '' && 'npm' || '' }}
@@ -145,10 +145,10 @@ jobs:
   test-contracts:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '18'
           cache: ${{ hashFiles('contracts/package-lock.json') != '' && 'npm' || '' }}
@@ -183,7 +183,7 @@ jobs:
   test-ai-agents:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Check for Python agents
         id: check-agents
@@ -196,7 +196,7 @@ jobs:
 
       - name: Setup Python
         if: steps.check-agents.outputs.has_agents == 'true'
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.11'
 

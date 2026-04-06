@@ -40,11 +40,11 @@ jobs:
       changelog: ${{ steps.changelog.outputs.changelog }}
       full_notes: ${{ steps.full_notes.outputs.notes }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '18'
       - name: Generate version
@@ -91,9 +91,9 @@ jobs:
       github.event.inputs.component == 'backend' ||
       hashFiles('backend/**') != ''
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '18'
           registry-url: 'https://registry.npmjs.org'
@@ -150,9 +150,9 @@ jobs:
       github.event.inputs.component == 'frontend' ||
       hashFiles('frontend/**') != ''
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '18'
           cache: ${{ hashFiles('frontend/package-lock.json') != '' && 'npm' || '' }}
@@ -207,9 +207,9 @@ jobs:
       github.event.inputs.component == 'contracts' ||
       hashFiles('contracts/**') != ''
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '18'
           registry-url: 'https://registry.npmjs.org'
@@ -250,7 +250,7 @@ jobs:
       contents: write
     if: always()
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - name: Create release

@@ -187,7 +187,7 @@ jobs:
 
       - name: Checkout Repository
         if: steps.secret-check.outputs.skip != 'true'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Docker Buildx
         if: steps.secret-check.outputs.skip != 'true'
@@ -249,7 +249,7 @@ jobs:
 
       - name: Checkout Repository
         if: steps.secret-check.outputs.skip != 'true'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install Railway CLI
         if: steps.secret-check.outputs.skip != 'true'

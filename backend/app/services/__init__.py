@@ -1,27 +1,28 @@
 """Services module initialization."""
 
-from .ipfs_service import ipfs_service, IPFSService
-from .rabbitmq_service import rabbitmq_service, RabbitMQService
-from .redis_service import redis_service, RedisService
-from .auth_service import auth_service, AuthService
-from .payment_service import payment_service, PaymentService
-from .engagement_service import EngagementIterationService
-from .workflow_engine import ProgressiveAutomationEngine, WorkflowStage
-from .halt_process_service import HaltProcessService
+import logging as _logging
 
-__all__ = [
-    'ipfs_service',
-    'IPFSService',
-    'rabbitmq_service',
-    'RabbitMQService',
-    'redis_service',
-    'RedisService',
-    'auth_service',
-    'AuthService',
-    'payment_service',
-    'PaymentService',
-    'EngagementIterationService',
-    'ProgressiveAutomationEngine',
-    'WorkflowStage',
-    'HaltProcessService',
-]
+_logger = _logging.getLogger(__name__)
+
+__all__: list[str] = []
+
+
+def _try_import(names: list[str], from_mod: str) -> None:
+    """Import *names* from *from_mod*, skipping silently on ImportError."""
+    try:
+        mod = __import__(from_mod, globals(), locals(), names, level=1)
+        for name in names:
+            globals()[name] = getattr(mod, name)
+            __all__.append(name)
+    except (ImportError, Exception) as exc:  # noqa: BLE001
+        _logger.debug("Optional service %s unavailable: %s", from_mod, exc)
+
+
+_try_import(['ipfs_service', 'IPFSService'], '.ipfs_service')
+_try_import(['rabbitmq_service', 'RabbitMQService'], '.rabbitmq_service')
+_try_import(['redis_service', 'RedisService'], '.redis_service')
+_try_import(['auth_service', 'AuthService'], '.auth_service')
+_try_import(['payment_service', 'PaymentService'], '.payment_service')
+_try_import(['EngagementIterationService'], '.engagement_service')
+_try_import(['ProgressiveAutomationEngine', 'WorkflowStage'], '.workflow_engine')
+_try_import(['HaltProcessService'], '.halt_process_service')
