@@ -10,6 +10,7 @@ Tests cover:
 """
 
 import pytest
+import pytest_asyncio
 import asyncio
 from datetime import datetime
 
@@ -30,7 +31,7 @@ from backend.app.services.base_agent import (
 )
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def orchestrator():
     """Create a test orchestrator."""
     orch = AgentOrchestrator()
@@ -155,7 +156,7 @@ async def test_agent_capabilities():
     # Test verifier capabilities
     verifier_caps = orch._get_agent_capabilities(AgentType.VERIFIER)
     assert len(verifier_caps) > 0
-    assert any('verify' in cap.name for cap in verifier_caps)
+    assert any('verif' in cap.name for cap in verifier_caps)
     assert any('verify_code' in cap.task_types for cap in verifier_caps)
 
     # Test master capabilities

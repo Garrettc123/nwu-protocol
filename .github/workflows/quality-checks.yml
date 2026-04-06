@@ -18,7 +18,7 @@ jobs:
     name: Repository Structure Check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Check repository structure
         run: |
           echo "Repository structure:"
@@ -37,10 +37,10 @@ jobs:
     runs-on: ubuntu-latest
     if: hashFiles('backend/**') != ''
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '18'
           cache: ${{ hashFiles('backend/package-lock.json') != '' && 'npm' || '' }}
@@ -68,10 +68,10 @@ jobs:
     runs-on: ubuntu-latest
     if: hashFiles('frontend/**') != ''
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '18'
           cache: ${{ hashFiles('frontend/package-lock.json') != '' && 'npm' || '' }}
@@ -102,10 +102,10 @@ jobs:
     runs-on: ubuntu-latest
     if: hashFiles('contracts/**') != ''
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '18'
           cache: ${{ hashFiles('contracts/package-lock.json') != '' && 'npm' || '' }}
@@ -143,10 +143,10 @@ jobs:
     runs-on: ubuntu-latest
     if: hashFiles('agents/**') != ''
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.9'
           cache: 'pip'
@@ -176,7 +176,7 @@ jobs:
     name: Security Vulnerability Scan
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
@@ -206,10 +206,10 @@ jobs:
     runs-on: ubuntu-latest
     if: hashFiles('backend/**') != '' || hashFiles('frontend/**') != ''
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '18'
           cache: ${{ hashFiles('package-lock.json') != '' && 'npm' || '' }}
@@ -236,10 +236,10 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '18'
           cache: ${{ hashFiles('package-lock.json') != '' && 'npm' || '' }}

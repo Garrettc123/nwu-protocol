@@ -268,7 +268,10 @@ class AgentOrchestrator:
             await self.stop_agent(child_id, graceful=graceful)
 
         # Remove from registry
-        self.agent_registry[agent.agent_type].remove(agent_id)
+        try:
+            self.agent_registry[agent.agent_type].remove(agent_id)
+        except ValueError:
+            pass  # Already removed from registry
         agent.status = AgentStatus.STOPPED
 
         logger.info(f"Stopped agent {agent_id}")

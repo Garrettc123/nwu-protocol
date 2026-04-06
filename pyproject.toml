@@ -78,4 +78,4 @@ disallow_untyped_defs = false
 minversion = "7.0"
 testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py"]
-addopts = "-v --cov=. --cov-report=term-missing --cov-report=html"
+addopts = "-v"
