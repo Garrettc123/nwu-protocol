@@ -1,79 +1,70 @@
-/**
- * API client for NWU Protocol frontend.
- * Provides typed wrappers around the backend REST API.
- */
-
 import axios from 'axios';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
-// ---------------------------------------------------------------------------
-// Shared types
-// ---------------------------------------------------------------------------
+const getAuthHeaders = () => {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
 
 export interface User {
   id: number;
   address: string;
-  username: string | null;
-  email: string | null;
   reputation_score: number;
   total_contributions: number;
   total_rewards: number;
-  is_active: boolean;
   created_at: string;
-  updated_at: string;
 }
 
 export interface Contribution {
   id: number;
-  ipfs_hash: string;
-  file_name: string;
-  file_type: string;
-  file_size: number;
   title: string;
   description: string | null;
+  file_type: string;
   status: string;
   quality_score: number | null;
-  verification_count: number;
-  created_at: string;
 }
 
-// ---------------------------------------------------------------------------
-// API helpers
-// ---------------------------------------------------------------------------
+export interface UserStats {
+  total_contributions: number;
+  verified_contributions: number;
+  average_quality_score: number;
+  total_rewards: number;
+  reputation_score: number;
+}
+
+export interface UserRewards {
+  pending_amount: number;
+  distributed_amount: number;
+  total_rewards: number;
+}
 
 export const api = {
-  /** Fetch a user by Ethereum address. */
-  async getUser(address: string): Promise<User> {
-    const response = await axios.get(`${API_BASE}/api/v1/users/${address}`);
+  getUser: async (address: string): Promise<User> => {
+    const response = await axios.get(`${API_URL}/api/v1/users/${address}`, {
+      headers: getAuthHeaders(),
+    });
     return response.data;
   },
 
-  /** Fetch a user's contributions. */
-  async getUserContributions(
-    address: string
-  ): Promise<{ contributions: Contribution[]; total: number }> {
-    const response = await axios.get(`${API_BASE}/api/v1/users/${address}/contributions`);
+  getUserContributions: async (address: string): Promise<{ contributions: Contribution[] }> => {
+    const response = await axios.get(`${API_URL}/api/v1/users/${address}/contributions`, {
+      headers: getAuthHeaders(),
+    });
     return response.data;
   },
 
-  /** Fetch a user's reward stats. */
-  async getUserRewards(address: string): Promise<{
-    pending_amount: number;
-    distributed_amount: number;
-    total_amount: number;
-  }> {
-    const response = await axios.get(`${API_BASE}/api/v1/users/${address}/rewards`);
+  getUserStats: async (address: string): Promise<UserStats> => {
+    const response = await axios.get(`${API_URL}/api/v1/users/${address}/stats`, {
+      headers: getAuthHeaders(),
+    });
     return response.data;
   },
 
-  /** Fetch a user's contribution statistics. */
-  async getUserStats(address: string): Promise<{
-    total_contributions: number;
-    verified_contributions: number;
-    average_quality_score: number;
-  }> {
-    const response = await axios.get(`${API_BASE}/api/v1/users/${address}/stats`);
+  getUserRewards: async (address: string): Promise<UserRewards> => {
+    const response = await axios.get(`${API_URL}/api/v1/users/${address}/rewards`, {
+      headers: getAuthHeaders(),
+    });
     return response.data;
   },
 };

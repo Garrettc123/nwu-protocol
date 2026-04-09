@@ -1,27 +1,26 @@
-/**
- * Authentication service for NWU Protocol frontend.
- * Handles wallet-based JWT authentication against the backend API.
- */
-
 import axios from 'axios';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-const AUTH_TOKEN_KEY = 'nwu_auth_token';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
+const TOKEN_KEY = 'auth_token';
+
+const getAuthHeaders = () => {
+  const token = typeof window !== 'undefined' ? localStorage.getItem(TOKEN_KEY) : null;
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
 
 export const authService = {
-  /** Initiate wallet connection and receive a nonce to sign. */
-  async connect(address: string): Promise<{ nonce: string; message: string }> {
-    const response = await axios.post(`${API_BASE}/api/v1/auth/connect`, { address });
+  connect: async (address: string): Promise<{ nonce: string; message: string }> => {
+    const response = await axios.post(`${API_URL}/api/v1/auth/connect`, { address });
     return response.data;
   },
 
-  /** Verify the signed nonce and receive a JWT access token. */
-  async verify(
+  verify: async (
     address: string,
     signature: string,
     nonce: string
-  ): Promise<{ access_token: string; token_type: string }> {
-    const response = await axios.post(`${API_BASE}/api/v1/auth/verify`, {
+  ): Promise<{ access_token: string }> => {
+    const response = await axios.post(`${API_URL}/api/v1/auth/verify`, {
       address,
       signature,
       nonce,
@@ -29,34 +28,23 @@ export const authService = {
     return response.data;
   },
 
-  /** Logout the current wallet session. */
-  async logout(address: string): Promise<void> {
-    try {
-      await axios.post(`${API_BASE}/api/v1/auth/logout`, { address });
-    } catch {
-      // Ignore logout errors — token will be cleared locally regardless.
+  logout: async (address: string): Promise<void> => {
+    await axios.post(
+      `${API_URL}/api/v1/auth/logout`,
+      { address },
+      { headers: getAuthHeaders() }
+    );
+  },
+
+  setAuthToken: (token: string): void => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(TOKEN_KEY, token);
     }
   },
 
-  /** Persist the JWT token in localStorage. */
-  setAuthToken(token: string): void {
+  clearAuthToken: (): void => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem(AUTH_TOKEN_KEY, token);
-    }
-  },
-
-  /** Retrieve the stored JWT token, or null if not authenticated. */
-  getAuthToken(): string | null {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem(AUTH_TOKEN_KEY);
-    }
-    return null;
-  },
-
-  /** Remove the stored JWT token. */
-  clearAuthToken(): void {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem(AUTH_TOKEN_KEY);
+      localStorage.removeItem(TOKEN_KEY);
     }
   },
 };
