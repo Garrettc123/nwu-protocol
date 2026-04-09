@@ -45,15 +45,8 @@ function formatEth(balance: string | null): string {
 
 export default function WalletPage() {
   const router = useRouter();
-  const {
-    address,
-    connected,
-    chainId,
-    networkName,
-    ethBalance,
-    disconnect,
-    refreshBalance,
-  } = useWallet();
+  const { address, connected, chainId, networkName, ethBalance, disconnect, refreshBalance } =
+    useWallet();
 
   const [user, setUser] = useState<User | null>(null);
   const [stats, setStats] = useState<UserStats | null>(null);
@@ -161,9 +154,7 @@ export default function WalletPage() {
             <div>
               <p className="text-gray-400 text-xs uppercase tracking-wider mb-1">Address</p>
               <p className="font-mono text-lg break-all">{address}</p>
-              {copyError && (
-                <p className="text-red-400 text-xs mt-1">{copyError}</p>
-              )}
+              {copyError && <p className="text-red-400 text-xs mt-1">{copyError}</p>}
             </div>
             <button
               onClick={handleCopy}
@@ -223,9 +214,7 @@ export default function WalletPage() {
           {/* Reputation Score */}
           <div className="bg-gray-800 rounded-xl border border-gray-700 p-5">
             <p className="text-gray-400 text-xs uppercase tracking-wider">Reputation</p>
-            <p className="text-2xl font-bold mt-2 text-blue-400">
-              {user?.reputation_score ?? 0}
-            </p>
+            <p className="text-2xl font-bold mt-2 text-blue-400">{user?.reputation_score ?? 0}</p>
           </div>
         </div>
 
@@ -269,9 +258,7 @@ export default function WalletPage() {
                 key={t}
                 onClick={() => setTab(t)}
                 className={`px-4 py-1.5 rounded-md text-sm font-medium transition capitalize ${
-                  tab === t
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-400 hover:text-white'
+                  tab === t ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'
                 }`}
               >
                 {t}

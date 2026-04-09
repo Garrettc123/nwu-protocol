@@ -66,10 +66,7 @@ export const useWallet = create<WalletState>((set, get) => ({
       const address = accounts[0];
 
       // Get signer and network info in parallel
-      const [signer, network] = await Promise.all([
-        provider.getSigner(),
-        provider.getNetwork(),
-      ]);
+      const [signer, network] = await Promise.all([provider.getSigner(), provider.getNetwork()]);
 
       const chainId = Number(network.chainId);
       const networkName = resolveNetworkName(chainId, network.name);

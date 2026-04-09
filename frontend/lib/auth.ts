@@ -29,11 +29,7 @@ export const authService = {
   },
 
   logout: async (address: string): Promise<void> => {
-    await axios.post(
-      `${API_URL}/api/v1/auth/logout`,
-      { address },
-      { headers: getAuthHeaders() }
-    );
+    await axios.post(`${API_URL}/api/v1/auth/logout`, { address }, { headers: getAuthHeaders() });
   },
 
   setAuthToken: (token: string): void => {
