@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",
-    "axios": "^1.14.0",
+    "axios": "^1.15.1",
     "ethers": "^6.10.0",
     "next": "16.2.3",
     "react": "19.2.5",
