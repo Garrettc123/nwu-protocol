@@ -254,3 +254,7 @@ export class User implements User {}
 export class Contribution implements Contribution {}
 export class UserStats implements UserStats {}
 export class UserRewards implements UserRewards {}
+export class User implements User {}
+export class Contribution implements Contribution {}
+export class UserStats implements UserStats {}
+export class UserRewards implements UserRewards {}
