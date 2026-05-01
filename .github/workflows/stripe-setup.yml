@@ -1,0 +1,89 @@
+name: Stripe Product Setup
+
+# Run once to create Stripe products and store price IDs into SSM.
+# Re-running is safe — setup-stripe-products.js skips existing products/prices.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region:     ${{ vars.AWS_REGION }}
+
+      - name: Pull STRIPE_SECRET_KEY from SSM
+        env:
+          SECRETOPS_PREFIX:  ${{ vars.SECRETOPS_PREFIX }}
+          SECRETOPS_ENV:     ${{ vars.SECRETOPS_ENV }}
+        run: |
+          pip install --quiet boto3 botocore
+          python scripts/secretops.py \
+            --prefix "$SECRETOPS_PREFIX" \
+            --env    "$SECRETOPS_ENV" \
+            --service nwu-protocol \
+            export-github-env \
+            --required STRIPE_API_KEY
+
+      - name: Create Stripe products and prices
+        env:
+          STRIPE_SECRET_KEY: ${{ env.STRIPE_API_KEY }}
+        run: |
+          npm install stripe
+          node scripts/setup-stripe-products.js | tee /tmp/stripe-output.txt
+
+      - name: Extract and store price IDs → SSM
+        env:
+          SECRETOPS_PREFIX: ${{ vars.SECRETOPS_PREFIX }}
+          SECRETOPS_ENV:    ${{ vars.SECRETOPS_ENV }}
+        run: |
+          # Parse price IDs from script output
+          PRO_PRICE=$(grep STRIPE_PRICE_ID_PRO /tmp/stripe-output.txt | head -1 | awk -F= '{print $2}' | tr -d ' ')
+          ENT_PRICE=$(grep STRIPE_PRICE_ID_ENTERPRISE /tmp/stripe-output.txt | head -1 | awk -F= '{print $2}' | tr -d ' ')
+
+          echo "Pro price ID:        $PRO_PRICE"
+          echo "Enterprise price ID: $ENT_PRICE"
+
+          if [ -n "$PRO_PRICE" ] && [ "$PRO_PRICE" != "N/A" ]; then
+            echo "$PRO_PRICE" | python scripts/secretops.py \
+              --prefix "$SECRETOPS_PREFIX" \
+              --env    "$SECRETOPS_ENV" \
+              --service nwu-protocol \
+              put STRIPE_PRICE_ID_PRO --stdin
+            echo "Stored STRIPE_PRICE_ID_PRO"
+          fi
+
+          if [ -n "$ENT_PRICE" ] && [ "$ENT_PRICE" != "N/A" ]; then
+            echo "$ENT_PRICE" | python scripts/secretops.py \
+              --prefix "$SECRETOPS_PREFIX" \
+              --env    "$SECRETOPS_ENV" \
+              --service nwu-protocol \
+              put STRIPE_PRICE_ID_ENTERPRISE --stdin
+            echo "Stored STRIPE_PRICE_ID_ENTERPRISE"
+          fi
+
+      - name: Audit
+        env:
+          SECRETOPS_PREFIX: ${{ vars.SECRETOPS_PREFIX }}
+          SECRETOPS_ENV:    ${{ vars.SECRETOPS_ENV }}
+        run: |
+          python scripts/secretops.py \
+            --prefix "$SECRETOPS_PREFIX" \
+            --env    "$SECRETOPS_ENV" \
+            --service nwu-protocol \
+            list

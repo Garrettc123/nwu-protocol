@@ -113,11 +113,12 @@ async function main() {
   }
 
   console.log('=== Stripe Setup Complete ===');
-  console.log('Add the following price IDs to your backend .env / environment configuration:\n');
+  console.log('Price IDs (add to .env or SSM):\n');
   for (const { tier, productId, priceId } of results) {
     const envKey = `STRIPE_PRICE_ID_${tier.toUpperCase()}`;
-    console.log(`  ${envKey}=${priceId || 'N/A (free tier)'}`);
-    console.log(`  Product: ${productId}`);
+    // Use bare KEY=VALUE format so the CI workflow can grep/awk cleanly
+    console.log(`${envKey}=${priceId || 'N/A'}`);
+    console.log(`# product: ${productId}`);
   }
   console.log(
     '\nAlso set STRIPE_SECRET_KEY (backend), STRIPE_PUBLISHABLE_KEY (frontend), and STRIPE_WEBHOOK_SECRET.'
