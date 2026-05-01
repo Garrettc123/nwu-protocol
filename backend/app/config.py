@@ -59,6 +59,8 @@ class Settings(BaseSettings):
     stripe_api_key: Optional[str] = None
     stripe_webhook_secret: Optional[str] = None
     stripe_publishable_key: Optional[str] = None
+    stripe_price_id_pro: Optional[str] = None
+    stripe_price_id_enterprise: Optional[str] = None
 
     # Subscription Tiers
     subscription_tier_free_rate_limit: int = 100  # requests per day

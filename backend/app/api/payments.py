@@ -343,10 +343,10 @@ async def stripe_webhook(
 
 @router.get("/pricing")
 async def get_pricing():
-    """
-    Get pricing information for subscription tiers.
-    """
+    """Get pricing information for subscription tiers."""
+    from ..config import settings
     return {
+        "publishable_key": settings.stripe_publishable_key,
         "tiers": [
             {
                 "name": "free",
@@ -359,7 +359,8 @@ async def get_pricing():
                     "Basic verification",
                     "Community support"
                 ],
-                "rate_limit": 100
+                "rate_limit": 100,
+                "stripe_price_id": None
             },
             {
                 "name": "pro",
@@ -374,7 +375,8 @@ async def get_pricing():
                     "Custom AI agents",
                     "Analytics dashboard"
                 ],
-                "rate_limit": 10000
+                "rate_limit": 10000,
+                "stripe_price_id": settings.stripe_price_id_pro
             },
             {
                 "name": "enterprise",
@@ -391,7 +393,126 @@ async def get_pricing():
                     "Advanced analytics",
                     "White-label options"
                 ],
-                "rate_limit": 100000
+                "rate_limit": 100000,
+                "stripe_price_id": settings.stripe_price_id_enterprise
             }
         ]
     }
+
+
+@router.post("/checkout-session")
+async def create_checkout_session(
+    tier: str,
+    success_url: str,
+    cancel_url: str,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    """
+    Create a Stripe Checkout Session for subscription signup.
+
+    - **tier**: 'pro' or 'enterprise'
+    - **success_url**: URL to redirect after successful payment
+    - **cancel_url**: URL to redirect after cancellation
+    """
+    if not payment_service.stripe_configured:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Payment processing is not configured"
+        )
+
+    tier_enum = validate_subscription_tier(tier)
+    if tier_enum.value == "free":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Free tier does not require checkout"
+        )
+
+    from ..config import settings
+    price_id_map = {
+        "pro": settings.stripe_price_id_pro,
+        "enterprise": settings.stripe_price_id_enterprise,
+    }
+    price_id = price_id_map.get(tier_enum.value)
+    if not price_id:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Stripe price not configured for {tier} tier"
+        )
+
+    # Get or create Stripe customer
+    stripe_customer_id = None
+    existing_sub = db.query(Subscription).filter(
+        Subscription.user_id == user.id
+    ).order_by(Subscription.created_at.desc()).first()
+    if existing_sub and existing_sub.stripe_customer_id:
+        stripe_customer_id = existing_sub.stripe_customer_id
+    else:
+        stripe_customer_id = await payment_service.create_customer(user)
+
+    if not stripe_customer_id:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create customer record"
+        )
+
+    try:
+        session = stripe.checkout.Session.create(
+            customer=stripe_customer_id,
+            mode="subscription",
+            line_items=[{"price": price_id, "quantity": 1}],
+            success_url=success_url,
+            cancel_url=cancel_url,
+            metadata={"user_id": user.id, "tier": tier_enum.value},
+            subscription_data={"metadata": {"user_id": user.id, "tier": tier_enum.value}},
+        )
+        return {"checkout_url": session.url, "session_id": session.id}
+    except Exception as e:
+        logger.error(f"Failed to create checkout session: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create checkout session"
+        )
+
+
+@router.post("/customer-portal")
+async def create_customer_portal(
+    return_url: str,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    """
+    Create a Stripe Customer Portal session for subscription management.
+
+    - **return_url**: URL to return to after leaving the portal
+    """
+    if not payment_service.stripe_configured:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Payment processing is not configured"
+        )
+
+    # Find the user's Stripe customer ID from their most recent subscription
+    sub = db.query(Subscription).filter(
+        Subscription.user_id == user.id,
+        Subscription.stripe_customer_id.isnot(None)
+    ).order_by(Subscription.created_at.desc()).first()
+
+    if not sub or not sub.stripe_customer_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No billing account found"
+        )
+
+    try:
+        portal_session = stripe.billing_portal.Session.create(
+            customer=sub.stripe_customer_id,
+            return_url=return_url,
+        )
+        return {"portal_url": portal_session.url}
+    except Exception as e:
+        logger.error(f"Failed to create customer portal session: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create billing portal session"
+        )

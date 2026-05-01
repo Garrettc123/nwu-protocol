@@ -102,17 +102,23 @@ def get_user_stats(address: str, db: Session = Depends(get_db)):
         Contribution.user_id == user.id,
         Contribution.status == "verified"
     ).scalar() or 0
-    
+
+    pending_count = db.query(func.count(Contribution.id)).filter(
+        Contribution.user_id == user.id,
+        Contribution.status == "pending"
+    ).scalar() or 0
+
     avg_quality_score = db.query(func.avg(Contribution.quality_score)).filter(
         Contribution.user_id == user.id,
         Contribution.quality_score.isnot(None)
     ).scalar() or 0.0
-    
+
     return {
         "user_address": address,
         "reputation_score": user.reputation_score,
         "total_contributions": user.total_contributions,
         "verified_contributions": verified_count,
+        "pending_contributions": pending_count,
         "average_quality_score": round(float(avg_quality_score), 2),
         "total_rewards": user.total_rewards,
         "joined_at": user.created_at

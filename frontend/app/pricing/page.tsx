@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useWallet } from '@/hooks/useWallet';
+import { api } from '@/lib/api';
 
 interface PricingTier {
   name: string;
@@ -11,12 +14,17 @@ interface PricingTier {
   billing_period: string;
   features: string[];
   rate_limit: number;
+  stripe_price_id: string | null;
 }
 
 export default function PricingPage() {
+  const router = useRouter();
+  const { connected } = useWallet();
   const [tiers, setTiers] = useState<PricingTier[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/payments/pricing`)
@@ -25,12 +33,39 @@ export default function PricingPage() {
         setTiers(data.tiers ?? []);
         setLoading(false);
       })
-      .catch(err => {
-        console.error('Failed to fetch pricing:', err);
+      .catch(() => {
         setError(true);
         setLoading(false);
       });
   }, []);
+
+  const handleSubscribe = async (tier: PricingTier) => {
+    if (!connected) {
+      router.push('/');
+      return;
+    }
+
+    if (!tier.stripe_price_id) {
+      setCheckoutError(`${tier.display_name} plan is not yet available for purchase. Please contact us.`);
+      return;
+    }
+
+    setCheckoutLoading(tier.name);
+    setCheckoutError(null);
+
+    try {
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+      const { checkout_url } = await api.createCheckoutSession(
+        tier.name,
+        `${appUrl}/dashboard?checkout=success`,
+        `${appUrl}/pricing?checkout=canceled`
+      );
+      window.location.href = checkout_url;
+    } catch {
+      setCheckoutError('Failed to start checkout. Please try again.');
+      setCheckoutLoading(null);
+    }
+  };
 
   const highlightedTier = 'pro';
 
@@ -45,6 +80,12 @@ export default function PricingPage() {
           </p>
         </div>
 
+        {checkoutError && (
+          <div className="mb-8 max-w-lg mx-auto bg-red-900/40 border border-red-500 rounded-lg p-4 text-red-300 text-center text-sm">
+            {checkoutError}
+          </div>
+        )}
+
         {/* Pricing Cards */}
         {loading ? (
           <div className="text-center text-gray-400 py-20">Loading pricing…</div>
@@ -56,6 +97,7 @@ export default function PricingPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {tiers.map(tier => {
               const isHighlighted = tier.name === highlightedTier;
+              const isLoadingThis = checkoutLoading === tier.name;
               return (
                 <div
                   key={tier.name}
@@ -93,16 +135,26 @@ export default function PricingPage() {
                     ))}
                   </ul>
 
-                  <Link
-                    href={tier.price === 0 ? '/upload' : `/dashboard?plan=${tier.name}`}
-                    className={`block text-center py-3 rounded-lg font-semibold transition ${
-                      isHighlighted
-                        ? 'bg-primary-600 hover:bg-primary-700 text-white'
-                        : 'bg-gray-700 hover:bg-gray-600 text-white'
-                    }`}
-                  >
-                    {tier.price === 0 ? 'Get Started Free' : `Start ${tier.display_name}`}
-                  </Link>
+                  {tier.price === 0 ? (
+                    <Link
+                      href="/upload"
+                      className="block text-center py-3 rounded-lg font-semibold transition bg-gray-700 hover:bg-gray-600 text-white"
+                    >
+                      Get Started Free
+                    </Link>
+                  ) : (
+                    <button
+                      onClick={() => handleSubscribe(tier)}
+                      disabled={isLoadingThis || checkoutLoading !== null}
+                      className={`block w-full text-center py-3 rounded-lg font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed ${
+                        isHighlighted
+                          ? 'bg-primary-600 hover:bg-primary-700 text-white'
+                          : 'bg-gray-700 hover:bg-gray-600 text-white'
+                      }`}
+                    >
+                      {isLoadingThis ? 'Redirecting…' : `Start ${tier.display_name}`}
+                    </button>
+                  )}
                 </div>
               );
             })}

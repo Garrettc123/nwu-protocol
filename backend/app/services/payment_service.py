@@ -405,7 +405,9 @@ class PaymentService:
             )
 
             # Handle different event types
-            if event.type == "payment_intent.succeeded":
+            if event.type == "checkout.session.completed":
+                await self._handle_checkout_session_completed(db, event.data.object)
+            elif event.type == "payment_intent.succeeded":
                 await self._handle_payment_succeeded(db, event.data.object)
             elif event.type == "payment_intent.payment_failed":
                 await self._handle_payment_failed(db, event.data.object)
@@ -418,6 +420,62 @@ class PaymentService:
         except Exception as e:
             logger.error(f"Failed to handle webhook: {e}")
             return False
+
+    async def _handle_checkout_session_completed(self, db: Session, session: Any):
+        """Provision subscription after a successful Stripe Checkout Session."""
+        if session.mode != "subscription" or not session.subscription:
+            return
+
+        user_id = int(session.metadata.get("user_id", 0))
+        tier_value = session.metadata.get("tier", "pro")
+        stripe_subscription_id = session.subscription
+        stripe_customer_id = session.customer
+
+        if not user_id:
+            logger.error("checkout.session.completed missing user_id in metadata")
+            return
+
+        # Avoid creating duplicate subscriptions
+        existing = db.query(Subscription).filter(
+            Subscription.stripe_subscription_id == stripe_subscription_id
+        ).first()
+        if existing:
+            return
+
+        try:
+            tier_map = {
+                "pro": SubscriptionTier.PRO,
+                "enterprise": SubscriptionTier.ENTERPRISE,
+            }
+            tier = tier_map.get(tier_value, SubscriptionTier.PRO)
+
+            stripe_sub = stripe.Subscription.retrieve(stripe_subscription_id)
+
+            rate_limits = {
+                SubscriptionTier.FREE: settings.subscription_tier_free_rate_limit,
+                SubscriptionTier.PRO: settings.subscription_tier_pro_rate_limit,
+                SubscriptionTier.ENTERPRISE: settings.subscription_tier_enterprise_rate_limit,
+            }
+
+            api_key = self.generate_api_key()
+
+            subscription = Subscription(
+                user_id=user_id,
+                tier=tier,
+                stripe_subscription_id=stripe_subscription_id,
+                stripe_customer_id=stripe_customer_id,
+                status=stripe_sub.status,
+                current_period_start=datetime.fromtimestamp(stripe_sub.current_period_start),
+                current_period_end=datetime.fromtimestamp(stripe_sub.current_period_end),
+                api_key=api_key,
+                rate_limit=rate_limits.get(tier, settings.subscription_tier_pro_rate_limit),
+            )
+            db.add(subscription)
+            db.commit()
+            logger.info(f"Provisioned subscription for user {user_id} via checkout session")
+        except Exception as e:
+            db.rollback()
+            logger.error(f"Failed to provision subscription from checkout session: {e}")
 
     async def _handle_payment_succeeded(self, db: Session, payment_intent: Any):
         """Handle successful payment."""

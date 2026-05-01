@@ -2,19 +2,24 @@
 
 import { useEffect, useState } from 'react';
 import { useWallet } from '@/hooks/useWallet';
-import { api, Contribution, User } from '@/lib/api';
+import { api, Contribution, User, Subscription } from '@/lib/api';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function Dashboard() {
   const { address, connected } = useWallet();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [user, setUser] = useState<User | null>(null);
   const [contributions, setContributions] = useState<Contribution[]>([]);
   const [stats, setStats] = useState<any>(null);
   const [rewards, setRewards] = useState<any>(null);
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
+  const [portalLoading, setPortalLoading] = useState(false);
+
+  const checkoutStatus = searchParams.get('checkout');
 
   useEffect(() => {
     if (!connected || !address) {
@@ -26,18 +31,19 @@ export default function Dashboard() {
       try {
         setLoading(true);
 
-        // Load user data
-        const [userData, userContributions, userStats, userRewards] = await Promise.all([
+        const [userData, userContributions, userStats, userRewards, sub] = await Promise.all([
           api.getUser(address).catch(() => null),
-          api.getUserContributions(address),
-          api.getUserStats(address),
-          api.getUserRewards(address),
+          api.getUserContributions(address).catch(() => ({ contributions: [] })),
+          api.getUserStats(address).catch(() => null),
+          api.getUserRewards(address).catch(() => null),
+          api.getSubscription().catch(() => null),
         ]);
 
         setUser(userData);
-        setContributions(userContributions.contributions || []);
+        setContributions(userContributions.contributions ?? []);
         setStats(userStats);
         setRewards(userRewards);
+        setSubscription(sub);
       } catch (error) {
         console.error('Failed to load dashboard data:', error);
       } finally {
@@ -47,6 +53,17 @@ export default function Dashboard() {
 
     loadData();
   }, [address, connected, router]);
+
+  const handleManageBilling = async () => {
+    setPortalLoading(true);
+    try {
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+      const { portal_url } = await api.getCustomerPortalUrl(`${appUrl}/dashboard`);
+      window.location.href = portal_url;
+    } catch {
+      setPortalLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -59,40 +76,108 @@ export default function Dashboard() {
     );
   }
 
+  const tierLabel: Record<string, string> = { free: 'Free', pro: 'Pro', enterprise: 'Enterprise' };
+  const tierColor: Record<string, string> = {
+    free: 'text-gray-400',
+    pro: 'text-blue-400',
+    enterprise: 'text-purple-400',
+  };
+  const currentTier = subscription?.tier ?? 'free';
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white">
       <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        {/* Checkout result banners */}
+        {checkoutStatus === 'success' && (
+          <div className="mb-6 bg-green-900/40 border border-green-500 rounded-lg p-4 text-green-300 text-sm">
+            Payment successful! Your subscription is now active. It may take a moment to reflect here.
+          </div>
+        )}
+        {checkoutStatus === 'canceled' && (
+          <div className="mb-6 bg-yellow-900/40 border border-yellow-500 rounded-lg p-4 text-yellow-300 text-sm">
+            Checkout was canceled. No charge was made.{' '}
+            <Link href="/pricing" className="underline hover:text-yellow-100">
+              View plans
+            </Link>
+          </div>
+        )}
+
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold">Dashboard</h1>
-          <p className="text-gray-400 mt-2">
-            Welcome back, {address?.substring(0, 6)}...{address?.substring(38)}
-          </p>
+        <div className="mb-8 flex justify-between items-start">
+          <div>
+            <h1 className="text-3xl font-bold">Dashboard</h1>
+            <p className="text-gray-400 mt-2">
+              Welcome back, {address?.substring(0, 6)}...{address?.substring(38)}
+            </p>
+          </div>
+        </div>
+
+        {/* Subscription Banner */}
+        <div className="bg-gray-800 rounded-lg border border-gray-700 p-5 mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <p className="text-gray-400 text-xs uppercase tracking-wider mb-1">Current Plan</p>
+            <div className="flex items-center gap-3">
+              <span className={`text-2xl font-bold ${tierColor[currentTier]}`}>
+                {tierLabel[currentTier] ?? currentTier}
+              </span>
+              {subscription?.current_period_end && currentTier !== 'free' && (
+                <span className="text-gray-500 text-sm">
+                  renews {new Date(subscription.current_period_end).toLocaleDateString()}
+                </span>
+              )}
+              {subscription?.cancel_at_period_end && (
+                <span className="text-red-400 text-xs bg-red-900/30 px-2 py-0.5 rounded">
+                  Cancels at period end
+                </span>
+              )}
+            </div>
+            <p className="text-gray-500 text-sm mt-1">
+              {subscription?.rate_limit?.toLocaleString() ?? 100} API requests / day
+            </p>
+          </div>
+          <div className="flex gap-3 shrink-0">
+            {currentTier === 'free' ? (
+              <Link
+                href="/pricing"
+                className="px-5 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-semibold transition"
+              >
+                Upgrade Plan
+              </Link>
+            ) : (
+              <button
+                onClick={handleManageBilling}
+                disabled={portalLoading}
+                className="px-5 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm font-semibold transition disabled:opacity-60"
+              >
+                {portalLoading ? 'Opening…' : 'Manage Billing'}
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
             <div className="text-gray-400 text-sm mb-2">Total Contributions</div>
-            <div className="text-3xl font-bold">{stats?.total_contributions || 0}</div>
+            <div className="text-3xl font-bold">{stats?.total_contributions ?? 0}</div>
           </div>
 
           <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
             <div className="text-gray-400 text-sm mb-2">Verified</div>
             <div className="text-3xl font-bold text-green-500">
-              {stats?.verified_contributions || 0}
+              {stats?.verified_contributions ?? 0}
             </div>
           </div>
 
           <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
             <div className="text-gray-400 text-sm mb-2">Avg. Quality Score</div>
-            <div className="text-3xl font-bold">{stats?.average_quality_score || 0}</div>
+            <div className="text-3xl font-bold">{stats?.average_quality_score ?? 0}</div>
           </div>
 
           <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
             <div className="text-gray-400 text-sm mb-2">Total Rewards</div>
             <div className="text-3xl font-bold text-yellow-500">
-              {user?.total_rewards.toFixed(2) || '0.00'} NWU
+              {(user?.total_rewards ?? 0).toFixed(2)} NWU
             </div>
           </div>
         </div>
@@ -104,18 +189,18 @@ export default function Dashboard() {
             <div>
               <div className="text-gray-400 text-sm">Pending</div>
               <div className="text-2xl font-bold text-yellow-400">
-                {rewards?.pending_amount?.toFixed(2) || '0.00'} NWU
+                {(rewards?.pending_amount ?? 0).toFixed(2)} NWU
               </div>
             </div>
             <div>
               <div className="text-gray-400 text-sm">Distributed</div>
               <div className="text-2xl font-bold text-green-400">
-                {rewards?.distributed_amount?.toFixed(2) || '0.00'} NWU
+                {(rewards?.distributed_amount ?? 0).toFixed(2)} NWU
               </div>
             </div>
             <div>
               <div className="text-gray-400 text-sm">Reputation Score</div>
-              <div className="text-2xl font-bold">{user?.reputation_score || 0}</div>
+              <div className="text-2xl font-bold">{user?.reputation_score ?? 0}</div>
             </div>
           </div>
         </div>
