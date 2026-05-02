@@ -9,7 +9,7 @@ from datetime import datetime
 
 from .config import settings
 from .database import init_db, engine
-from .api import contributions_router, users_router, verifications_router, auth_router, websocket_router, payments_router, referrals_router, business_agents_router, business_tasks_router, admin_router
+from .api import contributions_router, users_router, verifications_router, auth_router, websocket_router, payments_router, referrals_router, business_agents_router, business_tasks_router, admin_router, perplexity_router
 from .api.halt_process import router as halt_process_router
 from .api.agents import router as agents_router
 from .services import rabbitmq_service, redis_service
@@ -73,6 +73,14 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"Error shutting down Agent Orchestrator: {e}")
 
+    # Close Perplexity HTTP client
+    try:
+        from .services.perplexity_service import perplexity_service
+        await perplexity_service.close()
+        logger.info("Perplexity service closed")
+    except Exception as e:
+        logger.error(f"Error closing Perplexity service: {e}")
+
 
 # Create FastAPI application
 app = FastAPI(
@@ -107,6 +115,7 @@ app.include_router(agents_router)
 app.include_router(business_agents_router)
 app.include_router(business_tasks_router)
 app.include_router(admin_router)
+app.include_router(perplexity_router)
 
 
 @app.get("/")
@@ -170,6 +179,7 @@ async def api_info():
             "contributions": "/api/v1/contributions",
             "users": "/api/v1/users",
             "verifications": "/api/v1/verifications",
+            "perplexity": "/api/v1/perplexity",
             "health": "/health",
             "docs": "/docs"
         }

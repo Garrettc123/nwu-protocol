@@ -51,6 +51,9 @@ class Settings(BaseSettings):
     # OpenAI
     openai_api_key: Optional[str] = None
 
+    # Perplexity
+    perplexity_api_key: Optional[str] = None
+
     # Blockchain
     eth_rpc_url: Optional[str] = None
     contract_address: Optional[str] = None
