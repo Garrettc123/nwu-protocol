@@ -32,6 +32,11 @@ export const authService = {
     await axios.post(`${API_URL}/api/v1/auth/logout`, { address }, { headers: getAuthHeaders() });
   },
 
+  getAuthToken: (): string | null => {
+    if (typeof window === 'undefined') return null;
+    return localStorage.getItem(TOKEN_KEY);
+  },
+
   setAuthToken: (token: string): void => {
     if (typeof window !== 'undefined') {
       localStorage.setItem(TOKEN_KEY, token);

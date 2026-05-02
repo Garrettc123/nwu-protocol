@@ -37,6 +37,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   <Link href="/wallet" className="text-gray-300 hover:text-white transition">
                     Wallet
                   </Link>
+                  <Link href="/referrals" className="text-gray-300 hover:text-white transition">
+                    Referrals
+                  </Link>
                 </div>
               </div>
               <WalletConnect />

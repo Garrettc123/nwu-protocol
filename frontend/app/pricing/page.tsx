@@ -41,7 +41,7 @@ export default function PricingPage() {
 
   const handleSubscribe = async (tier: PricingTier) => {
     if (!connected) {
-      router.push('/');
+      setCheckoutError('Connect your wallet first to subscribe. Click "Connect Wallet" in the nav.');
       return;
     }
 

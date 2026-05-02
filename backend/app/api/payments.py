@@ -1,5 +1,6 @@
 """API endpoints for payments and subscriptions."""
 
+import stripe
 from fastapi import APIRouter, Depends, HTTPException, status, Header, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
