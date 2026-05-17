@@ -1,5 +1,10 @@
 name: Production Deployment - All Systems
 
+permissions:
+  contents: read
+  id-token: write
+  deployments: write
+  pages: write
 on:
   workflow_dispatch:
     inputs:
