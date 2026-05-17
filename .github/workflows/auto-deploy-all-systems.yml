@@ -1,5 +1,9 @@
 name: AUTO-DEPLOY ALL SYSTEMS
 
+permissions:
+  contents: read
+  deployments: write
+  statuses: write
 on:
   workflow_dispatch:
   push:
