@@ -9,6 +9,7 @@ from .payments import router as payments_router
 from .referrals import router as referrals_router
 from .business_agents import business_agents_router, business_tasks_router
 from .admin import router as admin_router
+from .perplexity import router as perplexity_router
 
 __all__ = [
     'contributions_router',
@@ -21,4 +22,5 @@ __all__ = [
     'business_agents_router',
     'business_tasks_router',
     'admin_router',
+    'perplexity_router',
 ]

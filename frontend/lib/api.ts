@@ -39,7 +39,105 @@ export interface UserRewards {
   total_rewards: number;
 }
 
+// ---------------------------------------------------------------------------
+// Perplexity types
+// ---------------------------------------------------------------------------
+
+export interface PerplexityResult {
+  success: boolean;
+  content: string;
+  citations: string[];
+  model: string;
+  usage: Record<string, number>;
+  finish_reason: string | null;
+}
+
+export interface PerplexityStatus {
+  configured: boolean;
+  message: string;
+  available_models: string[];
+}
+
+export interface ChatMessage {
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+}
+
+// ---------------------------------------------------------------------------
+// API client
+// ---------------------------------------------------------------------------
+
 export const api = {
+  // Perplexity
+  perplexityStatus: async (): Promise<PerplexityStatus> => {
+    const response = await axios.get(`${API_URL}/api/v1/perplexity/status`);
+    return response.data;
+  },
+
+  perplexitySearch: async (
+    query: string,
+    model = 'sonar',
+    systemPrompt?: string
+  ): Promise<PerplexityResult> => {
+    const response = await axios.post(
+      `${API_URL}/api/v1/perplexity/search`,
+      { query, model, system_prompt: systemPrompt },
+      { headers: getAuthHeaders() }
+    );
+    return response.data;
+  },
+
+  perplexityResearch: async (
+    topic: string,
+    depth: 'standard' | 'deep' = 'standard'
+  ): Promise<PerplexityResult> => {
+    const response = await axios.post(
+      `${API_URL}/api/v1/perplexity/research`,
+      { topic, depth },
+      { headers: getAuthHeaders() }
+    );
+    return response.data;
+  },
+
+  perplexityFactCheck: async (claim: string): Promise<PerplexityResult> => {
+    const response = await axios.post(
+      `${API_URL}/api/v1/perplexity/fact-check`,
+      { claim },
+      { headers: getAuthHeaders() }
+    );
+    return response.data;
+  },
+
+  perplexityChat: async (
+    messages: ChatMessage[],
+    model = 'sonar'
+  ): Promise<PerplexityResult> => {
+    const response = await axios.post(
+      `${API_URL}/api/v1/perplexity/chat`,
+      { messages, model },
+      { headers: getAuthHeaders() }
+    );
+    return response.data;
+  },
+
+  perplexityMarketAnalysis: async (market: string): Promise<PerplexityResult> => {
+    const response = await axios.post(
+      `${API_URL}/api/v1/perplexity/market-analysis`,
+      { market },
+      { headers: getAuthHeaders() }
+    );
+    return response.data;
+  },
+
+  perplexityTechnicalResearch: async (subject: string): Promise<PerplexityResult> => {
+    const response = await axios.post(
+      `${API_URL}/api/v1/perplexity/technical-research`,
+      { subject },
+      { headers: getAuthHeaders() }
+    );
+    return response.data;
+  },
+
   getUser: async (address: string): Promise<User> => {
     const response = await axios.get(`${API_URL}/api/v1/users/${address}`, {
       headers: getAuthHeaders(),

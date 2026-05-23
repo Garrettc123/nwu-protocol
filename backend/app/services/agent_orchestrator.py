@@ -21,6 +21,7 @@ class AgentType(Enum):
     ANALYZER = "analyzer"  # Analyzes data patterns
     COORDINATOR = "coordinator"  # Coordinates multiple tasks
     SPECIALIST = "specialist"  # Domain-specific tasks
+    RESEARCHER = "researcher"  # Real-time web research via Perplexity
 
 
 class AgentStatus(Enum):
@@ -91,6 +92,7 @@ class AgentOrchestrator:
         self.agent_registry: Dict[AgentType, List[str]] = {
             agent_type: [] for agent_type in AgentType
         }
+
         self.task_queue: asyncio.Queue = asyncio.Queue()
         self.running = False
         self.master_agent_id: Optional[str] = None
@@ -222,7 +224,22 @@ class AgentOrchestrator:
                     task_types=["specialized"],
                     max_concurrent_tasks=3
                 )
-            ]
+            ],
+            AgentType.RESEARCHER: [
+                AgentCapability(
+                    name="research",
+                    description="Real-time web research and search via Perplexity AI",
+                    task_types=[
+                        "web_search",
+                        "research_topic",
+                        "fact_check",
+                        "market_analysis",
+                        "technical_research",
+                    ],
+                    max_concurrent_tasks=5,
+                    requires_dependencies=["perplexity"]
+                )
+            ],
         }
         return capabilities_map.get(agent_type, [])
 
