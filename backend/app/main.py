@@ -9,7 +9,7 @@ from datetime import datetime
 
 from .config import settings
 from .database import init_db, engine
-from .api import contributions_router, users_router, verifications_router, auth_router, websocket_router, payments_router, referrals_router, business_agents_router, business_tasks_router, admin_router, perplexity_router
+from .api import contributions_router, users_router, verifications_router, auth_router, websocket_router, payments_router, referrals_router, business_agents_router, business_tasks_router, admin_router, perplexity_router, nsr_router
 from .api.halt_process import router as halt_process_router
 from .api.agents import router as agents_router
 from .services import rabbitmq_service, redis_service
@@ -116,6 +116,7 @@ app.include_router(business_agents_router)
 app.include_router(business_tasks_router)
 app.include_router(admin_router)
 app.include_router(perplexity_router)
+app.include_router(nsr_router)
 
 
 @app.get("/")

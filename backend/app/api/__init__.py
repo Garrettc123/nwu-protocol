@@ -10,6 +10,7 @@ from .referrals import router as referrals_router
 from .business_agents import business_agents_router, business_tasks_router
 from .admin import router as admin_router
 from .perplexity import router as perplexity_router
+from .nsr import router as nsr_router
 
 __all__ = [
     'contributions_router',
@@ -23,4 +24,5 @@ __all__ = [
     'business_tasks_router',
     'admin_router',
     'perplexity_router',
+    'nsr_router',
 ]

@@ -21,7 +21,8 @@ class AgentType(Enum):
     ANALYZER = "analyzer"  # Analyzes data patterns
     COORDINATOR = "coordinator"  # Coordinates multiple tasks
     SPECIALIST = "specialist"  # Domain-specific tasks
-    RESEARCHER = "researcher"  # Real-time web research via Perplexity
+    RESEARCHER = "researcher"      # Real-time web research via Perplexity
+    NSR_GUARDIAN = "nsr_guardian"  # Neuro-symbolic policy enforcement (SKV / RHNS)
 
 
 class AgentStatus(Enum):
@@ -238,6 +239,23 @@ class AgentOrchestrator:
                     ],
                     max_concurrent_tasks=5,
                     requires_dependencies=["perplexity"]
+                )
+            ],
+            AgentType.NSR_GUARDIAN: [
+                AgentCapability(
+                    name="neuro_symbolic_reasoning",
+                    description=(
+                        "Symbolic Knowledge Vault circuit breaker — validates neural intents "
+                        "via deontic defeasible logic and CSP conflict resolution (RHNS layer)"
+                    ),
+                    task_types=[
+                        "validate_intent",
+                        "resolve_policy",
+                        "fact_gate",
+                        "emergency_override",
+                    ],
+                    max_concurrent_tasks=10,
+                    requires_dependencies=["numpy"]
                 )
             ],
         }
