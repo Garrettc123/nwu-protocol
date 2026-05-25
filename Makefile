@@ -1,4 +1,5 @@
-.PHONY: help deploy start stop restart logs status clean test build pr-list pr-check pr-merge pr-batch pr-auto
+.PHONY: help deploy start stop restart logs status clean test build pr-list pr-check pr-merge pr-batch pr-auto \
+        secrets secrets-validate secrets-rotate secrets-push-railway secrets-push-github
 
 # Default target
 help:
@@ -21,6 +22,13 @@ help:
 	@echo "  make frontend   - Start frontend dev server"
 	@echo "  make migrate    - Run database migrations"
 	@echo "  make contracts  - Deploy smart contracts"
+	@echo ""
+	@echo "Secrets Management:"
+	@echo "  make secrets              - First-time interactive secrets setup"
+	@echo "  make secrets-validate     - Validate all secrets are set correctly"
+	@echo "  make secrets-rotate       - Rotate JWT/NSR secrets (run quarterly)"
+	@echo "  make secrets-push-railway - Push .env secrets to Railway"
+	@echo "  make secrets-push-github  - Push .env secrets to GitHub secrets"
 	@echo ""
 	@echo "PR Management:"
 	@echo "  make pr-list    - List all open pull requests"
@@ -166,6 +174,31 @@ shell-postgres:
 
 shell-mongodb:
 	@docker exec -it nwu-mongodb mongosh -u admin -p rocket69!
+
+# ── Secrets Management ──────────────────────────────────────────────────────
+
+# First-time secrets setup (interactive wizard)
+secrets:
+	@echo "🔐 Running secrets setup wizard..."
+	@bash scripts/setup-secrets.sh
+
+# Validate secrets are set and correctly formatted
+secrets-validate:
+	@bash scripts/validate-secrets.sh
+
+# Rotate auto-generated secrets (JWT, NSR) — run quarterly
+secrets-rotate:
+	@bash scripts/rotate-secrets.sh
+
+# Push existing .env to Railway
+secrets-push-railway:
+	@bash scripts/push-to-railway.sh
+
+# Push existing .env to GitHub repository secrets
+secrets-push-github:
+	@bash scripts/push-to-github.sh
+
+# ── Dev Setup ───────────────────────────────────────────────────────────────
 
 # Quick dev setup
 dev-setup:
