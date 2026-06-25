@@ -8,10 +8,25 @@ type Mode = 'search' | 'research' | 'fact-check' | 'chat' | 'market' | 'technica
 const MODES: { id: Mode; label: string; icon: string; description: string }[] = [
   { id: 'search', label: 'Web Search', icon: '🔍', description: 'Fast, grounded web search' },
   { id: 'research', label: 'Deep Research', icon: '📚', description: 'Multi-step expert research' },
-  { id: 'fact-check', label: 'Fact Check', icon: '✅', description: 'Verify claims with live sources' },
+  {
+    id: 'fact-check',
+    label: 'Fact Check',
+    icon: '✅',
+    description: 'Verify claims with live sources',
+  },
   { id: 'chat', label: 'Chat', icon: '💬', description: 'Conversational search' },
-  { id: 'market', label: 'Market Analysis', icon: '📈', description: 'Structured market intelligence' },
-  { id: 'technical', label: 'Technical Research', icon: '⚙️', description: 'Deep technical documentation' },
+  {
+    id: 'market',
+    label: 'Market Analysis',
+    icon: '📈',
+    description: 'Structured market intelligence',
+  },
+  {
+    id: 'technical',
+    label: 'Technical Research',
+    icon: '⚙️',
+    description: 'Deep technical documentation',
+  },
 ];
 
 export default function ResearchPage() {
@@ -91,12 +106,12 @@ export default function ResearchPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white">
       <div className="max-w-5xl mx-auto px-4 py-10 sm:px-6 lg:px-8">
-
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold">Perplexity Research</h1>
           <p className="text-gray-400 mt-2">
-            Real-time web intelligence powered by Perplexity AI — grounded answers with live citations.
+            Real-time web intelligence powered by Perplexity AI — grounded answers with live
+            citations.
           </p>
         </div>
 
@@ -105,7 +120,11 @@ export default function ResearchPage() {
           {MODES.map(m => (
             <button
               key={m.id}
-              onClick={() => { setMode(m.id); setResult(null); setError(null); }}
+              onClick={() => {
+                setMode(m.id);
+                setResult(null);
+                setError(null);
+              }}
               className={`p-3 rounded-lg border text-left transition ${
                 mode === m.id
                   ? 'border-blue-500 bg-blue-900/30 text-blue-300'
@@ -153,7 +172,10 @@ export default function ResearchPage() {
 
           {mode === 'chat' && chatHistory.length > 0 && (
             <button
-              onClick={() => { setChatHistory([]); setResult(null); }}
+              onClick={() => {
+                setChatHistory([]);
+                setResult(null);
+              }}
               className="text-xs text-red-400 hover:text-red-300 border border-red-800 rounded px-2 py-1"
             >
               Clear chat
@@ -165,12 +187,13 @@ export default function ResearchPage() {
         {mode === 'chat' && chatHistory.length > 0 && (
           <div className="bg-gray-800 rounded-lg border border-gray-700 p-4 mb-4 space-y-4 max-h-96 overflow-y-auto">
             {chatHistory.map((msg, i) => (
-              <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div
+                key={i}
+                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
                 <div
                   className={`max-w-[85%] px-4 py-2 rounded-lg text-sm whitespace-pre-wrap ${
-                    msg.role === 'user'
-                      ? 'bg-blue-700 text-white'
-                      : 'bg-gray-700 text-gray-100'
+                    msg.role === 'user' ? 'bg-blue-700 text-white' : 'bg-gray-700 text-gray-100'
                   }`}
                 >
                   {msg.content}
@@ -185,7 +208,12 @@ export default function ResearchPage() {
           <textarea
             value={input}
             onChange={e => setInput(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(e as any); } }}
+            onKeyDown={e => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSubmit(e as any);
+              }
+            }}
             placeholder={inputPlaceholders[mode]}
             rows={mode === 'research' || mode === 'technical' ? 3 : 2}
             className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 resize-none focus:outline-none focus:border-blue-500 transition"
@@ -216,10 +244,11 @@ export default function ResearchPage() {
         {/* Result */}
         {result && (
           <div className="bg-gray-800 rounded-lg border border-gray-700 p-6 space-y-4">
-
             {/* Meta bar */}
             <div className="flex items-center justify-between text-xs text-gray-500 border-b border-gray-700 pb-3">
-              <span>Model: <span className="text-gray-300">{result.model}</span></span>
+              <span>
+                Model: <span className="text-gray-300">{result.model}</span>
+              </span>
               {result.usage?.completion_tokens !== undefined && (
                 <span>{result.usage.completion_tokens} tokens</span>
               )}

@@ -108,10 +108,7 @@ export const api = {
     return response.data;
   },
 
-  perplexityChat: async (
-    messages: ChatMessage[],
-    model = 'sonar'
-  ): Promise<PerplexityResult> => {
+  perplexityChat: async (messages: ChatMessage[], model = 'sonar'): Promise<PerplexityResult> => {
     const response = await axios.post(
       `${API_URL}/api/v1/perplexity/chat`,
       { messages, model },
