@@ -28,3 +28,8 @@ Repository = "https://github.com/Garrettc123/nwu-protocol"
 
 [tool.setuptools.packages.find]
 where = ["."]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+asyncio_mode = "strict"

@@ -46,7 +46,7 @@ jobs:
 
     - name: Start services
       run: |
-        docker-compose up -d
+        docker compose up -d
         sleep 30
 
     - name: Wait for services
@@ -55,7 +55,7 @@ jobs:
 
     - name: Check service health
       run: |
-        docker-compose ps
+        docker compose ps
         curl -f http://localhost:8000/health || echo "Backend health check failed"
 
     - name: Run auto-recovery if needed
@@ -67,10 +67,10 @@ jobs:
     - name: Show logs on failure
       if: failure()
       run: |
-        docker-compose logs backend
-        docker-compose logs postgres
+        docker compose logs backend
+        docker compose logs postgres
 
     - name: Cleanup
       if: always()
       run: |
-        docker-compose down -v
+        docker compose down -v
