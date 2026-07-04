@@ -12,7 +12,7 @@ Before deploying to production and enabling real-world currency generation, ensu
    - Etherscan API key for contract verification
 
 2. **Infrastructure**
-   - Production server or cloud hosting (AWS, GCP, Azure, or Vercel)
+   - Production server or cloud hosting (AWS, GCP, Azure, Railway, or self-hosted Docker)
    - PostgreSQL database
    - Redis instance
    - MongoDB instance
@@ -139,19 +139,7 @@ docker-compose up -d
 docker-compose logs -f backend
 ```
 
-### Option B: Vercel Deployment
-
-```bash
-# Install Vercel CLI
-npm i -g vercel
-
-# Deploy
-vercel --prod
-
-# Set environment variables in Vercel dashboard
-```
-
-### Option C: Traditional Server Deployment
+### Option B: Traditional Server Deployment
 
 ```bash
 # Install dependencies
@@ -171,8 +159,8 @@ cd frontend
 npm install
 npm run build
 
-# Deploy to Vercel, Netlify, or your hosting provider
-vercel --prod
+# Host using your existing platform (Railway static service, GitHub Pages, or reverse-proxied container)
+# Then verify frontend can reach NEXT_PUBLIC_API_URL
 ```
 
 ## Step 6: Test Payment Flow

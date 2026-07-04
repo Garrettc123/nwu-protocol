@@ -70,8 +70,14 @@ jobs:
 
       - name: Verify deployment
         if: steps.secret-check.outputs.skip != 'true'
+        env:
+          DEPLOY_HEALTH_URL: ${{ secrets.DEPLOY_HEALTH_URL }}
         run: |
-          curl -f https://nwu-protocol.vercel.app/health || exit 1
+          if [ -z "$DEPLOY_HEALTH_URL" ]; then
+            echo "DEPLOY_HEALTH_URL not configured — skipping verification"
+            exit 0
+          fi
+          curl -f "$DEPLOY_HEALTH_URL" || exit 1
 
       - name: Notify Slack on success
         if: success() && steps.secret-check.outputs.skip != 'true'

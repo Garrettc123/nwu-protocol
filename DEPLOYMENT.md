@@ -135,7 +135,7 @@ npx hardhat run scripts/deploy.js --network localhost  # In another
 npx hardhat run scripts/deploy.js --network sepolia
 ```
 
-## Production Deployment
+## Production Deployment (Source of Truth)
 
 ### 1. Build Docker Images
 
@@ -186,23 +186,48 @@ docker-compose logs -f backend
 docker-compose logs -f agent-alpha
 ```
 
-### 5. Frontend Deployment (Vercel)
+### 5. Hosted Deployment Targets
 
-```bash
-cd frontend
+Primary hosted target:
 
-# Install Vercel CLI
-npm i -g vercel
+- **Railway** for managed API hosting.
 
-# Deploy
-vercel --prod
-```
+Secondary target:
 
-Or use the Vercel dashboard:
+- **SSH + Docker production server** using `docker-compose.prod.yml`.
 
-1. Connect your GitHub repository
-2. Configure environment variables
-3. Deploy
+### 6. CI/CD Deployment Commands and Secrets
+
+Railway deployment (`.github/workflows/production-deployment.yml`):
+
+- Command: `railway up --service wealth-api`
+- Required secrets:
+  - `RAILWAY_TOKEN`
+  - `RAILWAY_PROJECT_ID`
+  - `RAILWAY_URL` (health verification URL)
+
+Production server deployment (`.github/workflows/deploy.yml`):
+
+- Remote command: `git pull origin main && ./deploy.sh`
+- Required secrets:
+  - `DEPLOY_KEY`
+  - `DEPLOY_HOST`
+  - `DEPLOY_USER`
+  - `DEPLOY_PATH`
+  - `DEPLOY_HEALTH_URL` (platform-neutral health endpoint)
+
+### 7. Health Check URLs
+
+- Railway: `${RAILWAY_URL}/health`
+- Production server: `$DEPLOY_HEALTH_URL`
+
+### 8. Rollback Path
+
+If a deployment fails:
+
+1. Redeploy last known-good Docker image on the production server.
+2. Re-run Railway deploy pinned to the last known-good commit.
+3. Validate `/health` on both targets before re-enabling traffic.
 
 ## Database Migrations
 
