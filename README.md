@@ -22,6 +22,6 @@ This is an enterprise-grade protocol.
 
 ## 🛠️ Built By
 
-**Garrett Carroll**  
+**Garrett Carrol**  
 Founder, Zero-Human Enterprise  
 [GitHub](https://github.com/Garrettc123)
