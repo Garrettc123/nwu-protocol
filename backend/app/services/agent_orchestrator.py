@@ -2,16 +2,44 @@
 
 import asyncio
 import logging
+import os
 import uuid
 from datetime import datetime
 from enum import Enum
 from typing import Dict, Any, List, Optional, Set
 from dataclasses import dataclass, field
-import json
 
-from ..config import settings
+from .agent_runtime import (
+    LifecycleManager,
+    ObservabilityService,
+    ProducerService,
+    SharedTaskStateModel,
+    TaskEnvelope,
+    TaskState,
+    WorkerService,
+    generate_task_id,
+)
 
 logger = logging.getLogger(__name__)
+DEFAULT_SIMULATED_TASK_DURATION_SECONDS = 1
+MAX_SIMULATED_TASK_DURATION_SECONDS = 10
+
+
+def parse_bool_env(name: str, default: bool = False) -> bool:
+    """Parse a boolean environment variable."""
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def parse_and_clamp_duration(raw_value: Any, default: float, max_value: float) -> float:
+    """Parse a duration input and clamp to an allowed range."""
+    try:
+        parsed = float(raw_value)
+    except (TypeError, ValueError):
+        parsed = default
+    return max(0.0, min(parsed, max_value))
 
 
 class AgentType(Enum):
@@ -93,7 +121,6 @@ class AgentOrchestrator:
             agent_type: [] for agent_type in AgentType
         }
 
-        self.task_queue: asyncio.Queue = asyncio.Queue()
         self.running = False
         self.master_agent_id: Optional[str] = None
 
@@ -102,6 +129,20 @@ class AgentOrchestrator:
         self.auto_scale_enabled = True
         self.health_check_interval = 30  # seconds
         self.task_timeout = 300  # seconds
+        self.max_task_retry_attempts = 1
+        self.fault_injection_enabled = parse_bool_env("NWU_ENABLE_FAULT_INJECTION", default=False)
+
+        # Systematic runtime modules
+        self.task_state_model = SharedTaskStateModel()
+        self.observability = ObservabilityService()
+        self.producer = ProducerService(self.task_state_model)
+        self.lifecycle_manager = LifecycleManager(max_agents_per_type=self.max_agents_per_type)
+        self.worker = WorkerService(
+            state_model=self.task_state_model,
+            observability=self.observability,
+            execute_unit=self._run_task_unit,
+            max_retry_attempts=self.max_task_retry_attempts,
+        )
 
     async def initialize(self):
         """Initialize the orchestrator and spawn master agent."""
@@ -254,11 +295,13 @@ class AgentOrchestrator:
 
             # Mark as active
             agent.status = AgentStatus.ACTIVE
+            self.observability.record_agent_health(agent.agent_id, agent.status.value)
             logger.info(f"Agent {agent.agent_id} is now active")
 
         except Exception as e:
             logger.error(f"Failed to initialize agent {agent.agent_id}: {e}")
             agent.status = AgentStatus.FAILED
+            self.observability.record_agent_health(agent.agent_id, agent.status.value)
 
     async def stop_agent(self, agent_id: str, graceful: bool = True):
         """
@@ -274,6 +317,7 @@ class AgentOrchestrator:
 
         agent = self.agents[agent_id]
         agent.status = AgentStatus.STOPPING
+        self.observability.record_agent_health(agent_id, agent.status.value)
 
         if graceful:
             # Wait for current tasks to complete
@@ -290,6 +334,7 @@ class AgentOrchestrator:
         except ValueError:
             pass  # Already removed from registry
         agent.status = AgentStatus.STOPPED
+        self.observability.record_agent_health(agent_id, agent.status.value)
 
         logger.info(f"Stopped agent {agent_id}")
 
@@ -297,7 +342,8 @@ class AgentOrchestrator:
         self,
         task_type: str,
         task_data: Dict[str, Any],
-        preferred_agent_type: Optional[AgentType] = None
+        preferred_agent_type: Optional[AgentType] = None,
+        task_envelope: Optional[TaskEnvelope] = None,
     ) -> Optional[str]:
         """
         Assign a task to an appropriate agent.
@@ -310,29 +356,54 @@ class AgentOrchestrator:
         Returns:
             agent_id: ID of agent assigned to task, or None if no agent available
         """
-        task_id = f"task-{uuid.uuid4().hex[:8]}"
+        task = task_envelope or TaskEnvelope(
+            task_id=generate_task_id(),
+            task_type=task_type,
+            task_data=task_data,
+            preferred_agent_type=preferred_agent_type,
+            retry_count=0,
+        )
 
-        # Find suitable agent
-        agent_id = await self._find_suitable_agent(task_type, preferred_agent_type)
+        if not task_envelope:
+            self.task_state_model.transition(task.task_id, TaskState.QUEUED)
+            self.observability.record_task_state(task.task_id, TaskState.QUEUED, {"source": "direct_assign"})
 
-        if not agent_id:
-            # No suitable agent found, try to spawn one
-            if self.auto_scale_enabled:
-                agent_type = preferred_agent_type or AgentType.SPECIALIST
-                agent_id = await self.spawn_agent(agent_type)
+        async def _spawn_if_allowed(agent_type: AgentType) -> Optional[str]:
+            if not self.auto_scale_enabled:
+                return None
+            return await self.spawn_agent(agent_type)
+
+        # Find suitable agent through lifecycle manager
+        agent_id = await self.lifecycle_manager.select_or_provision(
+            task_type=task.task_type,
+            preferred_agent_type=task.preferred_agent_type,
+            find_agent=self._find_suitable_agent,
+            spawn_agent=_spawn_if_allowed,
+            default_agent_type=AgentType.SPECIALIST,
+        )
 
         if agent_id:
             agent = self.agents[agent_id]
-            agent.current_tasks.add(task_id)
+            agent.current_tasks.add(task.task_id)
             agent.status = AgentStatus.BUSY
+            self.observability.record_agent_health(agent_id, agent.status.value)
 
             # Execute task asynchronously
-            asyncio.create_task(self._execute_task(agent_id, task_id, task_type, task_data))
+            asyncio.create_task(
+                self._execute_task(
+                    agent_id=agent_id,
+                    task_id=task.task_id,
+                    task_type=task.task_type,
+                    task_data=task.task_data,
+                    retry_count=task.retry_count,
+                    preferred_agent_type=task.preferred_agent_type,
+                )
+            )
 
-            logger.info(f"Assigned task {task_id} to agent {agent_id}")
+            logger.info(f"Assigned task {task.task_id} to agent {agent_id}")
             return agent_id
 
-        logger.warning(f"No suitable agent found for task type {task_type}")
+        logger.warning(f"No suitable agent found for task type {task.task_type}")
         return None
 
     async def _find_suitable_agent(
@@ -373,34 +444,55 @@ class AgentOrchestrator:
         agent_id: str,
         task_id: str,
         task_type: str,
-        task_data: Dict[str, Any]
+        task_data: Dict[str, Any],
+        retry_count: int = 0,
+        preferred_agent_type: Optional[AgentType] = None,
     ):
         """Execute a task on an agent."""
         agent = self.agents[agent_id]
         start_time = datetime.utcnow()
+        task = TaskEnvelope(
+            task_id=task_id,
+            task_type=task_type,
+            task_data=task_data,
+            preferred_agent_type=preferred_agent_type,
+            retry_count=retry_count,
+        )
 
         try:
             logger.info(f"Agent {agent_id} executing task {task_id} ({task_type})")
+            result = await self.worker.execute_one(agent_id=agent_id, task=task)
 
-            # Task execution logic would go here
-            # This is a placeholder for the actual task execution
-            await asyncio.sleep(1)  # Simulate work
-
-            # Update metrics
             duration = (datetime.utcnow() - start_time).total_seconds()
-            agent.metrics.tasks_completed += 1
-            agent.metrics.last_task_timestamp = datetime.utcnow()
+            if result.state == TaskState.SUCCEEDED:
+                agent.metrics.tasks_completed += 1
+                agent.metrics.last_task_timestamp = datetime.utcnow()
 
-            # Update average duration
-            total_tasks = agent.metrics.tasks_completed + agent.metrics.tasks_failed
-            if total_tasks > 1:
-                agent.metrics.average_task_duration = (
-                    (agent.metrics.average_task_duration * (total_tasks - 1) + duration) / total_tasks
-                )
+                total_tasks = agent.metrics.tasks_completed + agent.metrics.tasks_failed
+                if total_tasks > 1:
+                    agent.metrics.average_task_duration = (
+                        (agent.metrics.average_task_duration * (total_tasks - 1) + duration) / total_tasks
+                    )
+                else:
+                    agent.metrics.average_task_duration = duration
+
+                logger.info(f"Agent {agent_id} completed task {task_id} in {duration:.2f}s")
             else:
-                agent.metrics.average_task_duration = duration
+                agent.metrics.tasks_failed += 1
+                agent.metrics.error_count += 1
+                logger.error(
+                    f"Agent {agent_id} failed task {task_id}: "
+                    f"{result.error.message if result.error else 'unknown error'}"
+                )
 
-            logger.info(f"Agent {agent_id} completed task {task_id} in {duration:.2f}s")
+                if result.state == TaskState.RETRIED:
+                    await self.producer.submit(
+                        task_type=task_type,
+                        task_data=task_data,
+                        preferred_agent_type=preferred_agent_type,
+                        task_id=task_id,
+                        retry_count=retry_count + 1,
+                    )
 
         except Exception as e:
             logger.error(f"Agent {agent_id} failed task {task_id}: {e}")
@@ -412,6 +504,28 @@ class AgentOrchestrator:
             agent.current_tasks.discard(task_id)
             if not agent.current_tasks:
                 agent.status = AgentStatus.IDLE
+                self.observability.record_agent_health(agent_id, agent.status.value)
+
+    async def _run_task_unit(self, agent_id: str, task: TaskEnvelope) -> Dict[str, Any]:
+        """Execute exactly one unit of work for a worker invocation."""
+        force_error_requested = bool(task.task_data.get("force_error"))
+        if force_error_requested:
+            if self.fault_injection_enabled:
+                raise RuntimeError("Forced task execution failure")
+            logger.warning(
+                "Fault injection requested for task %s but disabled by NWU_ENABLE_FAULT_INJECTION",
+                task.task_id,
+            )
+
+        raw_duration = task.task_data.get("simulated_duration_seconds", DEFAULT_SIMULATED_TASK_DURATION_SECONDS)
+        duration = parse_and_clamp_duration(
+            raw_value=raw_duration,
+            default=DEFAULT_SIMULATED_TASK_DURATION_SECONDS,
+            max_value=MAX_SIMULATED_TASK_DURATION_SECONDS,
+        )
+
+        await asyncio.sleep(duration)
+        return {"processed_by": agent_id, "task_type": task.task_type}
 
     async def _health_monitor(self):
         """Monitor agent health and handle failures."""
@@ -426,9 +540,13 @@ class AgentOrchestrator:
                     if time_since_heartbeat > 60:  # 60 seconds timeout
                         logger.warning(f"Agent {agent_id} appears unresponsive")
                         agent.status = AgentStatus.FAILED
+                        self.observability.record_agent_health(agent_id, agent.status.value)
 
                         # Attempt recovery
-                        await self._recover_agent(agent_id)
+                        await self.lifecycle_manager.recover_if_enabled(
+                            agent_id=agent_id,
+                            recover_callable=self._recover_agent,
+                        )
 
                 await asyncio.sleep(self.health_check_interval)
 
@@ -460,6 +578,7 @@ class AgentOrchestrator:
         """Automatically scale agents based on workload."""
         while self.running:
             try:
+                self.lifecycle_manager.max_agents_per_type = self.max_agents_per_type
                 if not self.auto_scale_enabled:
                     await asyncio.sleep(30)
                     continue
@@ -503,18 +622,18 @@ class AgentOrchestrator:
         """Process tasks from the queue."""
         while self.running:
             try:
-                # Get task from queue
-                task = await asyncio.wait_for(self.task_queue.get(), timeout=1.0)
+                task = await self.producer.dequeue(timeout=1.0)
+                if not task:
+                    continue
 
                 # Assign to agent
                 await self.assign_task(
-                    task_type=task.get('task_type'),
-                    task_data=task.get('task_data', {}),
-                    preferred_agent_type=task.get('preferred_agent_type')
+                    task_type=task.task_type,
+                    task_data=task.task_data,
+                    preferred_agent_type=task.preferred_agent_type,
+                    task_envelope=task,
                 )
 
-            except asyncio.TimeoutError:
-                continue
             except Exception as e:
                 logger.error(f"Error processing task: {e}")
 
@@ -525,11 +644,24 @@ class AgentOrchestrator:
         preferred_agent_type: Optional[AgentType] = None
     ):
         """Submit a task to the orchestrator."""
-        await self.task_queue.put({
-            'task_type': task_type,
-            'task_data': task_data,
-            'preferred_agent_type': preferred_agent_type
-        })
+        await self.producer.submit(
+            task_type=task_type,
+            task_data=task_data,
+            preferred_agent_type=preferred_agent_type,
+        )
+
+    def get_task_state(self, task_id: str) -> Optional[str]:
+        """Get shared state-model value for a task."""
+        state = self.task_state_model.get_state(task_id)
+        return state.value if state else None
+
+    def get_task_state_history(self, task_id: str) -> List[str]:
+        """Get shared state-model history for a task."""
+        return [state.value for state in self.task_state_model.get_history(task_id)]
+
+    def get_observability_snapshot(self) -> Dict[str, Any]:
+        """Get passive observability snapshot."""
+        return self.observability.snapshot()
 
     def get_agent_status(self, agent_id: str) -> Optional[Dict[str, Any]]:
         """Get status of an agent."""
