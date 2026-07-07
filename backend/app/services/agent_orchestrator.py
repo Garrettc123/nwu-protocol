@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+import os
 import uuid
 from datetime import datetime
 from enum import Enum
@@ -16,9 +17,29 @@ from .agent_runtime import (
     TaskEnvelope,
     TaskState,
     WorkerService,
+    generate_task_id,
 )
 
 logger = logging.getLogger(__name__)
+DEFAULT_SIMULATED_TASK_DURATION_SECONDS = 1
+MAX_SIMULATED_TASK_DURATION_SECONDS = 10
+
+
+def parse_bool_env(name: str, default: bool = False) -> bool:
+    """Parse a boolean environment variable."""
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def parse_and_clamp_duration(raw_value: Any, default: float, max_value: float) -> float:
+    """Parse a duration input and clamp to an allowed range."""
+    try:
+        parsed = float(raw_value)
+    except (TypeError, ValueError):
+        parsed = default
+    return max(0.0, min(parsed, max_value))
 
 
 class AgentType(Enum):
@@ -108,7 +129,8 @@ class AgentOrchestrator:
         self.auto_scale_enabled = True
         self.health_check_interval = 30  # seconds
         self.task_timeout = 300  # seconds
-        self.max_task_retries = 1
+        self.max_task_retry_attempts = 1
+        self.fault_injection_enabled = parse_bool_env("NWU_ENABLE_FAULT_INJECTION", default=False)
 
         # Systematic runtime modules
         self.task_state_model = SharedTaskStateModel()
@@ -119,7 +141,7 @@ class AgentOrchestrator:
             state_model=self.task_state_model,
             observability=self.observability,
             execute_unit=self._run_task_unit,
-            max_retries=self.max_task_retries,
+            max_retry_attempts=self.max_task_retry_attempts,
         )
 
     async def initialize(self):
@@ -335,7 +357,7 @@ class AgentOrchestrator:
             agent_id: ID of agent assigned to task, or None if no agent available
         """
         task = task_envelope or TaskEnvelope(
-            task_id=f"task-{uuid.uuid4().hex[:8]}",
+            task_id=generate_task_id(),
             task_type=task_type,
             task_data=task_data,
             preferred_agent_type=preferred_agent_type,
@@ -486,10 +508,23 @@ class AgentOrchestrator:
 
     async def _run_task_unit(self, agent_id: str, task: TaskEnvelope) -> Dict[str, Any]:
         """Execute exactly one unit of work for a worker invocation."""
-        if task.task_data.get("force_error"):
-            raise RuntimeError(task.task_data.get("error_message", "Forced task execution failure"))
+        force_error_requested = bool(task.task_data.get("force_error"))
+        if force_error_requested:
+            if self.fault_injection_enabled:
+                raise RuntimeError("Forced task execution failure")
+            logger.warning(
+                "Fault injection requested for task %s but disabled by NWU_ENABLE_FAULT_INJECTION",
+                task.task_id,
+            )
 
-        await asyncio.sleep(task.task_data.get("simulated_duration_seconds", 1))
+        raw_duration = task.task_data.get("simulated_duration_seconds", DEFAULT_SIMULATED_TASK_DURATION_SECONDS)
+        duration = parse_and_clamp_duration(
+            raw_value=raw_duration,
+            default=DEFAULT_SIMULATED_TASK_DURATION_SECONDS,
+            max_value=MAX_SIMULATED_TASK_DURATION_SECONDS,
+        )
+
+        await asyncio.sleep(duration)
         return {"processed_by": agent_id, "task_type": task.task_type}
 
     async def _health_monitor(self):

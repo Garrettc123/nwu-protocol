@@ -9,6 +9,10 @@ from typing import Any, Awaitable, Callable, Dict, List, Optional, Protocol
 
 logger = logging.getLogger(__name__)
 
+def generate_task_id() -> str:
+    """Generate a 37-char task id in the format task-<32-hex-chars> using UUID v4."""
+    return f"task-{uuid.uuid4().hex}"
+
 
 class TaskState(Enum):
     """Shared task lifecycle states."""
@@ -100,6 +104,8 @@ class SharedTaskStateModel:
         TaskState.RUNNING: {TaskState.SUCCEEDED, TaskState.FAILED},
         TaskState.FAILED: {TaskState.RETRIED, TaskState.DEAD_LETTERED},
         TaskState.RETRIED: {TaskState.QUEUED, TaskState.DEAD_LETTERED},
+        TaskState.SUCCEEDED: set(),
+        TaskState.DEAD_LETTERED: set(),
     }
 
     def __init__(self):
@@ -111,7 +117,11 @@ class SharedTaskStateModel:
         if current is not None and current != state:
             allowed = self._allowed_transitions.get(current, set())
             if state not in allowed:
-                raise ValueError(f"Invalid transition {current.value} -> {state.value} for {task_id}")
+                allowed_values = [candidate.value for candidate in allowed]
+                raise ValueError(
+                    f"Invalid transition {current.value} -> {state.value} for {task_id}. "
+                    f"Allowed transitions: {allowed_values}"
+                )
 
         self._state[task_id] = state
         self._history.setdefault(task_id, []).append(state)
@@ -139,7 +149,7 @@ class ProducerService(TaskProducerContract):
         retry_count: int = 0,
     ) -> TaskEnvelope:
         envelope = TaskEnvelope(
-            task_id=task_id or f"task-{uuid.uuid4().hex[:8]}",
+            task_id=task_id or generate_task_id(),
             task_type=task_type,
             task_data=task_data,
             preferred_agent_type=preferred_agent_type,
@@ -164,12 +174,12 @@ class WorkerService(TaskWorkerContract):
         state_model: SharedTaskStateModel,
         observability: ObservabilityContract,
         execute_unit: Callable[[str, TaskEnvelope], Awaitable[Dict[str, Any]]],
-        max_retries: int = 1,
+        max_retry_attempts: int = 1,
     ):
         self._state_model = state_model
         self._observability = observability
         self._execute_unit = execute_unit
-        self.max_retries = max_retries
+        self._max_retry_attempts = max_retry_attempts
 
     async def execute_one(self, agent_id: str, task: TaskEnvelope) -> TaskResult:
         self._state_model.transition(task.task_id, TaskState.RUNNING)
@@ -193,7 +203,7 @@ class WorkerService(TaskWorkerContract):
                 {"agent_id": agent_id, "error": str(exc)},
             )
 
-            if task.retry_count < self.max_retries:
+            if task.retry_count < self._max_retry_attempts:
                 self._state_model.transition(task.task_id, TaskState.RETRIED)
                 self._observability.record_task_state(task.task_id, TaskState.RETRIED, {"agent_id": agent_id})
                 return TaskResult(

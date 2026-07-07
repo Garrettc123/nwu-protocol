@@ -15,6 +15,16 @@ from backend.app.services.agent_runtime import (
     WorkerService,
 )
 
+async def wait_for_task_state(orchestrator: AgentOrchestrator, task_id: str, target_state: TaskState):
+    """Wait until task reaches a target state (caller enforces timeout)."""
+    while True:
+        current_state = orchestrator.get_task_state(task_id)
+        if current_state is None:
+            raise AssertionError(f"Task {task_id} not found in shared state model")
+        if current_state == target_state.value:
+            return
+        await asyncio.sleep(0.1)
+
 
 @pytest.mark.asyncio
 async def test_producer_enqueues_only_and_sets_queued_state():
@@ -41,7 +51,7 @@ async def test_worker_executes_single_unit_and_records_success():
         state_model=state_model,
         observability=observability,
         execute_unit=execute_unit,
-        max_retries=1,
+        max_retry_attempts=1,
     )
 
     task = TaskEnvelope(task_id="task-unit-success", task_type="verify_code", task_data={})
@@ -87,7 +97,8 @@ async def test_observability_is_passive_recorder():
 
 
 @pytest.mark.asyncio
-async def test_end_to_end_fault_injection_dead_letters_after_retry():
+async def test_end_to_end_fault_injection_dead_letters_after_retry(monkeypatch):
+    monkeypatch.setenv("NWU_ENABLE_FAULT_INJECTION", "true")
     orchestrator = AgentOrchestrator()
     await orchestrator.initialize()
 
@@ -98,8 +109,15 @@ async def test_end_to_end_fault_injection_dead_letters_after_retry():
             preferred_agent_type=AgentType.VERIFIER,
         )
 
-        # Wait for processing + retry + dead-lettering
-        await asyncio.sleep(3.5)
+        # Wait for processing + retry + dead-lettering.
+        await asyncio.wait_for(
+            wait_for_task_state(
+                orchestrator=orchestrator,
+                task_id=task.task_id,
+                target_state=TaskState.DEAD_LETTERED,
+            ),
+            timeout=5.0,
+        )
 
         assert orchestrator.get_task_state(task.task_id) == TaskState.DEAD_LETTERED.value
         assert orchestrator.get_task_state_history(task.task_id) == [
