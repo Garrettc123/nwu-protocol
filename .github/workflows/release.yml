@@ -164,27 +164,6 @@ jobs:
       - name: Build
         run: cd frontend && npm run build
 
-      - name: Guard — check VERCEL_TOKEN
-        id: vercel-check
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        run: |
-          if [ -z "$VERCEL_TOKEN" ]; then
-            echo "VERCEL_TOKEN not configured — skipping Vercel deploy"
-            echo "skip=true" >> $GITHUB_OUTPUT
-          else
-            echo "skip=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Deploy to Vercel
-        if: steps.vercel-check.outputs.skip != 'true'
-        uses: vercel/action@master
-        with:
-          working-directory: frontend
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        continue-on-error: true
-
       - name: Build Docker image
         run: |
           docker build -t ${{ env.REGISTRY }}/nwu-frontend:${{ needs.prepare-release.outputs.version }} \

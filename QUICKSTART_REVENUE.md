@@ -188,7 +188,7 @@ For production deployment with real money:
    ```
 
 3. **Deploy Backend:**
-   - Vercel: `vercel --prod`
+   - Railway: use the `Production Deployment - All Systems` workflow
    - AWS/GCP: See PRODUCTION_DEPLOYMENT.md
    - Docker: Use docker-compose.yml
 

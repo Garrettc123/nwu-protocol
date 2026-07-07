@@ -115,13 +115,11 @@ Follow **Option 1** first to test everything, then:
 
    Choose one:
 
-   **A) Vercel (Easiest)**
+   **A) Railway (Recommended Hosted Path)**
 
-   ```bash
-   npm i -g vercel
-   vercel --prod
-   # Add environment variables in Vercel dashboard
-   ```
+   - Use repository workflow: **Production Deployment - All Systems**
+   - Required secrets: `RAILWAY_TOKEN`, `RAILWAY_PROJECT_ID`, `RAILWAY_URL`
+   - Health endpoint: `$RAILWAY_URL/health`
 
    **B) AWS/GCP/Azure**
    - See PRODUCTION_DEPLOYMENT.md for details

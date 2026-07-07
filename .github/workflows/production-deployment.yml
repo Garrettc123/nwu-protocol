@@ -11,13 +11,13 @@ on:
       deploy_target:
         description: 'What to deploy'
         required: true
-        default: 'all'
+        default: 'railway'
         type: choice
         options:
-          - all
+          - railway
           - nwu-backend
           - github-pages
-          - railway
+          - all
   push:
     branches: [main]
     paths:
@@ -236,7 +236,7 @@ jobs:
             echo "NWU Backend deployed successfully"
 
   deploy-railway:
-    name: Deploy to Railway
+    name: Deploy Primary API to Railway
     runs-on: ubuntu-latest
     if: github.event.inputs.deploy_target == 'all' || github.event.inputs.deploy_target == 'railway' || github.event_name == 'push'
     steps:
@@ -268,6 +268,18 @@ jobs:
           railway link ${{ secrets.RAILWAY_PROJECT_ID }}
           railway up --service wealth-api
           echo "Railway deployment triggered"
+
+      - name: Verify Railway deployment
+        if: steps.secret-check.outputs.skip != 'true'
+        env:
+          RAILWAY_URL: ${{ secrets.RAILWAY_URL }}
+        run: |
+          if [ -z "$RAILWAY_URL" ]; then
+            echo "::warning::RAILWAY_URL not configured — skipping Railway verification"
+            exit 0
+          fi
+          curl -f -s "$RAILWAY_URL/health" > /dev/null
+          echo "Railway API verification passed"
 
   health-check:
     name: Verify All Deployments
@@ -311,10 +323,14 @@ jobs:
           fi
 
       - name: Deployment Summary
+        env:
+          RAILWAY_URL: ${{ secrets.RAILWAY_URL }}
         run: |
           echo ""
           echo "========================================"
           echo "   DEPLOYMENT COMPLETE"
           echo "========================================"
+          echo "Primary Hosted API: Railway"
+          echo "Railway URL:        ${RAILWAY_URL:-not-configured}"
           echo "GitHub Pages:  https://garrettc123.github.io"
           echo "========================================"

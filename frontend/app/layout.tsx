@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 // import { Inter } from 'next/font/google';  // Disabled due to network restrictions
-import { Analytics } from '@vercel/analytics/next';
 import './globals.css';
 import Link from 'next/link';
 import WalletConnect from '@/components/WalletConnect';
