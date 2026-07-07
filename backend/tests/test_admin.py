@@ -9,7 +9,7 @@ from app.main import app
 from app.models import Base, User as UserModel
 from app.database import get_db
 from app.api.admin import get_current_admin_user
-from app.services import auth_service
+from app.services.auth_service import auth_service
 
 # ---------------------------------------------------------------------------
 # SQLite test database setup
@@ -51,11 +51,25 @@ def override_get_current_admin_user():
     return _mock_admin_user
 
 
-# Apply dependency overrides
-app.dependency_overrides[get_db] = override_get_db
-app.dependency_overrides[get_current_admin_user] = override_get_current_admin_user
-
 client = TestClient(app)
+
+
+@pytest.fixture(autouse=True)
+def setup_overrides():
+    """Re-assert dependency overrides before every test in this module.
+
+    Because test_referrals.py also sets app.dependency_overrides[get_db] at
+    module-import time, we need to re-apply our own overrides at the start of
+    every admin test to ensure the in-memory SQLite database (and the mock admin
+    user) are used instead of the referrals file-based database.
+    Overrides are restored after each test so other test modules are unaffected.
+    """
+    saved = dict(app.dependency_overrides)
+    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_current_admin_user] = override_get_current_admin_user
+    yield
+    app.dependency_overrides.clear()
+    app.dependency_overrides.update(saved)
 
 # A fake non-admin Ethereum address used for auth tests
 NON_ADMIN_ADDRESS = "0x1111111111111111111111111111111111111111"
