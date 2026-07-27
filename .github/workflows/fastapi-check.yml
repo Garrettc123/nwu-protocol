@@ -121,14 +121,18 @@ jobs:
 
           root = app_module.root
           api_status = app_module.api_status
-          health_check = getattr(app_module, 'health_check', app_module.health)
+          health_check = getattr(app_module, 'health_check', None)
+          if health_check is None:
+              health_check = getattr(app_module, 'health', None)
+          if health_check is None:
+              raise RuntimeError('Neither health_check nor health endpoint found in app module')
 
           def call_endpoint(name, func):
               try:
                   return func()
               except TypeError as exc:
                   raise RuntimeError(
-                      f'Endpoint {name} requires unsupported call arguments: {exc}'
+                      f'Endpoint {name} could not be invoked without arguments: {exc}'
                   ) from exc
               except Exception as exc:
                   raise RuntimeError(f'Endpoint test failed for {name}: {exc}') from exc
