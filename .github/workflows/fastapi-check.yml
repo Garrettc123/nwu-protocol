@@ -115,6 +115,7 @@ jobs:
       - name: Test app.py execution
         run: |
           python -c "
+          import asyncio
           import inspect
           from app import root, api_status
 
@@ -129,7 +130,6 @@ jobs:
               try:
                   result = func()
                   if inspect.isawaitable(result):
-                      import asyncio
                       return asyncio.run(result)
                   return result
               except Exception as exc:
