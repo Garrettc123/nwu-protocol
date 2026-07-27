@@ -122,25 +122,26 @@ jobs:
           try:
               from app import health_check
           except ImportError as exc:
-              if \"cannot import name 'health_check'\" not in str(exc):
+              if 'cannot import name' not in str(exc) or 'health_check' not in str(exc):
                   raise
               from app import health as health_check
 
           def call_endpoint(name, func):
+              required_params = [
+                  p.name for p in inspect.signature(func).parameters.values()
+                  if p.default is inspect.Signature.empty
+                  and p.kind in (
+                      inspect.Parameter.POSITIONAL_ONLY,
+                      inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                      inspect.Parameter.KEYWORD_ONLY
+                  )
+              ]
+              if required_params:
+                  raise RuntimeError(
+                      f'Endpoint {name} requires parameters not supported by this check: {required_params}'
+                  )
+
               try:
-                  required_params = [
-                      p.name for p in inspect.signature(func).parameters.values()
-                      if p.default is inspect.Signature.empty
-                      and p.kind in (
-                          inspect.Parameter.POSITIONAL_ONLY,
-                          inspect.Parameter.POSITIONAL_OR_KEYWORD,
-                          inspect.Parameter.KEYWORD_ONLY
-                      )
-                  ]
-                  if required_params:
-                      raise RuntimeError(
-                          f'Endpoint {name} requires parameters not supported by this check: {required_params}'
-                      )
                   return func()
               except Exception as exc:
                   raise RuntimeError(f'Endpoint test failed for {name}: {exc}') from exc
