@@ -116,16 +116,41 @@ jobs:
         run: |
           python -c "
           import asyncio
-          from app import root, health_check, api_status
+          import inspect
+          import app as app_module
+
+          root = app_module.root
+          api_status = app_module.api_status
+          health_check = getattr(app_module, 'health_check', None)
+          if health_check is None:
+              health_check = getattr(app_module, 'health', None)
+          if health_check is None:
+              raise RuntimeError('Neither health_check nor health endpoint found in app module')
+
+          def call_endpoint(name, func):
+              try:
+                  return func()
+              except TypeError as exc:
+                  raise RuntimeError(
+                      f'Endpoint {name} could not be invoked without arguments: {exc}'
+                  ) from exc
+              except Exception as exc:
+                  raise RuntimeError(f'Endpoint test failed for {name}: {exc}') from exc
+
+          async def resolve_endpoint(name, func):
+              result = call_endpoint(name, func)
+              if inspect.isawaitable(result):
+                  return await result
+              return result
 
           async def test():
-              result = await root()
+              result = await resolve_endpoint('root', root)
               print(f'Root endpoint test passed: {result[\"status\"]}')
 
-              health = await health_check()
+              health = await resolve_endpoint('health_check', health_check)
               print(f'Health endpoint test passed: {health[\"status\"]}')
 
-              status = await api_status()
+              status = await resolve_endpoint('api_status', api_status)
               print(f'Status endpoint test passed: {status[\"status\"]}')
 
           asyncio.run(test())
