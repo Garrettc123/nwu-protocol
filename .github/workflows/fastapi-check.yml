@@ -128,21 +128,27 @@ jobs:
 
           def call_endpoint(name, func):
               try:
-                  result = func()
-                  if inspect.isawaitable(result):
-                      return asyncio.run(result)
-                  return result
+                  return func()
               except Exception as exc:
                   raise RuntimeError(f'Endpoint test failed for {name}: {exc}') from exc
 
-          result = call_endpoint('root', root)
-          print(f'Root endpoint test passed: {result[\"status\"]}')
+          async def resolve_endpoint(name, func):
+              result = call_endpoint(name, func)
+              if inspect.isawaitable(result):
+                  return await result
+              return result
 
-          health = call_endpoint('health_check', health_check)
-          print(f'Health endpoint test passed: {health[\"status\"]}')
+          async def test():
+              result = await resolve_endpoint('root', root)
+              print(f'Root endpoint test passed: {result[\"status\"]}')
 
-          status = call_endpoint('api_status', api_status)
-          print(f'Status endpoint test passed: {status[\"status\"]}')
+              health = await resolve_endpoint('health_check', health_check)
+              print(f'Health endpoint test passed: {health[\"status\"]}')
+
+              status = await resolve_endpoint('api_status', api_status)
+              print(f'Status endpoint test passed: {status[\"status\"]}')
+
+          asyncio.run(test())
           "
 
       - name: Summary
