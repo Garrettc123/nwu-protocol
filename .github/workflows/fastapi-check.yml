@@ -115,20 +115,29 @@ jobs:
       - name: Test app.py execution
         run: |
           python -c "
-          import asyncio
-          from app import root, health_check, api_status
+          import inspect
+          from app import root, api_status
 
-          async def test():
-              result = await root()
-              print(f'Root endpoint test passed: {result[\"status\"]}')
+          try:
+              from app import health_check
+          except ImportError:
+              from app import health as health_check
 
-              health = await health_check()
-              print(f'Health endpoint test passed: {health[\"status\"]}')
+          def call_endpoint(func):
+              result = func()
+              if inspect.isawaitable(result):
+                  import asyncio
+                  return asyncio.run(result)
+              return result
 
-              status = await api_status()
-              print(f'Status endpoint test passed: {status[\"status\"]}')
+          result = call_endpoint(root)
+          print(f'Root endpoint test passed: {result[\"status\"]}')
 
-          asyncio.run(test())
+          health = call_endpoint(health_check)
+          print(f'Health endpoint test passed: {health[\"status\"]}')
+
+          status = call_endpoint(api_status)
+          print(f'Status endpoint test passed: {status[\"status\"]}')
           "
 
       - name: Summary
