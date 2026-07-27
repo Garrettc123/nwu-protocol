@@ -117,32 +117,19 @@ jobs:
           python -c "
           import asyncio
           import inspect
-          from app import root, api_status
+          import app as app_module
 
-          try:
-              from app import health_check
-          except ImportError as exc:
-              if 'cannot import name' not in str(exc) or 'health_check' not in str(exc):
-                  raise
-              from app import health as health_check
+          root = app_module.root
+          api_status = app_module.api_status
+          health_check = getattr(app_module, 'health_check', app_module.health)
 
           def call_endpoint(name, func):
-              required_params = [
-                  p.name for p in inspect.signature(func).parameters.values()
-                  if p.default is inspect.Signature.empty
-                  and p.kind in (
-                      inspect.Parameter.POSITIONAL_ONLY,
-                      inspect.Parameter.POSITIONAL_OR_KEYWORD,
-                      inspect.Parameter.KEYWORD_ONLY
-                  )
-              ]
-              if required_params:
-                  raise RuntimeError(
-                      f'Endpoint {name} requires parameters not supported by this check: {required_params}'
-                  )
-
               try:
                   return func()
+              except TypeError as exc:
+                  raise RuntimeError(
+                      f'Endpoint {name} requires unsupported call arguments: {exc}'
+                  ) from exc
               except Exception as exc:
                   raise RuntimeError(f'Endpoint test failed for {name}: {exc}') from exc
 
