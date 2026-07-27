@@ -120,23 +120,28 @@ jobs:
 
           try:
               from app import health_check
-          except ImportError:
+          except ImportError as exc:
+              if \"cannot import name 'health_check'\" not in str(exc):
+                  raise
               from app import health as health_check
 
-          def call_endpoint(func):
-              result = func()
-              if inspect.isawaitable(result):
-                  import asyncio
-                  return asyncio.run(result)
-              return result
+          def call_endpoint(name, func):
+              try:
+                  result = func()
+                  if inspect.isawaitable(result):
+                      import asyncio
+                      return asyncio.run(result)
+                  return result
+              except Exception as exc:
+                  raise RuntimeError(f'Endpoint test failed for {name}: {exc}') from exc
 
-          result = call_endpoint(root)
+          result = call_endpoint('root', root)
           print(f'Root endpoint test passed: {result[\"status\"]}')
 
-          health = call_endpoint(health_check)
+          health = call_endpoint('health_check', health_check)
           print(f'Health endpoint test passed: {health[\"status\"]}')
 
-          status = call_endpoint(api_status)
+          status = call_endpoint('api_status', api_status)
           print(f'Status endpoint test passed: {status[\"status\"]}')
           "
 
