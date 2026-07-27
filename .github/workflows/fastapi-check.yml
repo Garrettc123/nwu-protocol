@@ -128,6 +128,19 @@ jobs:
 
           def call_endpoint(name, func):
               try:
+                  required_params = [
+                      p.name for p in inspect.signature(func).parameters.values()
+                      if p.default is inspect.Signature.empty
+                      and p.kind in (
+                          inspect.Parameter.POSITIONAL_ONLY,
+                          inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                          inspect.Parameter.KEYWORD_ONLY
+                      )
+                  ]
+                  if required_params:
+                      raise RuntimeError(
+                          f'Endpoint {name} requires parameters not supported by this check: {required_params}'
+                      )
                   return func()
               except Exception as exc:
                   raise RuntimeError(f'Endpoint test failed for {name}: {exc}') from exc
