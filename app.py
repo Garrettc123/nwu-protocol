@@ -28,7 +28,7 @@ app.include_router(payments_router)
 
 
 @app.get("/")
-def root():
+async def root():
     return {
         "service": "NWU Protocol API",
         "version": "1.0.0",
@@ -40,7 +40,7 @@ def root():
 
 
 @app.get("/health")
-def health():
+async def health_check():
     return {
         "status": "healthy",
         "system": "NWU Protocol",
@@ -49,7 +49,7 @@ def health():
 
 
 @app.get("/api/v1/status")
-def api_status():
+async def api_status():
     return {
         "api": "NWU Protocol",
         "version": "1.0.0",
