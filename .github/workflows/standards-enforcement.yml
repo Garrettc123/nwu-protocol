@@ -76,9 +76,16 @@ jobs:
         with:
           script: |
             const branch = context.payload.pull_request.head.ref;
-            const validPrefixes = [
-              'feat/', 'fix/', 'docs/', 'style/', 'refactor/',
-              'test/', 'chore/', 'security/', 'perf/', 'ci/',
+             const author = context.payload.pull_request.user.login;
+
+             if (author === 'dependabot[bot]') {
+               core.info(`Skipping branch naming enforcement for Dependabot branch '${branch}'`);
+               return;
+             }
+
+             const validPrefixes = [
+               'feat/', 'fix/', 'docs/', 'style/', 'refactor/',
+               'test/', 'chore/', 'security/', 'perf/', 'ci/',
               'copilot/' // Allow Copilot branches
             ];
 
