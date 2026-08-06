@@ -19,7 +19,7 @@ jobs:
   pr-checklist-validation:
     name: Validate PR Checklist
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'
     steps:
       - name: Check PR Description
         uses: actions/github-script@v8
@@ -69,7 +69,7 @@ jobs:
   enforce-branch-naming:
     name: Enforce Branch Naming Convention
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'
     steps:
       - name: Check Branch Name
         uses: actions/github-script@v8
@@ -97,7 +97,7 @@ jobs:
   enforce-commit-messages:
     name: Enforce Commit Message Convention
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'
     steps:
       - uses: actions/checkout@v5
         with:
