@@ -19,7 +19,7 @@ jobs:
   pr-checklist-validation:
     name: Validate PR Checklist
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'
     steps:
       - name: Check PR Description
         uses: actions/github-script@v8
