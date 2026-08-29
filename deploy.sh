@@ -277,7 +277,7 @@ display_urls() {
     echo "   • View logs:          docker-compose logs -f"
     echo "   • View backend logs:  docker-compose logs -f backend"
     echo "   • View agent logs:    docker-compose logs -f agent-alpha"
-    echo "   • View bl logs:       docker-compose logs -f business-lead"
+    echo "   • View business-lead logs: docker-compose logs -f business-lead"
     echo "   • Stop services:      docker-compose down"
     echo "   • Restart services:   docker-compose restart"
     echo ""
