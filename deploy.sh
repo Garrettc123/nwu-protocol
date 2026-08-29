@@ -125,6 +125,9 @@ build_images() {
     log_info "Building agent-alpha image..."
     docker-compose build agent-alpha
     
+    log_info "Building business-lead image..."
+    docker-compose build business-lead
+    
     log_success "Docker images built successfully"
 }
 
@@ -203,7 +206,7 @@ run_migrations() {
 start_application() {
     log_info "Starting application services..."
     
-    docker-compose up -d backend agent-alpha
+    docker-compose up -d backend agent-alpha business-lead
     
     log_info "Waiting for backend to be healthy..."
     for i in {1..60}; do
@@ -274,6 +277,7 @@ display_urls() {
     echo "   • View logs:          docker-compose logs -f"
     echo "   • View backend logs:  docker-compose logs -f backend"
     echo "   • View agent logs:    docker-compose logs -f agent-alpha"
+    echo "   • View bl logs:       docker-compose logs -f business-lead"
     echo "   • Stop services:      docker-compose down"
     echo "   • Restart services:   docker-compose restart"
     echo ""

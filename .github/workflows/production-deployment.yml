@@ -218,6 +218,32 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Build and Push Agent-Alpha Image
+        if: steps.secret-check.outputs.skip != 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.agent
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/nwu-agent:latest
+            ${{ secrets.DOCKER_USERNAME }}/nwu-agent:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and Push Business-Lead Image
+        if: steps.secret-check.outputs.skip != 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.business-lead
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/nwu-business-lead:latest
+            ${{ secrets.DOCKER_USERNAME }}/nwu-business-lead:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
       - name: Deploy to Production Server
         if: steps.secret-check.outputs.skip != 'true'
         uses: appleboy/ssh-action@v1.0.3
@@ -229,11 +255,15 @@ jobs:
             cd /opt/nwu-protocol || exit 1
             git pull origin main
             docker pull ${{ secrets.DOCKER_USERNAME }}/nwu-backend:latest
+            docker pull ${{ secrets.DOCKER_USERNAME }}/nwu-agent:latest
+            docker pull ${{ secrets.DOCKER_USERNAME }}/nwu-business-lead:latest
             docker-compose -f docker-compose.prod.yml up -d --no-build
             sleep 15
-            docker exec nwu-backend alembic upgrade head || echo "Migrations already applied"
+            docker exec nwu-backend-prod alembic upgrade head || echo "Migrations already applied"
             curl -f http://localhost:8000/health || exit 1
             echo "NWU Backend deployed successfully"
+            echo "NWU Agent-Alpha deployed successfully"
+            echo "NWU Business-Lead deployed successfully"
 
   deploy-railway:
     name: Deploy Primary API to Railway
