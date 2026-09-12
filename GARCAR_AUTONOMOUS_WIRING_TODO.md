@@ -2,6 +2,8 @@
 
 Role: `blockchain_protocol`
 
+_Live fan-out: 2026-09-12 (wet / CASH_LOCK)_
+
 ## Required Garcar Base Contract
 - Implement `/health`, `/meta`, `/metrics`, `/events` endpoints.
 
