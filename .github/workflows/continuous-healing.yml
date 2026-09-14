@@ -1,156 +1,53 @@
 name: Continuous Code Healing
 
 on:
-  # cron removed — was running HOURLY, extremely wasteful; use workflow_dispatch for manual runs
-  workflow_dispatch:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
 
 jobs:
   health-check:
-    name: System Health & Auto-Healing
+    name: System Health & Maintenance
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v5
 
-      - name: Check Repository Health
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Validate repository files
+        shell: bash
         run: |
-          echo "Performing repository health check..."
+          set -euo pipefail
 
-          # Check for broken links in markdown
-          find . -name '*.md' -type f | while read f; do
-            grep -o 'https*://[^)]\+' "$f" | while read url; do
-              echo "Checking URL: $url"
-            done
-          done
+          python - <<'PY'
+          import json
+          from pathlib import Path
 
-          # Validate JSON files
-          find . -name '*.json' -type f | while read f; do
-            python -m json.tool "$f" > /dev/null && echo "OK $f" || echo "FAIL $f"
-          done
+          for path in Path('.').rglob('*.json'):
+              if any(part in {'.git', 'node_modules'} for part in path.parts):
+                  continue
+              with path.open(encoding='utf-8') as handle:
+                  json.load(handle)
+              print(f'OK JSON {path}')
+          PY
 
-          # Check YAML syntax
-          find . -name '*.yml' -o -name '*.yaml' | while read f; do
-            python -c "import yaml; yaml.safe_load(open('$f'))" && echo "OK $f" || echo "FAIL $f"
-          done
+          python - <<'PY'
+          import yaml
+          from pathlib import Path
 
-          echo "::notice::Health check complete"
+          for path in [*Path('.').rglob('*.yml'), *Path('.').rglob('*.yaml')]:
+              if any(part in {'.git', 'node_modules'} for part in path.parts):
+                  continue
+              with path.open(encoding='utf-8') as handle:
+                  yaml.safe_load(handle)
+              print(f'OK YAML {path}')
+          PY
 
-      - name: Auto-Update Dependencies
-        run: |
-          echo "Auto-updating dependencies..."
-
-          # Update npm packages
-          npm update 2>/dev/null || true
-          npm audit fix 2>/dev/null || true
-
-          # Update pip packages
-          pip list --outdated 2>/dev/null || true
-
-          # Check for security updates
-          npm audit 2>/dev/null || true
-
-          echo "::notice::Dependency update complete"
-
-      - name: Optimize Performance
-        run: |
-          echo "Optimizing performance..."
-
-          # Minify JavaScript
-          find . -name '*.js' -type f | head -5 | while read f; do
-            echo "Optimizing: $f"
-          done
-
-          # Remove unused imports
-          npx ts-prune 2>/dev/null || true
-
-          # Analyze bundle size
-          npx webpack-bundle-analyzer 2>/dev/null || true
-
-          echo "::notice::Performance optimization complete"
-
-      - name: Clean Up & Maintain
-        run: |
-          echo "Cleaning up and maintaining codebase..."
-
-          # Remove log files
-          find . -name '*.log' -type f -mtime +30 -delete
-
-          # Clean cache directories
-          rm -rf node_modules/.cache 2>/dev/null || true
-          rm -rf .pytest_cache 2>/dev/null || true
-          rm -rf dist/ build/ 2>/dev/null || true
-
-          # Update .gitignore
-          if [ ! -f ".gitignore" ]; then
-            cat > .gitignore << 'GITIGNORE'
-node_modules/
-dist/
-build/
-.env
-.env.local
-*.log
-.DS_Store
-__pycache__/
-*.pyc
-.pytest_cache/
-.coverage
-cover/
-GITIGNORE
-          fi
-
-          echo "::notice::Cleanup complete"
-
-      - name: Generate Documentation
-        run: |
-          echo "Auto-generating documentation..."
-
-          # Generate API docs
-          npx typedoc 2>/dev/null || true
-
-          # Generate README
-          if [ ! -f "README.md" ]; then
-            cat > README.md << 'EOF'
-# Project Name
-
-Auto-generated project documentation.
-
-## Quick Start
-
-```bash
-cd project
-npm install
-npm run dev
-```
-
-## API Documentation
-
-See [API.md](./API.md) for endpoint documentation.
-
-EOF
-          fi
-
-          echo "::notice::Documentation generated"
-
-      - name: Commit Healing Changes
-        run: |
-          git config user.name "Auto-Healing Bot"
-          git config user.email "heal@bot.local"
-
-          if [ -n "$(git status --porcelain)" ]; then
-            git add .
-            git commit -m "Automated health maintenance and healing
-
-            - Updated dependencies and security patches
-            - Optimized performance and bundle size
-            - Cleaned up logs and cache
-            - Generated/updated documentation
-            - Fixed broken links and syntax errors
-
-            Manual maintenance cycle" || true
-            git push origin main 2>/dev/null || true
-          else
-            echo "::notice::Repository is healthy - no changes needed"
-          fi
+      - name: Check working tree
+        run: git status --short
