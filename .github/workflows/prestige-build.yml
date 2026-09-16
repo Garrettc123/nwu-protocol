@@ -38,12 +38,12 @@ jobs:
           output-file: dist/sbom.spdx.json
 
       - name: Generate Provenance (Wheel)
-        uses: actions/attest-build-provenance@v1
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: 'dist/*.whl'
 
       - name: Generate Provenance (Source)
-        uses: actions/attest-build-provenance@v1
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: 'dist/*.tar.gz'
 
