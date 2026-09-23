@@ -40,7 +40,7 @@ jobs:
       changelog: ${{ steps.changelog.outputs.changelog }}
       full_notes: ${{ steps.full_notes.outputs.notes }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Setup Node.js
@@ -91,7 +91,7 @@ jobs:
       github.event.inputs.component == 'backend' ||
       hashFiles('backend/**') != ''
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
@@ -150,7 +150,7 @@ jobs:
       github.event.inputs.component == 'frontend' ||
       hashFiles('frontend/**') != ''
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
@@ -187,7 +187,7 @@ jobs:
       github.event.inputs.component == 'contracts' ||
       hashFiles('contracts/**') != ''
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
@@ -231,7 +231,7 @@ jobs:
       contents: write
     if: always()
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Create release
