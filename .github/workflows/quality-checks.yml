@@ -18,7 +18,7 @@ jobs:
     name: Repository Structure Check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: Check repository structure
         run: |
           echo "Repository structure:"
@@ -37,7 +37,7 @@ jobs:
     runs-on: ubuntu-latest
     if: hashFiles('backend/**') != ''
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
@@ -68,7 +68,7 @@ jobs:
     runs-on: ubuntu-latest
     if: hashFiles('frontend/**') != ''
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
@@ -103,7 +103,7 @@ jobs:
     runs-on: ubuntu-latest
     if: hashFiles('contracts/**') != ''
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
@@ -145,7 +145,7 @@ jobs:
     runs-on: ubuntu-latest
     if: hashFiles('agents/**') != ''
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Setup Python
         uses: actions/setup-python@v6
@@ -178,7 +178,7 @@ jobs:
     name: Security Vulnerability Scan
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
@@ -208,7 +208,7 @@ jobs:
     runs-on: ubuntu-latest
     if: hashFiles('backend/**') != '' || hashFiles('frontend/**') != ''
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
@@ -238,7 +238,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
