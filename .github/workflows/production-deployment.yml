@@ -207,7 +207,7 @@ jobs:
 
       - name: Build and Push Backend Image
         if: steps.secret-check.outputs.skip != 'true'
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: ./Dockerfile.backend
@@ -220,7 +220,7 @@ jobs:
 
       - name: Build and Push Agent-Alpha Image
         if: steps.secret-check.outputs.skip != 'true'
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: ./Dockerfile.agent
@@ -233,7 +233,7 @@ jobs:
 
       - name: Build and Push Business-Lead Image
         if: steps.secret-check.outputs.skip != 'true'
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: ./Dockerfile.business-lead
