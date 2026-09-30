@@ -25,7 +25,7 @@ jobs:
     steps:
       - name: Check if PR is safe to auto-approve
         id: check-safe
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const pr = context.payload.pull_request;
@@ -102,7 +102,7 @@ jobs:
     steps:
       - name: Check if PR can be auto-merged
         id: check-merge
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             let pr;
@@ -224,7 +224,7 @@ jobs:
 
       - name: Enable auto-merge
         if: steps.check-merge.outputs.should_merge == 'true'
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const prNumber = parseInt('${{ steps.check-merge.outputs.pr_number }}');

@@ -22,7 +22,7 @@ jobs:
     if: github.event_name == 'pull_request'
     steps:
       - name: Check PR Description
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const pr = context.payload.pull_request;
@@ -72,7 +72,7 @@ jobs:
     if: github.event_name == 'pull_request'
     steps:
       - name: Check Branch Name
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const branch = context.payload.pull_request.head.ref;
@@ -234,7 +234,7 @@ jobs:
           fetch-depth: 0
 
       - name: Check if Documentation Needed
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const pr = context.payload.pull_request;
@@ -284,7 +284,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Post Summary Comment
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const checks = {
