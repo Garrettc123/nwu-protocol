@@ -60,7 +60,7 @@ jobs:
 
       - name: Create dependency update PR
         if: steps.check-updates.outputs.has_updates == 'true'
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const branchName = `chore/auto-dependency-update-${Date.now()}`;
@@ -134,7 +134,7 @@ jobs:
 
       - name: Create maintenance report
         if: steps.check-maintenance.outputs.has_maintenance == 'true'
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const todoCount = '${{ steps.check-maintenance.outputs.todo_count }}';
@@ -196,7 +196,7 @@ jobs:
 
       - name: Create security issue
         if: steps.audit.outputs.has_vulnerabilities == 'true'
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const issueTitle = `Security Vulnerabilities Detected - ${new Date().toISOString().split('T')[0]}`;
