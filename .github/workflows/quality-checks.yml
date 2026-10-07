@@ -128,7 +128,7 @@ jobs:
         run: cd contracts && npm run coverage || true
 
       - name: Security scan with Slither
-        uses: crytic/slither-action@v0.3.0
+        uses: crytic/slither-action@v0.4.2
         with:
           target: 'contracts/contracts/'
           sarif: results.sarif
