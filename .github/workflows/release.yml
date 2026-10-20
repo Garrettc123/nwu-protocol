@@ -291,7 +291,8 @@ jobs:
         if: steps.slack-check.outputs.skip != 'true'
         uses: slackapi/slack-github-action@v4
         with:
-          webhook-url: ${{ secrets.SLACK_WEBHOOK }}
+          webhook: ${{ secrets.SLACK_WEBHOOK }}
+          webhook-type: incoming-webhook
           payload: |
             {
               "text": "NWU Protocol v${{ needs.prepare-release.outputs.version }} released!",
