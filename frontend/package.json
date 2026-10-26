@@ -24,7 +24,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "autoprefixer": "^10.6.1",
-    "postcss": "^8.5.30",
+    "postcss": "^8.5.31",
     "source-map-js": "1.2.2",
     "tailwindcss": "^4.3.3",
     "typescript": "^7"
