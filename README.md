@@ -4,7 +4,7 @@
   <a href="https://github.com/sponsors/Garrettc123"><img src="https://img.shields.io/badge/Sponsor-Garrett%20Carroll-red?style=for-the-badge&logo=github"></a>
 </div>
 
-**Status:** 🚀 ACTIVE
+**Status:** ✅ v1.0.0 FINAL — released November 4, 2026 (72 tests passing, see CHANGELOG)
 
 **Neural Workflow Unification (NWU)** — distributed AI agent coordination protocol.
 

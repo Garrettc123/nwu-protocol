@@ -5,6 +5,14 @@ All notable changes to the NWU Protocol will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0] — 2026-11-04
+
+### Finalized
+
+- Promoted from 1.0.0-alpha to **1.0.0 FINAL** after full verification run (2026-11-04): 72/72 tests passing (`pytest tests/`).
+- Test dependencies (`pytest`, `pytest-asyncio`) added to `requirements.txt` for reproducible verification.
+- Fleet-synced with the Garcar Repo Foundry inventory (313 repos, 2026-11-04).
+
 ## [Unreleased]
 
 ### Added
