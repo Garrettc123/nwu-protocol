@@ -1,5 +1,7 @@
 """Main FastAPI application for NWU Protocol Backend."""
 
+import asyncio
+import os
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -50,8 +52,30 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"Failed to initialize Agent Orchestrator: {e}")
 
-    yield
-    
+    # Root app.py and this backend are separate entrypoints. If this service
+    # runs the backend, publish only opt-in, conservative health receipts.
+    mesh_task = None
+    if os.getenv("GARCAR_MESH_PUBLISH_ENABLED", "").lower() == "true":
+        async def mesh_heartbeat_loop():
+            from nwu_protocol.mesh_heartbeat import send_heartbeat
+            while True:
+                try:
+                    await asyncio.to_thread(send_heartbeat, "degraded")
+                except Exception:
+                    logger.warning("NWU mesh heartbeat unavailable")
+                await asyncio.sleep(300)
+        mesh_task = asyncio.create_task(mesh_heartbeat_loop())
+
+    try:
+        yield
+    finally:
+        if mesh_task is not None:
+            mesh_task.cancel()
+            try:
+                await mesh_task
+            except asyncio.CancelledError:
+                pass
+
     # Shutdown
     logger.info("Shutting down NWU Protocol Backend...")
     try:
