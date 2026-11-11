@@ -1,4 +1,6 @@
 """NWU Protocol - Decentralized Intelligence & Verified Truth Protocol API"""
+import asyncio
+import os
 from collections import deque
 from datetime import datetime, timezone
 from typing import Any
