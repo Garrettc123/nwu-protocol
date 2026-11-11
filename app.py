@@ -36,6 +36,36 @@ app.include_router(verifications_router)
 app.include_router(users_router)
 app.include_router(payments_router)
 
+@app.on_event("startup")
+async def _start_optional_mesh_heartbeat():
+    """Enable only in an explicitly configured NWU deployment."""
+    if os.getenv("GARCAR_MESH_PUBLISH_ENABLED", "").lower() != "true":
+        return
+
+    async def heartbeat_loop():
+        from nwu_protocol.mesh_heartbeat import send_heartbeat
+        while True:
+            try:
+                await asyncio.to_thread(send_heartbeat, "degraded")
+            except Exception:
+                # Never fail NWU's normal API startup because Sync Core is down.
+                pass
+            await asyncio.sleep(300)
+
+    app.state.mesh_heartbeat_task = asyncio.create_task(heartbeat_loop())
+
+
+@app.on_event("shutdown")
+async def _stop_optional_mesh_heartbeat():
+    task = getattr(app.state, "mesh_heartbeat_task", None)
+    if task is not None:
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
+
+
 _events: deque[dict[str, Any]] = deque(maxlen=1000)
 _counters: dict[str, int] = {
     "requests_total": 0,
