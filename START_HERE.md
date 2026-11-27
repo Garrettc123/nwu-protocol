@@ -90,11 +90,11 @@ The code is complete and ready! You have:
 
 **✅ Done! Your test system is running!**
 
-To test the full payment flow, use Stripe test card:
+To test the full payment flow, use any Stripe test card from the official docs:
 
-- Card: `4242 4242 4242 4242`
-- Expiry: Any future date
-- CVC: Any 3 digits
+- Reference: https://docs.stripe.com/testing#cards
+- Never hardcode card numbers in public repos
+- Cash is only real when Stripe reports paid=true with last4 not equal to a test value
 
 ---
 
@@ -327,7 +327,7 @@ Remember: You're not alone. Thousands of developers have done this before. You'v
 
 ---
 
-**Last Updated:** January 10, 2026  
+**Last Updated:** November 27, 2026  
 **Status:** ✅ READY TO DEPLOY  
 **Time to First Revenue:** 30 minutes
 
