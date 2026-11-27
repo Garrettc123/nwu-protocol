@@ -372,6 +372,7 @@ if (error) {
 4. **Input Validation:** Validate all amounts and parameters
 5. **SSL/HTTPS:** Always use HTTPS in production
 6. **PCI Compliance:** Never handle raw card data directly
+7. **No hardcoded PANs:** Card numbers belong in Stripe's test docs, not public repos
 
 ## Testing
 
@@ -384,9 +385,13 @@ Use Stripe test keys for development:
 
 ### Test Cards
 
-- Success: `4242 4242 4242 4242`
-- Decline: `4000 0000 0000 0002`
-- Require 3D Secure: `4000 0025 0000 3155`
+Reference only — see https://docs.stripe.com/testing#cards for the current list:
+
+- Success scenario
+- Decline scenario
+- 3D Secure required scenario
+
+Never paste raw numbers into documentation. Last4 of any test charge must never be treated as revenue.
 
 ### Test Webhooks
 
