@@ -233,18 +233,11 @@ For subscription prices, update in Stripe dashboard:
 
 ## 🧪 Testing Payments
 
-Use Stripe test cards:
+Use Stripe test cards from the official reference — never hardcode numbers in public repos:
 
-```
-# Successful payment
-Card: 4242 4242 4242 4242
-Expiry: Any future date
-CVC: Any 3 digits
-ZIP: Any 5 digits
-
-# Declined payment
-Card: 4000 0000 0000 0002
-```
+- Docs: https://docs.stripe.com/testing#cards
+- Success, decline, and 3DS scenarios are all listed there
+- Cash is only real when Stripe reports paid=true with last4 not equal to a test value
 
 ## 🚨 Troubleshooting
 
